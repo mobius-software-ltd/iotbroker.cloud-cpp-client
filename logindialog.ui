@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LogInDialog</class>
+ <widget class="QDialog" name="LogInDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>352</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Log In</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="styleSheet">
+      <string notr="true">font-size:10pt; 
+font-weight:700;</string>
+     </property>
+     <property name="text">
+      <string> ragistration info:</string>
+     </property>
+     <property name="margin">
+      <number>4</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="ListWidget" name="registrationInfoWidget">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>192</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>192</height>
+      </size>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::NoSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="styleSheet">
+      <string notr="true">font-size:10pt; 
+font-weight:700;</string>
+     </property>
+     <property name="text">
+      <string> settings:</string>
+     </property>
+     <property name="margin">
+      <number>4</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="ListWidget" name="settingsWidget">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>230</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>230</height>
+      </size>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::NoSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QPushButton" name="pushButton">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>48</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+	font-size:16pt; 
+	border-style: outset;
+	border-width: 0px;
+	color: white;
+	background-color: rgb(25,163,219);
+	top:100px;
+}
+QPushButton:pressed {
+	background-color: rgb(45,183,239);
+}</string>
+     </property>
+     <property name="text">
+      <string>Log In</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ListWidget</class>
+   <extends>QListWidget</extends>
+   <header>listwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

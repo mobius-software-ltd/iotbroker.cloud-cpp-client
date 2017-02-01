@@ -1,0 +1,92 @@
+#include "sendmessagetab.h"
+#include "ui_sendmessagetab.h"
+#include <QMessageBox>
+
+static int const contentIndex = 0;
+static int const topicIndex = 1;
+static int const qosIndex = 2;
+static int const retainIndex = 3;
+static int const duplicateIndex = 4;
+
+SendMessageTab::SendMessageTab(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::SendMessageTab)
+{
+    ui->setupUi(this);
+
+    this->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+
+    connect(ui->sendPushButton, SIGNAL(clicked()), this, SLOT(sendButtonDidClick()));
+
+    CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget);
+    CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget);
+    CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", "0", ui->sendMessageListWidget);
+    CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
+    CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
+}
+
+void SendMessageTab::sendButtonDidClick()
+{
+    QList<QString> list = this->getInformation();
+
+    if (this->isFieldsFill(list) == false) {
+        QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->exec();
+    } else {
+
+        QoS *qos = new QoS();
+        qos->setValue(list.at(qosIndex).toInt());
+
+        Topic *topic = new Topic();
+        topic->setName(list.at(topicIndex));
+        topic->setQoS(qos);
+
+        Publish *publish = new Publish();
+        publish->setTopic(topic);
+        publish->setContent(list.at(contentIndex).toUtf8());
+        publish->setRetain(list.at(retainIndex).toInt());
+        publish->setDup(list.at(duplicateIndex).toInt());
+
+        emit donePublishForSending(publish);
+    }
+}
+
+QList<QString> SendMessageTab::getInformation()
+{
+    QList<QString> list = QList<QString>();
+
+    for (int i = 0; i < 5; i++) {
+        QListWidgetItem *item = ui->sendMessageListWidget->item(i);
+        if (item != NULL) {
+            QWidget *widget = ui->sendMessageListWidget->itemWidget(item);
+            if (widget->metaObject()->className() == CellWithEditLine().metaObject()->className()) {
+                CellWithEditLine *cell = (CellWithEditLine *)widget;
+                list.append(cell->getInputText());
+            } else if (widget->metaObject()->className() == CellWithCheckbox().metaObject()->className()) {
+                CellWithCheckbox *cell = (CellWithCheckbox *)widget;
+                list.append(QString::number(cell->getState()));
+            } else if (widget->metaObject()->className() == CellWithComboBox().metaObject()->className()) {
+                CellWithComboBox *cell = (CellWithComboBox *)widget;
+                list.append(cell->getValue());
+            }
+        }
+    }
+    return list;
+}
+
+bool SendMessageTab::isFieldsFill(QList<QString> list) {
+
+    bool flag = true;
+
+    for (int i = 0; i < list.size(); i++) {
+        if (list.at(i).isEmpty()) {
+            flag = false;
+        }
+    }
+    return flag;
+}
+
+SendMessageTab::~SendMessageTab()
+{
+    delete ui;
+}
