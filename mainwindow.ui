@@ -113,7 +113,7 @@ background: red;
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -175,8 +175,8 @@ background: red;
       <widget class="QWidget" name="logoutTab">
        <attribute name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/resources/resources/Logout Rounded Filled-54.png</normaloff>
-         <normalon>:/resources/resources/Logout Rounded Filled-54-2.png</normalon>:/resources/resources/Logout Rounded Filled-54.png</iconset>
+         <normaloff>:/resources/resources/logout.png</normaloff>
+         <normalon>:/resources/resources/logoutBlue.png</normalon>:/resources/resources/logout.png</iconset>
        </attribute>
        <attribute name="title">
         <string/>

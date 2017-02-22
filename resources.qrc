@@ -19,5 +19,7 @@
         <file>resources/iotbroker_icon_big.png</file>
         <file>resources/Logout Rounded Filled-54-2.png</file>
         <file>resources/Logout Rounded Filled-54.png</file>
+        <file>resources/logout.png</file>
+        <file>resources/logoutBlue.png</file>
     </qresource>
 </RCC>
