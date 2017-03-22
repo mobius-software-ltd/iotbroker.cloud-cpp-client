@@ -44,3 +44,4 @@ Please note that at this stage it is not possible to register as a client. You c
 
 IoTBroker.Cloud C++ Client is developed by [Mobius Software](http://mobius-software.com).
 
+## [License](LICENSE.md)
