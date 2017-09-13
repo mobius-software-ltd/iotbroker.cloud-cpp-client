@@ -1,0 +1,4 @@
+#ifndef MQTTSNENUMS_H
+#define MQTTSNENUMS_H
+
+#endif // MQTTSNENUMS_H
