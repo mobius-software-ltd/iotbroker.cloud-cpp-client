@@ -1,0 +1,4 @@
+#ifndef AMQPSECTION_H
+#define AMQPSECTION_H
+
+#endif // AMQPSECTION_H

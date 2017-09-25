@@ -1,0 +1,4 @@
+#ifndef AMQPMESSAGEID_H
+#define AMQPMESSAGEID_H
+
+#endif // AMQPMESSAGEID_H
