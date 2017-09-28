@@ -19,23 +19,27 @@
  */
 
 #include "timersmap.h"
+#include "iot-protocols/classes/countablemessage.h"
+#include "iot-protocols/iotprotocol.h"
 
-TimersMap::TimersMap(MQTTManager *mqtt)
+TimersMap::TimersMap(IotProtocol *iotProtocol)
 {
     this->timersMap = new QMap<int, TimerTask *>();
     this->connect = NULL;
     this->ping = NULL;
-    this->mqtt = mqtt;
+    this->reg = NULL;
+    this->timeout = NULL;
+    this->iotProtocol = iotProtocol;
     this->count = 0;
 }
 
-void TimersMap::goConnectTimer(Connect *connect)
+void TimersMap::goConnectTimer(Message *connect)
 {
     if (this->connect != NULL) {
         this->connect->stop();
     }
 
-    this->connect = new TimerTask(connect, this->mqtt->getMQTT(), MESSAGE_RESEND_PERIOD);
+    this->connect = new TimerTask(connect, this->iotProtocol, 3000);
     this->connect->start();
 }
 
@@ -52,7 +56,8 @@ void TimersMap::goPingTimer(int keepalive)
     if (this->ping != NULL) {
         this->ping->stop();
     }
-    this->ping = new TimerTask(new Pingreq(), this->mqtt->getMQTT(), keepalive * 1000);
+
+    this->ping = new TimerTask(this->iotProtocol->getPingreqMessage(), this->iotProtocol, keepalive * 1000);
     this->ping->start();
 }
 
@@ -64,9 +69,62 @@ void TimersMap::stopPingTimer()
     }
 }
 
+void TimersMap::goRegisterTimer(Message *reg)
+{
+    if (this->reg != NULL) {
+        this->reg->stop();
+    }
+
+    SNRegister *regPacket  = (SNRegister *)reg;
+    if (regPacket->getPacketID() == 0) {
+        int packetID = this->getNewPacketID();
+        regPacket->setPacketID(packetID);
+    }
+
+    this->reg = new TimerTask(reg, this->iotProtocol, 3000);
+    this->reg->start();
+}
+
+void TimersMap::stopRegisterTimer()
+{
+    if (this->reg != NULL) {
+        this->reg->stop();
+        this->reg = NULL;
+    }
+}
+
+void TimersMap::goTimeoutTimer()
+{
+    if (this->timeout != NULL) {
+        this->timeout->stop();
+    }
+
+    this->timeout = new TimerTask(NULL, this->iotProtocol, TIMEOUT_VALUE);
+    this->timeout->setIsTimeoutTask(true);
+    this->timeout->start();
+}
+
+void TimersMap::stopTimeoutTimer()
+{
+    if (this->timeout != NULL) {
+        this->timeout->stop();
+        this->timeout = NULL;
+    }
+}
+
+void TimersMap::goCoAPMessageTimer(Message *message)
+{
+    TimerTask *timer = new TimerTask(message, this->iotProtocol, MESSAGE_RESEND_PERIOD);
+
+    CoAPMessage *coapMessage = (CoAPMessage *)message;
+    this->timersMap->insert(coapMessage->getToken(), timer);
+
+    timer->start();
+}
+
 void TimersMap::goMessageTimer(Message *message)
 {
-    TimerTask *timer = new TimerTask(message, this->mqtt->getMQTT(), MESSAGE_RESEND_PERIOD);
+    TimerTask *timer = new TimerTask(message, this->iotProtocol, MESSAGE_RESEND_PERIOD);
 
     if (this->timersMap->size() == MAX_VALUE) {
         throw new QString("TimersMap : Outgoing identifier overflow");
@@ -114,6 +172,8 @@ void TimersMap::stopAllTimers()
 {
     this->stopConnectTimer();
     this->stopPingTimer();
+    this->stopRegisterTimer();
+    this->stopTimeoutTimer();
 
     QList<int> keys = this->timersMap->keys();
     for (int i = 0; i < this->timersMap->size(); i++) {

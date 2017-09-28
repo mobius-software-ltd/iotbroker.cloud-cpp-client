@@ -32,8 +32,13 @@ TopicListTab::TopicListTab(QWidget *parent) :
 
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addButtonDidClick()));
 
+    QList<QString> qosList = QList<QString>();
+    qosList.append(QString::number(0));
+    qosList.append(QString::number(1));
+    qosList.append(QString::number(2));
+
     this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic:", "topic", ui->inputListWidget);
-    this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS:", "0", ui->inputListWidget);
+    this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS:", qosList, "0", ui->inputListWidget);
 }
 
 void TopicListTab::addCell(QString name, int qos)
@@ -61,10 +66,13 @@ void TopicListTab::setTopicsList(QList<TopicEntity> list)
 void TopicListTab::addButtonDidClick()
 {
     QString topicName = this->topicCell->getInputText();
-    int qos = this->qosCell->getValue().toInt();
+
+    TopicEntity topic = TopicEntity();
+    topic.topicName = topicName;
+    topic.qos = this->qosCell->getValue().toInt();
 
     if (topicName.length() != 0) {
-        emit addNewTopic(topicName, qos);
+        emit addNewTopic(topic);
     } else {
         QMessageBox *messageBox = new QMessageBox("Warrning", "Please input topic name", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->exec();
@@ -77,9 +85,10 @@ void TopicListTab::deleteItemAt(int row)
     CellTopicItem *widget = (CellTopicItem *)ui->listWidget->itemWidget(item);
 
     if (widget != NULL) {
-        QString topicName = widget->getText();
-        int qos = widget->getValue();
-        emit deleteTopic(topicName, qos);
+        TopicEntity topic = TopicEntity();
+        topic.topicName = widget->getText();
+        topic.qos = widget->getValue();
+        emit deleteTopic(topic);
     }
 }
 

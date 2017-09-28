@@ -19,6 +19,7 @@
  */
 
 #include "puback.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Puback::Puback()
 {
@@ -45,7 +46,12 @@ int Puback::getLength()
     return 2;
 }
 
-MessageType Puback::getType()
+int Puback::getType()
 {
-    return PUBACK;
+    return MQ_PUBACK;
+}
+
+IotEnumProtocol *Puback::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

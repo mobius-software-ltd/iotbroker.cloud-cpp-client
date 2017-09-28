@@ -57,8 +57,8 @@ public:
     void setTopicsList(QList<TopicEntity> list);
 
 signals:
-    void addNewTopic(QString topicName, int qos);
-    void deleteTopic(QString topicName, int qos);
+    void addNewTopic(TopicEntity topic);
+    void deleteTopic(TopicEntity topic);
 
 private slots:
     void addButtonDidClick();

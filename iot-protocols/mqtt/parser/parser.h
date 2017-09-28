@@ -24,24 +24,24 @@
 #include <QDebug>
 #include <QBuffer>
 #include <QByteArray>
-#include <parser/supporting/bytearray.h>
-#include <parser/supporting/lengthdetails.h>
+#include "classes/bytearray.h"
+#include "classes/lengthdetails.h"
 
-#include <parser/messages/message.h>
-#include <parser/messages/connect.h>
-#include <parser/messages/connack.h>
-#include <parser/messages/disconnect.h>
-#include <parser/messages/pingreq.h>
-#include <parser/messages/pingresp.h>
-#include <parser/messages/publish.h>
-#include <parser/messages/puback.h>
-#include <parser/messages/pubcomp.h>
-#include <parser/messages/pubrec.h>
-#include <parser/messages/pubrel.h>
-#include <parser/messages/subscribe.h>
-#include <parser/messages/suback.h>
-#include <parser/messages/unsubscribe.h>
-#include <parser/messages/unsuback.h>
+#include "iot-protocols/classes/message.h"
+#include "iot-protocols/mqtt/messages/connect.h"
+#include "iot-protocols/mqtt/messages/connack.h"
+#include "iot-protocols/mqtt/messages/disconnect.h"
+#include "iot-protocols/mqtt/messages/pingreq.h"
+#include "iot-protocols/mqtt/messages/pingresp.h"
+#include "iot-protocols/mqtt/messages/publish.h"
+#include "iot-protocols/mqtt/messages/puback.h"
+#include "iot-protocols/mqtt/messages/pubcomp.h"
+#include "iot-protocols/mqtt/messages/pubrec.h"
+#include "iot-protocols/mqtt/messages/pubrel.h"
+#include "iot-protocols/mqtt/messages/subscribe.h"
+#include "iot-protocols/mqtt/messages/suback.h"
+#include "iot-protocols/mqtt/messages/unsubscribe.h"
+#include "iot-protocols/mqtt/messages/unsuback.h"
 
 /**
  * @brief The Parser class

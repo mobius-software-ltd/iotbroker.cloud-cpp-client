@@ -22,7 +22,7 @@
 #define MESSAGESPARSER_H
 
 #include <QObject>
-#include <parser/parser.h>
+#include "iot-protocols/mqtt/parser/parser.h"
 
 /**
  * @brief The MessagesParser class

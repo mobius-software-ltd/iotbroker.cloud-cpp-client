@@ -21,6 +21,8 @@
 #include "logindialog.h"
 #include "ui_logindialog.h"
 #include <QMessageBox>
+#include "iot-protocols/classes/iotenumprotocol.h"
+#include <QDebug>
 
 LogInDialog::LogInDialog(QWidget *parent) :
     QDialog(parent),
@@ -29,6 +31,20 @@ LogInDialog::LogInDialog(QWidget *parent) :
     ui->setupUi(this);
 
     this->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+
+    QList<QString> protocolsList = QList<QString>();
+    IotEnumProtocol *prot = new IotEnumProtocol();
+    protocolsList.append(prot->EnumObject::getName(MQTT_PROTOCOL));
+    protocolsList.append(prot->EnumObject::getName(MQTT_SN_PROTOCOL));
+    protocolsList.append(prot->EnumObject::getName(COAP_PROTOCOL));
+    protocolsList.append(prot->EnumObject::getName(AMQP_PROTOCOL));
+
+    QList<QString> qosList = QList<QString>();
+    qosList.append(QString::number(0));
+    qosList.append(QString::number(1));
+    qosList.append(QString::number(2));
+
+    this->protocolCell      = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"), "Protocol:", protocolsList, "protocol",     ui->registrationInfoWidget);
 
     this->usernameCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/username.png"), "Username:",      "username",     ui->registrationInfoWidget);
     this->passwordCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/password.png"), "Password:",      "password",     ui->registrationInfoWidget);
@@ -41,7 +57,7 @@ LogInDialog::LogInDialog(QWidget *parent) :
     this->willCell          = CellWithEditLine::createCellWith(QString(":/resources/resources/settings.png"),     "Will:",          "will",         ui->settingsWidget);
     this->willTopicCell     = CellWithEditLine::createCellWith(QString(":/resources/resources/settings.png"),     "Will topic:",    "will topic",   ui->settingsWidget);
     this->retainCell        = CellWithCheckbox::createCellWith(QString(":/resources/resources/settings.png"),     "Retain:",        false,          ui->settingsWidget);
-    this->qosCell           = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"),     "QoS:",           "0",            ui->settingsWidget);
+    this->qosCell           = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"),     "QoS:",   qosList, "0",            ui->settingsWidget);
 
     connect(ui->pushButton, SIGNAL(clicked(bool)), this, SLOT(logInButtonDidClick()));
 }
@@ -55,7 +71,11 @@ void LogInDialog::logInButtonDidClick()
         messageBox->exec();
 
     } else {
+
+        IotEnumProtocol *protocol = new IotEnumProtocol();
+
         AccountEntity account;
+        account.protocol    = protocol->EnumObject::getValue(this->protocolCell->getValue());
         account.username    = this->usernameCell->getInputText();
         account.password    = this->passwordCell->getInputText();
         account.clientID    = this->clientIDCell->getInputText();
@@ -66,10 +86,8 @@ void LogInDialog::logInButtonDidClick()
         account.will        = this->willCell->getInputText();
         account.willTopic   = this->willTopicCell->getInputText();
         account.isRetain    = this->retainCell->getState();
-        account.qos         = this->qosCell->getText().toInt();
+        account.qos         = this->qosCell->getValue().toInt();
         account.isDefault = true;
-
-        qDebug() << account;
 
         emit accountToSave(account);
         accept();

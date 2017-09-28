@@ -19,6 +19,7 @@
  */
 
 #include "pubcomp.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Pubcomp::Pubcomp()
 {
@@ -45,7 +46,12 @@ int Pubcomp::getLength()
     return 2;
 }
 
-MessageType Pubcomp::getType()
+int Pubcomp::getType()
 {
-    return PUBCOMP;
+    return MQ_PUBCOMP;
+}
+
+IotEnumProtocol *Pubcomp::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

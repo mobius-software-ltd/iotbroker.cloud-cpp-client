@@ -21,8 +21,8 @@
 #ifndef UNSUBSCRIBE_H
 #define UNSUBSCRIBE_H
 
-#include <parser/messages/countablemessage.h>
-#include <parser/supporting/topic.h>
+#include "iot-protocols/classes/countablemessage.h"
+#include "iot-protocols/mqtt/classes/mqtopic.h"
 #include <QList>
 #include <QString>
 
@@ -45,7 +45,8 @@ public:
     virtual void setPacketID(int packetID);
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
 
     QList<QString> *getTopics();
     void setTopics(QList<QString> *topics);

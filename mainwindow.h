@@ -22,12 +22,15 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <mqtt/mqttmanager.h>
-#include <database/accountmanager.h>
-#include <logindialog.h>
-#include <loadingdialog.h>
-#include <accountslistdialog.h>
-#include <timer/timersmap.h>
+#include "logindialog.h"
+#include "loadingdialog.h"
+#include "accountslistdialog.h"
+#include "database/accountmanager.h"
+#include "iot-protocols/mqtt/classes/will.h"
+#include "iot-protocols/mqtt/mqtt.h"
+#include "iot-protocols/mqtt-sn/mqttsn.h"
+#include "iot-protocols/coap/coap.h"
+#include "iot-protocols/amqp/classes/amqp.h"
 
 namespace Ui {
 class MainWindow;
@@ -41,19 +44,20 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    MQTTManager *mqtt;
+    IotProtocol *iotProtocol;
+
     AccountManager *accountManager;
     LogInDialog *login;
     AccountsListDialog *accountsListDialog;
     AccountEntity currentAccount;
-    TimersMap *timerMap;
     QTimer *progressTimer;
+    LoadingDialog *loading;
 
     void startNewSession();
     void initMainWindow();
     bool showLogIn();
     void showLoading();
-    void saveTopic(Publish *publish, bool isIncoming);
+    void saveTopic(QString topicName, int qos, QByteArray content, bool isRetain, bool isDub, bool isIncoming);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -63,6 +67,18 @@ private:
     Ui::MainWindow *ui;
 
 private slots:
+
+    //Iot protocol
+    void connackReceived(IotProtocol*,int);
+    void publishReceived(IotProtocol*,QString,int,QByteArray,bool,bool);
+    void pubackReceived(IotProtocol*,QString,int,QByteArray,bool,bool,int);
+    void subackReceived(IotProtocol*,QString,int,int);
+    void unsubackReceived(IotProtocol*,QString);
+    void pingrespReceived(IotProtocol*);
+    void disconnectReceived(IotProtocol*);
+    void timeout(IotProtocol*);
+    void errorReceived(IotProtocol*,QString);
+    //
 
     // Accounts list dialog
     void deleteAccountSlot(AccountEntity *account);
@@ -75,28 +91,12 @@ private slots:
     //
 
     // Topic list tab
-    void willSubscribeSlot(QString topicName, int qos);
-    void willUnsubscribeSlot(QString topicName, int qos);
+    void willSubscribeSlot(TopicEntity topic);
+    void willUnsubscribeSlot(TopicEntity topic);
     //
 
     // Send message tab
-    void willPublishSlot(Publish *publish);
-    //
-
-    // MQTT Manager
-    void openConnectionSlot();
-    void closeConnectionSlot();
-    void connackDidReceiveSlot(Connack *connack);
-    void publishDidReceiveSlot(Publish *publish);
-    void pubackDidReceiveSlot(Puback *puback);
-    void pubrecDidReceiveSlot(Pubrec *pubrec);
-    void pubrelDidReceiveSlot(Pubrel *pubrel);
-    void pubcompDidReceiveSlot(Pubcomp *pubcomp);
-    void subackDidReceiveSlot(Suback *suback);
-    void unsubackDidReceiveSlot(Unsuback *unsuback);
-    void pingrespDidReceiveSlot(Pingresp *pingresp);
-    void errorMessageDidReceiveSlot(QString *error);
-    void errorSlot(QString *error);
+    void willPublishSlot(MessageEntity message);
     //
 
     // QTabWidget

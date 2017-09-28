@@ -18,17 +18,17 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-#ifndef TOPIC_H
-#define TOPIC_H
+#ifndef MQTOPIC_H
+#define MQTOPIC_H
 
 #include <QString>
-#include "iot-protocols/classes/qos.h"
+#include "iot-protocols/classes/topic.h"
 
 /**
- * @brief The Topic class
+ * @brief The MQTopic class
  */
 
-class Topic
+class MQTopic : public Topic
 {
 
 private:
@@ -36,18 +36,21 @@ private:
     QoS *qos;
 
 public:
-    Topic();
-    Topic(QString name, QoS *qos);
+    MQTopic();
+    MQTopic(QString name, QoS *qos);
 
     QString toString();
 
     QString getName() const;
     void setName(QString name);
 
-    QoS *getQoS() const;
     void setQoS(QoS *qos);
 
-    int length();
+    virtual SNTopicTypes getType();
+    virtual QoS *getQoS();
+    virtual QByteArray encode();
+    virtual int getLength();
+
 };
 
-#endif // TOPIC_H
+#endif // MQTOPIC_H

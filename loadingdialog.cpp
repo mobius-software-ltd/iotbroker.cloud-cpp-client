@@ -33,7 +33,7 @@ LoadingDialog::LoadingDialog(QWidget *parent) :
     this->timer = new QTimer(this);
 
     QObject::connect(timer, SIGNAL(timeout()), SLOT(timeoutSlot()));
-    this->timer->setInterval(32);
+    this->timer->setInterval(64);
     this->timer->start();
 }
 
@@ -43,7 +43,7 @@ void LoadingDialog::timeoutSlot()
         ui->progressBar->setValue(ui->progressBar->value() + 1);
     } else {
         this->timer->stop();
-        accept();
+        //accept();
     }
 }
 

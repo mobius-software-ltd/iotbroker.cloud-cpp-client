@@ -38,9 +38,14 @@ SendMessageTab::SendMessageTab(QWidget *parent) :
 
     connect(ui->sendPushButton, SIGNAL(clicked()), this, SLOT(sendButtonDidClick()));
 
+    QList<QString> qosList = QList<QString>();
+    qosList.append(QString::number(0));
+    qosList.append(QString::number(1));
+    qosList.append(QString::number(2));
+
     CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget);
     CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget);
-    CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", "0", ui->sendMessageListWidget);
+    CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
     CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
     CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
 }
@@ -53,21 +58,23 @@ void SendMessageTab::sendButtonDidClick()
         QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->exec();
     } else {
+/*
+        DQField<QByteArray>             content;
+        DQField<int>                    qos;
+        DQField<QString>                topicName;
+        DQField<bool>                   incoming;
+        DQField<bool>                   isRetain;
+    */
+        MessageEntity message = MessageEntity();
 
-        QoS *qos = new QoS();
-        qos->setValue(list.at(qosIndex).toInt());
+        message.topicName = list.at(topicIndex);
+        message.qos = list.at(qosIndex).toInt();
+        message.content = list.at(contentIndex).toUtf8();
+        message.isRetain = list.at(retainIndex).toInt();
+        message.isDub = list.at(duplicateIndex).toInt();
+        message.incoming = false;
 
-        Topic *topic = new Topic();
-        topic->setName(list.at(topicIndex));
-        topic->setQoS(qos);
-
-        Publish *publish = new Publish();
-        publish->setTopic(topic);
-        publish->setContent(list.at(contentIndex).toUtf8());
-        publish->setRetain(list.at(retainIndex).toInt());
-        publish->setDup(list.at(duplicateIndex).toInt());
-
-        emit donePublishForSending(publish);
+        emit donePublishForSending(message);
     }
 }
 

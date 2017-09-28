@@ -21,7 +21,7 @@
 #ifndef COUNTABLEMESSAGE_H
 #define COUNTABLEMESSAGE_H
 
-#include <parser/messages/message.h>
+#include "iot-protocols/classes/message.h"
 
 class CountableMessage : public Message
 {

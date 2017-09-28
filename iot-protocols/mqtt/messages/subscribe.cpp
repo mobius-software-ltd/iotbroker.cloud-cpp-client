@@ -19,6 +19,7 @@
  */
 
 #include "subscribe.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Subscribe::Subscribe()
 {
@@ -30,13 +31,13 @@ Subscribe::Subscribe(int packetID)
     this->packetID = packetID;
 }
 
-Subscribe::Subscribe(QList<Topic> *topics)
+Subscribe::Subscribe(QList<MQTopic> *topics)
 {
     this->packetID = 0;
     this->topics = topics;
 }
 
-Subscribe::Subscribe(int packetID, QList<Topic> *topics)
+Subscribe::Subscribe(int packetID, QList<MQTopic> *topics)
 {
     this->packetID = packetID;
     this->topics = topics;
@@ -57,23 +58,28 @@ int Subscribe::getLength()
     int length = 0;
     length += this->packetID != 0 ? 2 : 0;
     for (int i = 0; i < this->topics->size(); i++) {
-        Topic item = this->topics->at(i);
+        MQTopic item = this->topics->at(i);
         length += item.getName().length() + 3;
     }
     return length;
 }
 
-MessageType Subscribe::getType()
+int Subscribe::getType()
 {
-    return SUBSCRIBE;
+    return MQ_SUBSCRIBE;
 }
 
-QList<Topic> *Subscribe::getTopics()
+IotEnumProtocol *Subscribe::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
+}
+
+QList<MQTopic> *Subscribe::getTopics()
 {
     return this->topics;
 }
 
-void Subscribe::setTopics(QList<Topic> *topics)
+void Subscribe::setTopics(QList<MQTopic> *topics)
 {
     this->topics = topics;
 }

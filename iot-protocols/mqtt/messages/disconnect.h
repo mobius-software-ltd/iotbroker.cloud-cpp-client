@@ -21,7 +21,7 @@
 #ifndef DISCONNECT_H
 #define DISCONNECT_H
 
-#include <parser/messages/message.h>
+#include "iot-protocols/classes/message.h"
 
 /**
  * @brief The Disconnect class
@@ -33,7 +33,9 @@ public:
     Disconnect();
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
+
 };
 
 #endif // DISCONNECT_H

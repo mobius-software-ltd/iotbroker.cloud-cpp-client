@@ -22,7 +22,7 @@
 #define WILL_H
 
 #include <QByteArray>
-#include <parser/supporting/topic.h>
+#include "iot-protocols/mqtt/classes/mqtopic.h"
 
 /**
  * @brief The Will class
@@ -32,18 +32,18 @@ class Will
 {
 
 private:
-    Topic *topic;
+    MQTopic *topic;
     QByteArray content;
     bool retain;
 
 public:
     Will();
-    Will(Topic *topic, QByteArray content, bool retain);
+    Will(MQTopic *topic, QByteArray content, bool retain);
 
     int retrieveLength();
 
-    Topic *getTopic();
-    void setTopic(Topic *topic);
+    MQTopic *getTopic();
+    void setTopic(MQTopic *topic);
 
     QByteArray getContent();
     void setContent(QByteArray content);

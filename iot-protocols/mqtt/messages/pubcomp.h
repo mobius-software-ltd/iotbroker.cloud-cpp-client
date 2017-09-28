@@ -21,7 +21,7 @@
 #ifndef PUBCOMP_H
 #define PUBCOMP_H
 
-#include <parser/messages/countablemessage.h>
+#include "iot-protocols/classes/countablemessage.h"
 
 /**
  * @brief The Pubcomp class
@@ -40,7 +40,9 @@ public:
     virtual void setPacketID(int packetID);
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
+
 };
 
 #endif // PUBCOMP_H

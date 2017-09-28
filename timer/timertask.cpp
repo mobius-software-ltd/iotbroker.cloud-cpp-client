@@ -19,14 +19,22 @@
  */
 
 #include "timertask.h"
+#include "iot-protocols/iotprotocol.h"
+#include "iot-protocols/mqtt/messages/publish.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
-TimerTask::TimerTask(Message *message, MQTT *mqtt, int period)
+TimerTask::TimerTask(Message *message, IotProtocol *iotProtocol, int period)
 {
-    this->timer = new QTimer();
+    this->timer = new QTimer(this);
+    this->timer->setTimerType(Qt::PreciseTimer);
+    QObject::connect(this->timer, SIGNAL(timeout()), this, SLOT(startSlot()));
+
     this->message = message;
-    this->mqtt = mqtt;
+    this->iotProtocol = iotProtocol;
     this->period = period;
     this->status = false;
+
+    this->isTimeoutTask = false;
 }
 
 int TimerTask::getPeriod()
@@ -39,23 +47,31 @@ Message *TimerTask::getMessage()
     return this->message;
 }
 
+void TimerTask::setIsTimeoutTask(bool value)
+{
+    this->isTimeoutTask = value;
+}
+
 void TimerTask::start()
 {
-    this->timer->setTimerType(Qt::PreciseTimer);
-    QObject::connect(this->timer, SIGNAL(timeout()), this, SLOT(startSlot()));
     this->timer->start(this->period);
 }
 
 void TimerTask::startSlot()
 {
-    if (this->mqtt->isConnected() == true) {
+    if (this->isTimeoutTask == true) {
+        this->iotProtocol->timeoutMethod();
+        return;
+    }
+
+    if (this->iotProtocol->getIsConnect() == true) {
         if (this->status == true) {
-            if (this->message->getType() == PUBLISH) {
+            if (this->message->getType() == MQ_PUBLISH) {
                 Publish *publish = (Publish *)message;
                 publish->setDup(true);
             }
         }
-        this->mqtt->sendMessage(this->message);
+        this->iotProtocol->send(this->message);
         this->status = true;
     }
 }

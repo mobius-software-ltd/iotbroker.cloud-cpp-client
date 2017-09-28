@@ -21,7 +21,7 @@
 #ifndef PINGREQ_H
 #define PINGREQ_H
 
-#include <parser/messages/message.h>
+#include <iot-protocols/classes/message.h>
 
 /**
  * @brief The Pingreq class
@@ -33,7 +33,9 @@ public:
     Pingreq();
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
+
 };
 
 #endif // PINGREQ_H

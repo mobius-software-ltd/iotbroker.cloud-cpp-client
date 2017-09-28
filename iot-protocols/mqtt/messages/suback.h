@@ -21,7 +21,7 @@
 #ifndef SUBACK_H
 #define SUBACK_H
 
-#include <parser/messages/countablemessage.h>
+#include "iot-protocols/classes/countablemessage.h"
 #include <QList>
 
 enum SubackCode
@@ -51,7 +51,9 @@ public:
     virtual void setPacketID(int packetID);
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
+
 
     QList<SubackCode> *getReturnCodes();
     void setReturnCodes(QList<SubackCode> *returnCodes);

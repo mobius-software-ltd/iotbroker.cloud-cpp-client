@@ -19,6 +19,7 @@
  */
 
 #include "disconnect.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Disconnect::Disconnect()
 {
@@ -30,7 +31,12 @@ int Disconnect::getLength()
     return 0;
 }
 
-MessageType Disconnect::getType()
+int Disconnect::getType()
 {
-    return DISCONNECT;
+    return MQ_DISCONNECT;
+}
+
+IotEnumProtocol *Disconnect::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

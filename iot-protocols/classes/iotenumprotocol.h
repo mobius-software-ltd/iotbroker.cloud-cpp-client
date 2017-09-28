@@ -18,43 +18,36 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef IOTENUMPROTOCOL_H
+#define IOTENUMPROTOCOL_H
 
-#include <parser/supporting/protocolmessage.h>
+#include "iot-protocols/amqp/classes/enums/enumobject.h"
 
-enum MessageType
+enum IotEnumProtocols : int
 {
-    CONNECT = 1,
-    CONNACK = 2,
-    PUBLISH = 3,
-    PUBACK = 4,
-    PUBREC = 5,
-    PUBREL = 6,
-    PUBCOMP = 7,
-    SUBSCRIBE = 8,
-    SUBACK = 9,
-    UNSUBSCRIBE = 10,
-    UNSUBACK = 11,
-    PINGREQ = 12,
-    PINGRESP = 13,
-    DISCONNECT = 14
+    MQTT_PROTOCOL = 1,
+    MQTT_SN_PROTOCOL = 2,
+    COAP_PROTOCOL = 3,
+    AMQP_PROTOCOL = 4
 };
 
-/**
- * @brief The Message class
- */
+static QString const MQTT_PROTOCOL_STRING = QString("MQTT");
+static QString const MQTT_SN_PROTOCOL_STRING = QString("MQTT-SN");
+static QString const COAP_PROTOCOL_STRING = QString("COAP");
+static QString const AMQP_PROTOCOL_STRING = QString("AMQP");
 
-class Message : public ProtocolMessage
+class IotEnumProtocol : public EnumObject
 {
+private:
+
+    int value;
+
 public:
+    IotEnumProtocol();
+    IotEnumProtocol(int value);
 
-    virtual int getLength() = 0;
-    virtual MessageType getType() = 0;
-    Protocol getProtocol()
-    {
-        return MQTT_PROTOCOL;
-    }
+    int getValue();
+    QString getName();
 };
 
-#endif // MESSAGE_H
+#endif // IOTENUMPROTOCOL_H

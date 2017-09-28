@@ -35,6 +35,7 @@ class ByteArray
 private:
     QByteArray byteArray;
     quint8 header;
+    int initSize;
 
 public:
     ByteArray();
@@ -46,15 +47,27 @@ public:
     char getLSB(short number);
     char getMSB(short number);
 
+    int readInt();
     short readShort();
     char readChar();
+    int readUInt24();
+    long readLong();
+    float readFloat();
+    double readDouble();
+
     QString readString();
     QString readStringWithLength(int length);
+    int numberWithLength(int length);
 
+    void writeInt(const int number);
     void writeShort(const short number);
     void writeChar(const char ch);
     void writeString(const QString &string);
     void writeRawData(const QByteArray &data);
+    void writeUInt24(int number);
+    void writeLong(long number);
+    void writeFloat(float number);
+    void writeDouble(double number);
 
     void write(QDataStream &stream);
 
@@ -63,6 +76,12 @@ public:
     int getSize();
 
     void remove(int index, int length);
+    ByteArray subFrom(int index, int length);
+
+    int readerIndex();
+
+    int getInitSize() const;
+    void fixSizeAsInitial();
 };
 
 #endif // BYTEARRAY_H

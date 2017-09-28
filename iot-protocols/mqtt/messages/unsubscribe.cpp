@@ -19,6 +19,7 @@
  */
 
 #include "unsubscribe.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Unsubscribe::Unsubscribe()
 {
@@ -57,9 +58,14 @@ int Unsubscribe::getLength()
     return length;
 }
 
-MessageType Unsubscribe::getType()
+int Unsubscribe::getType()
 {
-    return UNSUBSCRIBE;
+    return MQ_UNSUBSCRIBE;
+}
+
+IotEnumProtocol *Unsubscribe::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }
 
 QList<QString> *Unsubscribe::getTopics()

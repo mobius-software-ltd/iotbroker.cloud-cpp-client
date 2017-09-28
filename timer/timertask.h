@@ -22,12 +22,14 @@
 #define TIMERTASK_H
 
 #include <QObject>
-#include <parser/messages/message.h>
-#include <mqtt/mqtt.h>
+#include <QTimer>
+#include "iot-protocols/classes/message.h"
 
 /**
  * @brief The TimerTask class
  */
+
+class IotProtocol;
 
 class TimerTask : public QObject
 {
@@ -35,18 +37,20 @@ class TimerTask : public QObject
 
 private:
     Message *message;
-    MQTT *mqtt;
+    IotProtocol *iotProtocol;
     int period;
     bool status;
+    bool isTimeoutTask;
 
     QTimer *timer;
 
 public:
-    explicit TimerTask(QObject *parent = 0);
-    TimerTask(Message *message, MQTT *mqtt, int period);
+    TimerTask(Message *message, IotProtocol *iotProtocol, int period);
 
     int getPeriod();
     Message *getMessage();
+
+    void setIsTimeoutTask(bool value);
 
     void start();
     void stop();

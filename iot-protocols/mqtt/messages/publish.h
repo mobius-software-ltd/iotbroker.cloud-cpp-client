@@ -21,8 +21,8 @@
 #ifndef PUBLISH_H
 #define PUBLISH_H
 
-#include <parser/messages/countablemessage.h>
-#include <parser/supporting/topic.h>
+#include "iot-protocols/classes/countablemessage.h"
+#include "iot-protocols/mqtt/classes/mqtopic.h"
 #include <QByteArray>
 
 /**
@@ -33,7 +33,7 @@ class Publish : public CountableMessage
 {
 private:
     int packetID;
-    Topic *topic;
+    MQTopic *topic;
     QByteArray content;
     bool retain;
     bool dup;
@@ -41,17 +41,18 @@ private:
 public:
     Publish();
     Publish(int packetID);
-    Publish(Topic *topic, QByteArray content, bool retain, bool dup);
-    Publish(int packetID, Topic *topic, QByteArray content, bool retain, bool dup);
+    Publish(MQTopic *topic, QByteArray content, bool retain, bool dup);
+    Publish(int packetID, MQTopic *topic, QByteArray content, bool retain, bool dup);
 
     virtual int getPacketID();
     virtual void setPacketID(int packetID);
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
 
-    Topic *getTopic();
-    void setTopic(Topic *topic);
+    MQTopic *getTopic();
+    void setTopic(MQTopic *topic);
 
     QByteArray getContent();
     void setContent(QByteArray content);

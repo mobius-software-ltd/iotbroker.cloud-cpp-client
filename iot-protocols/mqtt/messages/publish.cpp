@@ -19,6 +19,7 @@
  */
 
 #include "publish.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Publish::Publish()
 {
@@ -30,7 +31,7 @@ Publish::Publish(int packetID)
     this->packetID = packetID;
 }
 
-Publish::Publish(Topic *topic, QByteArray content, bool retain, bool dup)
+Publish::Publish(MQTopic *topic, QByteArray content, bool retain, bool dup)
 {
     this->packetID = 0;
     this->topic = topic;
@@ -39,7 +40,7 @@ Publish::Publish(Topic *topic, QByteArray content, bool retain, bool dup)
     this->dup = dup;
 }
 
-Publish::Publish(int packetID, Topic *topic, QByteArray content, bool retain, bool dup)
+Publish::Publish(int packetID, MQTopic *topic, QByteArray content, bool retain, bool dup)
 {
     this->packetID = packetID;
     this->topic = topic;
@@ -62,22 +63,27 @@ int Publish::getLength()
 {
     int length = 0;
     length += this->packetID != 0 ? 2 : 0;
-    length += this->topic->length() + 2;
+    length += this->topic->getLength() + 2;
     length += this->content.length();
     return length;
 }
 
-MessageType Publish::getType()
+int Publish::getType()
 {
-    return PUBLISH;
+    return MQ_PUBLISH;
 }
 
-Topic *Publish::getTopic()
+IotEnumProtocol *Publish::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
+}
+
+MQTopic *Publish::getTopic()
 {
     return this->topic;
 }
 
-void Publish::setTopic(Topic *topic)
+void Publish::setTopic(MQTopic *topic)
 {
     this->topic = topic;
 }

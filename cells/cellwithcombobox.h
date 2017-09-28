@@ -39,7 +39,7 @@ public:
     explicit CellWithComboBox(QWidget *parent = 0);
     ~CellWithComboBox();
 
-    static CellWithComboBox *createCellWith(QString imagePath, QString text, QString value, ListWidget *widget);
+    static CellWithComboBox *createCellWith(QString imagePath, QString text, QList<QString> values, QString currentValue, ListWidget *widget);
 
     QImage getImage();
     void setImage(QString path);
@@ -49,6 +49,9 @@ public:
 
     QString getValue();
     void setValue(QString value);
+
+    QList<QString> getValues();
+    void setValues(QList<QString> values);
 
 private:
     Ui::CellWithComboBox *ui;

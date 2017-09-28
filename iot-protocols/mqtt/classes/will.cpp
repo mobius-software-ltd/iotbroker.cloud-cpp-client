@@ -25,7 +25,7 @@ Will::Will()
 
 }
 
-Will::Will(Topic *topic, QByteArray content, bool retain)
+Will::Will(MQTopic *topic, QByteArray content, bool retain)
 {
     this->topic = topic;
     this->content = content;
@@ -34,15 +34,15 @@ Will::Will(Topic *topic, QByteArray content, bool retain)
 
 int Will::retrieveLength()
 {
-    return this->topic->length() + this->content.size() + 4;
+    return this->topic->getLength() + this->content.size() + 4;
 }
 
-Topic *Will::getTopic()
+MQTopic *Will::getTopic()
 {
     return this->topic;
 }
 
-void Will::setTopic(Topic *topic)
+void Will::setTopic(MQTopic *topic)
 {
     this->topic = topic;
 }
@@ -69,5 +69,5 @@ void Will::setRetain(bool retain)
 
 bool Will::isValid()
 {
-    return this->topic != NULL && this->topic->length() > 0 && !this->content.isEmpty() && this->topic->getQoS() != NULL;
+    return this->topic != NULL && this->topic->getLength() > 0 && !this->content.isEmpty() && this->topic->getQoS() != NULL;
 }

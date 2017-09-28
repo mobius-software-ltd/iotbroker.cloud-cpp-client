@@ -19,6 +19,7 @@
  */
 
 #include "pingresp.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Pingresp::Pingresp()
 {
@@ -30,7 +31,12 @@ int Pingresp::getLength()
     return 0;
 }
 
-MessageType Pingresp::getType()
+int Pingresp::getType()
 {
-    return PINGRESP;
+    return MQ_PINGRESP;
+}
+
+IotEnumProtocol *Pingresp::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

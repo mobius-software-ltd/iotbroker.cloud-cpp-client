@@ -22,7 +22,7 @@
 #define LENGTHDETAILS_H
 
 #include <QBuffer>
-#include <parser/supporting/bytearray.h>
+#include "classes/bytearray.h"
 
 /**
  * @brief The LengthDetails class

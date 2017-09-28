@@ -19,21 +19,24 @@
  */
 
 #include "bytearray.h"
+#include <QDebug>
 
 ByteArray::ByteArray()
 {
-
+    this->initSize = 0;
 }
 
 ByteArray::ByteArray(QByteArray byteArray)
 {
     this->byteArray = byteArray;
+    this->initSize = byteArray.size();
 }
 
 ByteArray::ByteArray(quint8 header, QByteArray byteArray)
 {
     this->header = header;
     this->byteArray = byteArray;
+    this->initSize = byteArray.size();
 }
 
 QByteArray ByteArray::getByteArray()
@@ -51,6 +54,11 @@ char ByteArray::getMSB(short number)
     return (char)((number & 0xFF00) >> 8);
 }
 
+int ByteArray::readInt()
+{
+    return this->numberWithLength(4);
+}
+
 short ByteArray::readShort()
 {
     char msb = static_cast<char>(this->byteArray.at(0));
@@ -66,6 +74,48 @@ char ByteArray::readChar()
     return ch;
 }
 
+int ByteArray::readUInt24()
+{
+    int length = 3;
+
+    int value = 0;
+
+    QByteArray array = this->byteArray.mid(0, length);
+    this->byteArray.remove(0, length);
+
+    char *bytes = (char *)array.data();
+
+    for (int i = 0; i < length; i++) {
+        value <<= 8;
+        value |= bytes[i] & 0x00FF;
+    }
+    return (int)value;
+}
+
+long ByteArray::readLong()
+{
+    int length = sizeof(long);
+    QByteArray array = this->byteArray.mid(0, length);
+    this->byteArray.remove(0, length);
+    return ((long *)array.data())[0];
+}
+
+float ByteArray::readFloat()
+{
+    int length = sizeof(float);
+    QByteArray array = this->byteArray.mid(0, length);
+    this->byteArray.remove(0, length);
+    return ((float *)array.data())[0];
+}
+
+double ByteArray::readDouble()
+{
+    int length = sizeof(double);
+    QByteArray array = this->byteArray.mid(0, length);
+    this->byteArray.remove(0, length);
+    return ((double *)array.data())[0];
+}
+
 QString ByteArray::readString()
 {
     short length = readShort();
@@ -79,6 +129,18 @@ QString ByteArray::readStringWithLength(int length)
     QString string = QString::fromUtf8(this->byteArray.left(length));
     this->byteArray.remove(0, length);
     return string;
+}
+
+void ByteArray::writeInt(const int number)
+{
+    char a = (number >> 24) & 0XFF;
+    char b = (number >> 16) & 0XFF;
+    char c = (number >> 8) & 0XFF;
+    char d = number & 0XFF;
+    this->byteArray.append(a);
+    this->byteArray.append(b);
+    this->byteArray.append(c);
+    this->byteArray.append(d);
 }
 
 void ByteArray::writeShort(const short number)
@@ -108,6 +170,57 @@ void ByteArray::writeRawData(const QByteArray &data)
     this->byteArray.append(data);
 }
 
+void ByteArray::writeUInt24(int number)
+{
+    int length = 3;
+
+    char *bytes = (char *)malloc(sizeof(char) * length);
+
+    for (int i = 0, bitShift = 16; i < length; i++, bitShift -= 8) {
+        if (bitShift == 0) {
+            bytes[i] = (char)(number & 0x00FF);
+        } else {
+            bytes[i] = (char)((number >> bitShift) & 0x00FF);
+        }
+    }
+    this->byteArray.append(bytes, length);
+    free(bytes);
+}
+
+void ByteArray::writeLong(long number)
+{
+    QByteArray data = QByteArray(reinterpret_cast<const char*>(&number), sizeof(long));
+    this->byteArray.append(data);
+}
+
+void ByteArray::writeFloat(float number)
+{
+    QByteArray data = QByteArray(reinterpret_cast<const char*>(&number), sizeof(float));
+    this->byteArray.append(data);
+}
+
+void ByteArray::writeDouble(double number)
+{
+    QByteArray data = QByteArray(reinterpret_cast<const char*>(&number), sizeof(double));
+    this->byteArray.append(data);
+}
+
+int ByteArray::numberWithLength(int length)
+{
+    if (this->getSize() < length)
+        return 0;
+
+    int number = 0;
+    char *charArray = this->byteArray.data();
+
+    for (int i = 0; i < length; i++) {
+        number <<= 8;
+        number |= charArray[i] & 0x00FF;
+    }
+    this->byteArray.remove(0, length);
+    return number;
+}
+
 int ByteArray::getSize()
 {
     return this->byteArray.size();
@@ -116,6 +229,28 @@ int ByteArray::getSize()
 void ByteArray::remove(int index, int length)
 {
     this->byteArray.remove(index, length);
+}
+
+ByteArray ByteArray::subFrom(int index, int length)
+{
+    QByteArray copy = QByteArray(this->byteArray);
+    QByteArray sub = copy.mid(index, length);
+    return ByteArray(sub);
+}
+
+int ByteArray::readerIndex()
+{
+    return this->initSize - this->getSize();
+}
+
+int ByteArray::getInitSize() const
+{
+    return initSize;
+}
+
+void ByteArray::fixSizeAsInitial()
+{
+    this->initSize = this->getSize();
 }
 
 void ByteArray::write(QDataStream &stream)

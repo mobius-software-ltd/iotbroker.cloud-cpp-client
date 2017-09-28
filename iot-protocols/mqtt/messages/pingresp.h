@@ -21,7 +21,7 @@
 #ifndef PINGRESP_H
 #define PINGRESP_H
 
-#include <parser/messages/message.h>
+#include "iot-protocols/classes/message.h"
 
 /**
  * @brief The Pingresp class
@@ -33,7 +33,9 @@ public:
     Pingresp();
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
+
 };
 
 #endif // PINGRESP_H

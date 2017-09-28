@@ -18,45 +18,55 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-#include "topic.h"
+#include "mqtopic.h"
 
-Topic::Topic()
+MQTopic::MQTopic()
 {
 
 }
 
-Topic::Topic(QString name, QoS *qos)
+MQTopic::MQTopic(QString name, QoS *qos)
 {
     this->name = name;
     this->qos = new QoS(qos->getValue());
 }
 
-QString Topic::toString()
+QString MQTopic::toString()
 {
     return this->name + ":" + QString::number(this->qos->getValue());
 }
 
-QString Topic::getName() const
+QString MQTopic::getName() const
 {
     return this->name;
 }
 
-void Topic::setName(QString name)
+void MQTopic::setName(QString name)
 {
     this->name = name;
 }
 
-QoS *Topic::getQoS() const
-{
-    return this->qos;
-}
-
-void Topic::setQoS(QoS *qos)
+void MQTopic::setQoS(QoS *qos)
 {
     this->qos = qos;
 }
 
-int Topic::length()
+SNTopicTypes MQTopic::getType()
+{
+    return SN_UNKNOWN_TOPIC_TYPE;
+}
+
+QoS *MQTopic::getQoS()
+{
+    return this->qos;
+}
+
+QByteArray MQTopic::encode()
+{
+    return this->name.toUtf8();
+}
+
+int MQTopic::getLength()
 {
     return this->name.length();
 }

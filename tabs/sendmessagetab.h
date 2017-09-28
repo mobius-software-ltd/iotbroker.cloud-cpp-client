@@ -25,7 +25,7 @@
 #include <cells/cellwithcheckbox.h>
 #include <cells/cellwithcombobox.h>
 #include <cells/cellwitheditline.h>
-#include <parser/messages/publish.h>
+#include "database/entities/messageentity.h"
 
 namespace Ui {
 class SendMessageTab;
@@ -51,7 +51,7 @@ public:
     ~SendMessageTab();
 
 signals:
-    void donePublishForSending(Publish *publish);
+    void donePublishForSending(MessageEntity message);
 
 private slots:
     void sendButtonDidClick();

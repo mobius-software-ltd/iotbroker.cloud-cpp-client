@@ -19,10 +19,11 @@
  */
 
 #include "connect.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Connect::Connect()
 {
-
+    this->protocolLevel = 4;
 }
 
 Connect::Connect(QString username, QString password, QString clientID, bool cleanSession, int keepAlive, Will *will)
@@ -46,22 +47,14 @@ int Connect::getLength()
     return length;
 }
 
-MessageType Connect::getType()
+int Connect::getType()
 {
-    return CONNECT;
+    return MQ_CONNECT;
 }
 
-QString Connect::getProtocolName()
+IotEnumProtocol *Connect::getProtocol()
 {
-    QString name;
-
-    switch (this->getProtocol()) {
-        case MQTT_PROTOCOL:      name = "MQTT";      break;
-        case MQTT_SN_PROTOCOL:   name = "MQTT_SN";   break;
-        case COAP_PROTOCOL:      name = "COAP";      break;
-        case AMQP_PROTOCOL:      name = "AMQP";      break;
-    }
-    return name;
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }
 
 int Connect::getProtocolLevel()
@@ -104,7 +97,7 @@ int Connect::getKeepAlive()
     return this->keepAlive;
 }
 
-void Connect::setKeepAlive(bool keepAlive)
+void Connect::setKeepAlive(int keepAlive)
 {
     this->keepAlive = keepAlive;
 }

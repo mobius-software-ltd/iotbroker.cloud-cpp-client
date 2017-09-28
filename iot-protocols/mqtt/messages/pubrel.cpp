@@ -19,6 +19,7 @@
  */
 
 #include "pubrel.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Pubrel::Pubrel()
 {
@@ -45,7 +46,12 @@ int Pubrel::getLength()
     return 2;
 }
 
-MessageType Pubrel::getType()
+int Pubrel::getType()
 {
-    return PUBREL;
+    return MQ_PUBREL;
+}
+
+IotEnumProtocol *Pubrel::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

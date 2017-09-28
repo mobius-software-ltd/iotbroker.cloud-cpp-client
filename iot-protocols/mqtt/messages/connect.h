@@ -21,9 +21,9 @@
 #ifndef CONNECT_H
 #define CONNECT_H
 
-#include <parser/messages/message.h>
 #include <QString>
-#include <parser/supporting/will.h>
+#include "iot-protocols/classes/message.h"
+#include "iot-protocols/mqtt/classes/will.h"
 
 /**
  * @brief The Connect class
@@ -47,9 +47,8 @@ public:
     Connect(QString username, QString password, QString clientID, bool cleanSession, int keepAlive, Will *will);
 
     virtual int getLength();
-    virtual MessageType getType();
-
-    QString getProtocolName();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
 
     int getProtocolLevel();
     void setProtocolLevel(int protocolLevel);
@@ -62,7 +61,7 @@ public:
     void setWill(Will *will);
 
     int getKeepAlive();
-    void setKeepAlive(bool keepAlive);
+    void setKeepAlive(int keepAlive);
 
     QString getClientID();
     void setClientID(QString clientID);

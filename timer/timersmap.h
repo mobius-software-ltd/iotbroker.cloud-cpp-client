@@ -22,16 +22,21 @@
 #define TIMERSMAP_H
 
 #include <QObject>
-#include <timer/timertask.h>
-#include <mqtt/mqttmanager.h>
+#include "timer/timertask.h"
+#include "iot-protocols/mqtt/messages/connect.h"
+#include "iot-protocols/mqtt-sn/messages/snregister.h"
+#include "iot-protocols/coap/messages/coapmessage.h"
 
 static int const MAX_VALUE = 65535;
 static int const FIRST_ID = 1;
 static int const MESSAGE_RESEND_PERIOD = 3000;
+static int const TIMEOUT_VALUE = 20000;
 
 /**
  * @brief The TimersMap class
  */
+
+class IotProtocol;
 
 class TimersMap
 {
@@ -40,19 +45,29 @@ private:
 
     TimerTask *connect;
     TimerTask *ping;
+    TimerTask *reg;
+    TimerTask *timeout;
 
     int count;
 
-    MQTTManager *mqtt;
+    IotProtocol *iotProtocol;
 
 public:
-    TimersMap(MQTTManager *mqtt);
+    TimersMap(IotProtocol *iotProtocol);
 
-    void goConnectTimer(Connect *connect);
+    void goConnectTimer(Message *connect);
     void stopConnectTimer();
 
     void goPingTimer(int keepalive);
     void stopPingTimer();
+
+    void goRegisterTimer(Message *reg);
+    void stopRegisterTimer();
+
+    void goTimeoutTimer();
+    void stopTimeoutTimer();
+
+    void goCoAPMessageTimer(Message *message);
 
     void goMessageTimer(Message *message);
 

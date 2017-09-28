@@ -37,6 +37,8 @@ public:
     DQField<int>                    qos;
     DQField<QString>                topicName;
     DQField<bool>                   incoming;
+    DQField<bool>                   isRetain;
+    DQField<bool>                   isDub;
     DQForeignKey<AccountEntity>     account;
 };
 
@@ -46,6 +48,8 @@ DQ_DECLARE_MODEL(MessageEntity,
                  DQ_FIELD(qos),
                  DQ_FIELD(topicName),
                  DQ_FIELD(incoming),
+                 DQ_FIELD(isRetain),
+                 DQ_FIELD(isDub),
                  DQ_FIELD(account)
                  )
 

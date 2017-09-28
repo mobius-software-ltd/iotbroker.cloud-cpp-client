@@ -19,6 +19,7 @@
  */
 
 #include "suback.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Suback::Suback()
 {
@@ -51,9 +52,14 @@ int Suback::getLength()
     return this->returnCodes->size() + 2;
 }
 
-MessageType Suback::getType()
+int Suback::getType()
 {
-    return SUBACK;
+    return MQ_SUBACK;
+}
+
+IotEnumProtocol *Suback::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }
 
 QList<SubackCode> *Suback::getReturnCodes()

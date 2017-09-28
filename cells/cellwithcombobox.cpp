@@ -29,12 +29,13 @@ CellWithComboBox::CellWithComboBox(QWidget *parent) :
     ui->setupUi(this);
 }
 
-CellWithComboBox *CellWithComboBox::createCellWith(QString imagePath, QString text, QString value, ListWidget *widget)
+CellWithComboBox *CellWithComboBox::createCellWith(QString imagePath, QString text, QList<QString> values, QString currentValue, ListWidget *widget)
 {
     CellWithComboBox *widgetForm = new CellWithComboBox();
     widgetForm->setImage(imagePath);
     widgetForm->setText(text);
-    widgetForm->setValue(value);
+    widgetForm->setValue(currentValue);
+    widgetForm->setValues(values);
     QListWidgetItem *item = new QListWidgetItem();
     item->setSizeHint(QSize(0,38));
     widget->addItem(item);
@@ -83,6 +84,22 @@ QString CellWithComboBox::getValue()
 void CellWithComboBox::setValue(QString value)
 {
     ui->comboBox->setCurrentText(value);
+}
+
+QList<QString> CellWithComboBox::getValues()
+{
+    QList<QString> values = QList<QString>();
+    for (int i = 0; i < ui->comboBox->count(); i++) {
+        values.append(ui->comboBox->itemText(i));
+    }
+    return values;
+}
+
+void CellWithComboBox::setValues(QList<QString> values)
+{
+    foreach (QString item, values) {
+        ui->comboBox->addItem(item);
+    }
 }
 
 CellWithComboBox::~CellWithComboBox()

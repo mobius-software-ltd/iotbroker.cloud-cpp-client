@@ -18,34 +18,29 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-#include "pubrel.h"
+#include "iotenumprotocol.h"
 
-Pubrel::Pubrel()
+IotEnumProtocol::IotEnumProtocol()
 {
-    this->packetID = 0;
+    this->map = QMap<int, QString>();
+
+    this->map.insert(MQTT_PROTOCOL, MQTT_PROTOCOL_STRING);
+    this->map.insert(MQTT_SN_PROTOCOL, MQTT_SN_PROTOCOL_STRING);
+    this->map.insert(COAP_PROTOCOL, COAP_PROTOCOL_STRING);
+    this->map.insert(AMQP_PROTOCOL, AMQP_PROTOCOL_STRING);
 }
 
-Pubrel::Pubrel(int packetID)
+IotEnumProtocol::IotEnumProtocol(int value) : IotEnumProtocol()
 {
-    this->packetID = packetID;
+    this->value = value;
 }
 
-int Pubrel::getPacketID()
+int IotEnumProtocol::getValue()
 {
-    return this->packetID;
+    return this->value;
 }
 
-void Pubrel::setPacketID(int packetID)
+QString IotEnumProtocol::getName()
 {
-    this->packetID = packetID;
-}
-
-int Pubrel::getLength()
-{
-    return 2;
-}
-
-MessageType Pubrel::getType()
-{
-    return PUBREL;
+    return EnumObject::getName(this->value);
 }

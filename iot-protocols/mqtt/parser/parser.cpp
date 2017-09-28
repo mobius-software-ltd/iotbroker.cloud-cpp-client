@@ -19,6 +19,7 @@
  */
 
 #include "parser.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 QByteArray Parser::next(QByteArray &byteArray)
 {
@@ -32,9 +33,9 @@ QByteArray Parser::next(QByteArray &byteArray)
     }
 
     switch (messageType) {
-        case PINGREQ:
-        case PINGRESP:
-        case DISCONNECT: {
+        case MQ_PINGREQ:
+        case MQ_PINGRESP:
+        case MQ_DISCONNECT: {
             QByteArray dreturnArray = QByteArray(byteArray);
             dreturnArray.remove(2, byteArray.size());
             byteArray.remove(0, 2);
@@ -69,7 +70,7 @@ QByteArray Parser::encode(Message *message)
 
     switch (messageType) {
 
-        case CONNECT: {
+        case MQ_CONNECT: {
 
             Connect *connect = (Connect *)message;
 
@@ -80,8 +81,7 @@ QByteArray Parser::encode(Message *message)
             buffer->writeChar(messageType << 4);
             buffer->writeRawData(getBufferByLength(length));
 
-
-            buffer->writeString(connect->getProtocolName());
+            buffer->writeString(connect->getProtocol()->getName());
             buffer->writeChar(connect->getProtocolLevel());
 
             char contentFlags = 0;
@@ -130,7 +130,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case CONNACK: {
+        case MQ_CONNACK: {
 
             Connack *connack = (Connack *)message;
             buffer->writeChar(messageType << 4);
@@ -140,7 +140,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case PUBLISH: {
+        case MQ_PUBLISH: {
 
             Publish *publish = (Publish *)message;
             char firstByte = (messageType << 4);
@@ -171,7 +171,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case PUBACK: {
+        case MQ_PUBACK: {
 
             Puback *puback = (Puback *)message;
             buffer->writeChar(messageType << 4);
@@ -183,7 +183,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case PUBREC: {
+        case MQ_PUBREC: {
 
             Pubrec *pubrec = (Pubrec *)message;
             buffer->writeChar(messageType << 4);
@@ -195,7 +195,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case PUBREL: {
+        case MQ_PUBREL: {
 
             Pubrel *pubrel = (Pubrel *)message;
             buffer->writeChar(messageType << 4 | 0x2);
@@ -207,7 +207,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case PUBCOMP: {
+        case MQ_PUBCOMP: {
 
             Pubcomp *pubcomp = (Pubcomp *)message;
             buffer->writeChar(messageType << 4);
@@ -219,7 +219,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case SUBSCRIBE: {
+        case MQ_SUBSCRIBE: {
 
             Subscribe *subscribe = (Subscribe *)message;
             buffer->writeChar(messageType << 4 | 0x2);
@@ -230,14 +230,14 @@ QByteArray Parser::encode(Message *message)
             buffer->writeShort(subscribe->getPacketID());
 
             for (int i = 0; i < subscribe->getTopics()->size(); i++) {
-                Topic item = subscribe->getTopics()->at(i);
+                MQTopic item = subscribe->getTopics()->at(i);
                 buffer->writeString(item.getName());
                 buffer->writeChar(item.getQoS()->getValue());
             }
         }
         break;
 
-        case SUBACK: {
+        case MQ_SUBACK: {
 
             Suback *suback = (Suback *)message;
             buffer->writeChar(messageType << 4);
@@ -254,7 +254,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case UNSUBSCRIBE: {
+        case MQ_UNSUBSCRIBE: {
 
             Unsubscribe *unsubscribe = (Unsubscribe *)message;
             buffer->writeChar(messageType << 4 | 0x2);
@@ -271,7 +271,7 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case UNSUBACK: {
+        case MQ_UNSUBACK: {
 
             Unsuback *unsuback = (Unsuback *)message;
             buffer->writeChar(messageType << 4);
@@ -283,9 +283,9 @@ QByteArray Parser::encode(Message *message)
         }
         break;
 
-        case DISCONNECT:
-        case PINGREQ:
-        case PINGRESP:
+        case MQ_DISCONNECT:
+        case MQ_PINGREQ:
+        case MQ_PINGRESP:
             buffer->writeChar(messageType << 4);
             buffer->writeRawData(getBufferByLength(length));
         break;
@@ -308,18 +308,16 @@ Message *Parser::decode(QByteArray byteArray)
 
     switch (messageType) {
 
-        case CONNECT: {
+        case MQ_CONNECT: {
 
             Connect *connect = new Connect();
 
             QString protocolName = buffer->readString();
             int protocolLevel = buffer->readChar();
 
-            if (protocolName != connect->getProtocolName()) {
+            if (protocolName != connect->getProtocol()->getName()) {
                 throw new QString("Decode. Connect. Protocol name is wrong");
             }
-
-            qDebug() << "protocol name = " << protocolName << "protocol level = " << protocolLevel;
 
             char contentFlags = buffer->readChar();
 
@@ -330,7 +328,7 @@ Message *Parser::decode(QByteArray byteArray)
             int willQoSFlag = (((contentFlags & 0x1f) >> 3) & 3);
             QoS *willQoS = new QoS(willQoSFlag);
 
-            if (willQoS->isValid() != true) {
+            if (willQoS->isValidForMQTT() != true) {
                 throw new QString(QString("Decode. Connect. Will QoS set to ") + QString::number(willQoS->getValue()));
             }
 
@@ -349,15 +347,6 @@ Message *Parser::decode(QByteArray byteArray)
 
             int keepalive = buffer->readShort();
 
-            qDebug() << "User name flag      = " << (usernameFlag ? "yes" : "no");
-            qDebug() << "User password flag  = " << (passwordFlag ? "yes" : "no");
-            qDebug() << "Will retain flag    = " << (willRetainFlag ? "yes" : "no");
-            qDebug() << "User qos flag       = " << (willQoSFlag ? "yes" : "no");
-            qDebug() << "User will flag      = " << (willFlag ? "yes" : "no");
-            qDebug() << "Clean session flag  = " << (cleanSessionFlag ? "yes" : "no");
-            qDebug() << "Reserved flag       = " << (reservedFlag ? "yes" : "no");
-            qDebug() << "Keepalive           = " << keepalive;
-
             QString clientID = buffer->readString();
 
             QByteArray willMessage;
@@ -374,7 +363,7 @@ Message *Parser::decode(QByteArray byteArray)
                     throw new QString("Decode. Connect. Will topic contains invalid will encoding");
                 }
 
-                Topic *topic = new Topic(willTopicName, willQoS);
+                MQTopic *topic = new MQTopic(willTopicName, willQoS);
                 will = new Will(topic, willMessage, willRetainFlag);
 
                 if (will->isValid() == false) {
@@ -408,7 +397,7 @@ Message *Parser::decode(QByteArray byteArray)
         }
         break;
 
-        case CONNACK: {
+        case MQ_CONNACK: {
 
             Connack *connack = new Connack();
 
@@ -419,7 +408,7 @@ Message *Parser::decode(QByteArray byteArray)
             }
 
             bool isPresent = (sessionPresentValue == 1) ? true : false;
-            ConnackCode connectReturnCode = (ConnackCode)buffer->readChar();
+            MQConnackCode connectReturnCode = (MQConnackCode)buffer->readChar();
 
             if (connack->isValidReturnCode(connectReturnCode) != true) {
                 throw new QString("Decode. Connack. Invalid connack code");
@@ -432,7 +421,7 @@ Message *Parser::decode(QByteArray byteArray)
         }
         break;
 
-        case PUBLISH: {
+        case MQ_PUBLISH: {
 
             int dataLength = length->getLength();
             fixedHeader &= 0xf;
@@ -441,7 +430,7 @@ Message *Parser::decode(QByteArray byteArray)
 
             QoS *qos = new QoS((fixedHeader & 0x07) >> 1);
 
-            if (qos->isValid() == false) {
+            if (qos->isValidForMQTT() == false) {
                 throw new QString("Decode. Publish. Invalid QoS value");
             }
 
@@ -472,53 +461,53 @@ Message *Parser::decode(QByteArray byteArray)
                 data = string.toUtf8();
             }
 
-            Topic *topic = new Topic(topicName, qos);
+            MQTopic *topic = new MQTopic(topicName, qos);
             message = new Publish(packetID, topic, data, isRetain, dup);
         }
         break;
 
-        case PUBACK: {
+        case MQ_PUBACK: {
 
             int packetID = buffer->readShort();
             message = new Puback(packetID);
         }
         break;
 
-        case PUBREC: {
+        case MQ_PUBREC: {
 
             int packetID = buffer->readShort();
             message = new Pubrec(packetID);
         }
         break;
 
-        case PUBREL: {
+        case MQ_PUBREL: {
 
             int packetID = buffer->readShort();
             message = new Pubrel(packetID);
         }
         break;
 
-        case PUBCOMP: {
+        case MQ_PUBCOMP: {
 
             int packetID = buffer->readShort();
             message = new Pubcomp(packetID);
         }
         break;
 
-        case SUBSCRIBE: {
+        case MQ_SUBSCRIBE: {
 
             int subscibeID = buffer->readShort();
-            QList<Topic> *subscriptions = new QList<Topic>();
+            QList<MQTopic> *subscriptions = new QList<MQTopic>();
 
             while (buffer->getSize() > 0) {
 
                 QString topic = buffer->readString();
                 QoS *qos = new QoS(buffer->readChar());
-                if (qos->isValid() == false) {
+                if (qos->isValidForMQTT() == false) {
                     throw new QString("Decode. Subscribe. Subscribe qos must be in range from 0 to 2");
                 }
 
-                Topic *subscription = new Topic(topic, qos);
+                MQTopic *subscription = new MQTopic(topic, qos);
                 subscriptions->append(*subscription);
             }
 
@@ -529,7 +518,7 @@ Message *Parser::decode(QByteArray byteArray)
         }
         break;
 
-        case SUBACK: {
+        case MQ_SUBACK: {
 
             int subackID = buffer->readShort();
             QList<SubackCode> *subackCodes = new QList<SubackCode>();
@@ -549,7 +538,7 @@ Message *Parser::decode(QByteArray byteArray)
         }
         break;
 
-        case UNSUBSCRIBE: {
+        case MQ_UNSUBSCRIBE: {
 
             int unsubackID = buffer->readShort();
             QList<QString> *unsubscribeTopics = new QList<QString>();
@@ -564,26 +553,26 @@ Message *Parser::decode(QByteArray byteArray)
         }
         break;
 
-        case UNSUBACK: {
+        case MQ_UNSUBACK: {
 
             int packetID = buffer->readShort();
             message = new Unsuback(packetID);
         }
         break;
 
-        case DISCONNECT: {
+        case MQ_DISCONNECT: {
 
             message = new Disconnect();
         }
         break;
 
-        case PINGREQ: {
+        case MQ_PINGREQ: {
 
             message = new Pingreq();
         }
         break;
 
-        case PINGRESP:{
+        case MQ_PINGRESP:{
 
             message = new Pingresp();
         }

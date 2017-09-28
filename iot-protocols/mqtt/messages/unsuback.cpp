@@ -19,6 +19,7 @@
  */
 
 #include "unsuback.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Unsuback::Unsuback()
 {
@@ -45,7 +46,12 @@ int Unsuback::getLength()
     return 2;
 }
 
-MessageType Unsuback::getType()
+int Unsuback::getType()
 {
-    return UNSUBACK;
+    return MQ_UNSUBACK;
+}
+
+IotEnumProtocol *Unsuback::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

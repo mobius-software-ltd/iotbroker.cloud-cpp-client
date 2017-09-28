@@ -19,6 +19,7 @@
  */
 
 #include "pingreq.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Pingreq::Pingreq()
 {
@@ -30,7 +31,12 @@ int Pingreq::getLength()
     return 0;
 }
 
-MessageType Pingreq::getType()
+int Pingreq::getType()
 {
-    return PINGREQ;
+    return MQ_PINGREQ;
+}
+
+IotEnumProtocol *Pingreq::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }

@@ -32,6 +32,7 @@ class AccountEntity : public DQModel
     DQ_MODEL
 public:
 
+    DQField<int>        protocol;
     DQField<QString>    username;
     DQField<QString>    password;
     DQField<QString>    clientID;
@@ -48,6 +49,7 @@ public:
 
 DQ_DECLARE_MODEL(AccountEntity,
                  "account",
+                 DQ_FIELD(protocol),
                  DQ_FIELD(username , DQNotNull),
                  DQ_FIELD(password),
                  DQ_FIELD(clientID),

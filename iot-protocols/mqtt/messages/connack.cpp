@@ -19,13 +19,14 @@
  */
 
 #include "connack.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 Connack::Connack()
 {
 
 }
 
-Connack::Connack(bool sessionPresent, ConnackCode returnCode)
+Connack::Connack(bool sessionPresent, MQConnackCode returnCode)
 {
     this->sessionPresent = sessionPresent;
     this->returnCode = returnCode;
@@ -36,9 +37,14 @@ int Connack::getLength()
     return 2;
 }
 
-MessageType Connack::getType()
+int Connack::getType()
 {
-    return CONNACK;
+    return MQ_CONNACK;
+}
+
+IotEnumProtocol *Connack::getProtocol()
+{
+    return new IotEnumProtocol(MQTT_PROTOCOL);
 }
 
 bool Connack::isSessionPresent()
@@ -51,19 +57,19 @@ void Connack::setSessionPresent(bool sessionPresent)
     this->sessionPresent = sessionPresent;
 }
 
-ConnackCode Connack::getReturnCode()
+MQConnackCode Connack::getReturnCode()
 {
     return this->returnCode;
 }
 
-void Connack::setReturnCode(ConnackCode returnCode)
+void Connack::setReturnCode(MQConnackCode returnCode)
 {
     this->returnCode = returnCode;
 }
 
-bool Connack::isValidReturnCode(ConnackCode code)
+bool Connack::isValidReturnCode(MQConnackCode code)
 {
-    if (code >= ACCEPTED && code <= NOT_AUTHORIZED) {
+    if (code >= MQ_ACCEPTED && code <= MQ_NOT_AUTHORIZED) {
         return true;
     }
     return false;

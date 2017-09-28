@@ -21,17 +21,8 @@
 #ifndef CONNACK_H
 #define CONNACK_H
 
-#include <parser/messages/message.h>
-
-enum ConnackCode
-{
-    ACCEPTED = 0,
-    UNACCEPTABLE_PROTOCOL_VERSION = 1,
-    IDENTIFIER_REJECTED = 2,
-    SERVER_UNUVALIABLE = 3,
-    BAD_USER_OR_PASS = 4,
-    NOT_AUTHORIZED = 5
-};
+#include "iot-protocols/classes/message.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 /**
  * @brief The Connack class
@@ -41,21 +32,22 @@ class Connack : public Message
 {  
 private:
     bool sessionPresent;
-    ConnackCode returnCode;
+    MQConnackCode returnCode;
 
 public:
     Connack();
-    Connack(bool sessionPresent, ConnackCode returnCode);
+    Connack(bool sessionPresent, MQConnackCode returnCode);
 
     virtual int getLength();
-    virtual MessageType getType();
+    virtual int getType();
+    virtual IotEnumProtocol *getProtocol();
 
     bool isSessionPresent();
     void setSessionPresent(bool sessionPresent);
-    ConnackCode getReturnCode();
-    void setReturnCode(ConnackCode returnCode);
+    MQConnackCode getReturnCode();
+    void setReturnCode(MQConnackCode returnCode);
 
-    bool isValidReturnCode(ConnackCode code);
+    bool isValidReturnCode(MQConnackCode code);
 };
 
 #endif // CONNACK_H

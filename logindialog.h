@@ -43,6 +43,8 @@ private:
 
     Ui::LogInDialog *ui;
 
+    CellWithComboBox *protocolCell;
+
     CellWithEditLine *usernameCell;
     CellWithEditLine *passwordCell;
     CellWithEditLine *clientIDCell;

@@ -1,14 +1,35 @@
+/**
+ * Mobius Software LTD
+ * Copyright 2015-2017, Mobius Software LTD
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 #include "mqtt.h"
 #include "timer/timersmap.h"
 #include "internet-protocols/tcpsocket.h"
-#include "iot-protocols/mqtt/parser/messagesparser.h"
 
 MQTT::MQTT(AccountEntity account) : IotProtocol(account)
 {
     this->timers = new TimersMap(this);
     this->keepAlive = account.keepAlive;
 
-    this->exactlyOncePublishPackets = new QMap<int, Message *>();
+    this->publishPackets = new QMap<int, Message *>();
+
+    this->messageParser = new MessagesParser(this);
 
     this->internetProtocol = new TCPSocket(account.serverHost, account.port);
 
@@ -21,8 +42,7 @@ MQTT::MQTT(AccountEntity account) : IotProtocol(account)
 bool MQTT::send(Message *message)
 {
     if (this->internetProtocol->getState() == IP_CONNECTION_OPEN) {
-        MessagesParser *parser = new MessagesParser(this);
-        QByteArray data = parser->encodeMessage(message);
+        QByteArray data = this->messageParser->encodeMessage(message);
         return this->internetProtocol->send(data);
     }
     return false;
@@ -35,7 +55,7 @@ void MQTT::goConnect()
     bool retain = this->currentAccount.isRetain.get().toBool();
 
     QoS *qos = new QoS(this->currentAccount.qos.get().toInt());
-    Topic *topic = new Topic(topicName, qos);
+    MQTopic *topic = new MQTopic(topicName, qos);
     Will *will = new Will(topic, content, retain);
 
     Connect *connect = new Connect();
@@ -58,7 +78,7 @@ void MQTT::publish(MessageEntity message)
     int qosNumber = message.qos.get().toInt();
 
     QoS *qos = new QoS(qosNumber);
-    Topic *topic = new Topic(topicName, qos);
+    MQTopic *topic = new MQTopic(topicName, qos);
 
     Publish *publish = new Publish();
     publish->setTopic(topic);
@@ -76,9 +96,9 @@ void MQTT::subscribeTo(TopicEntity topic)
 {
     QString topicName = topic.topicName.get().toString();
     QoS *qos = new QoS(topic.qos.get().toInt());
-    QList<Topic> *topics = new QList<Topic>();
+    QList<MQTopic> *topics = new QList<MQTopic>();
 
-    topics->append(Topic(topicName, qos));
+    topics->append(MQTopic(topicName, qos));
 
     Subscribe *subscribe = new Subscribe(topics);
 
@@ -135,30 +155,28 @@ void MQTT::connectionDidStop(InternetProtocol *protocol)
 
 void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 {
-    MessagesParser *messageParser = new MessagesParser();
-
     do {
-        QByteArray barray = messageParser->nextMessage(data);
-        Message *message = messageParser->decodeMessage(barray);
+        QByteArray barray = this->messageParser->nextMessage(data);
+        Message *message = this->messageParser->decodeMessage(barray);
 
         switch (message->getType()) {
-            case CONNECT:
+            case MQ_CONNECT:
             {
                 emit errorReceived(this, "Packet 'Connect' did receive");
             }
             break;
-            case CONNACK:
+            case MQ_CONNACK:
             {
                 this->timers->stopConnectTimer();
                 Connack *connack = (Connack *)message;
-                if (connack->getReturnCode() == ACCEPTED) {
+                if (connack->getReturnCode() == MQ_ACCEPTED) {
                     this->timers->stopTimeoutTimer();
                     this->timers->goPingTimer(this->keepAlive);
                     emit connackReceived(this, connack->getReturnCode());
                 }
             }
             break;
-            case PUBLISH:
+            case MQ_PUBLISH:
             {
                 Publish *publish = (Publish *)message;
                 int qos = publish->getTopic()->getQoS()->getValue();
@@ -167,40 +185,40 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                     this->send(puback);
                     emit pubackReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain(), 0);
                 } else if (qos == EXACTLY_ONCE) {
-                    this->exactlyOncePublishPackets->insert(publish->getPacketID(), publish);
+                    this->publishPackets->insert(publish->getPacketID(), publish);
                     Pubrec *pubrec = new Pubrec(publish->getPacketID());
                     this->timers->goMessageTimer(pubrec);
                 }
             }
             break;
-            case PUBACK:
+            case MQ_PUBACK:
             {
                 Puback *puback = (Puback *)message;
                 Message *mess = this->timers->stopTimer(puback->getPacketID());
-                if (mess->getType() == PUBLISH) {
+                if (mess->getType() == MQ_PUBLISH) {
                     Publish *publish = (Publish *)mess;
                     emit pubackReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain(), 0);
                 }
             }
             break;
-            case PUBREC:
+            case MQ_PUBREC:
             {
                 Pubrec *pubrec = (Pubrec *)message;
                 Message *mess = this->timers->stopTimer(pubrec->getPacketID());
-                if (mess->getType() == PUBLISH) {
+                if (mess->getType() == MQ_PUBLISH) {
                     Publish *publish = (Publish *)mess;
-                    this->exactlyOncePublishPackets->insert(publish->getPacketID(), publish);
+                    this->publishPackets->insert(publish->getPacketID(), publish);
                     this->timers->goMessageTimer(new Pubrel(publish->getPacketID()));
                 }
             }
             break;
-            case PUBREL:
+            case MQ_PUBREL:
             {
                 Pubrel *pubrel = (Pubrel *)message;
                 Message *mess = this->timers->stopTimer(pubrel->getPacketID());
-                if (mess->getType() == PUBREC) {
-                    Message *publishMessage = this->exactlyOncePublishPackets->value(pubrel->getPacketID());
-                    if (publishMessage->getType() == PUBLISH) {
+                if (mess->getType() == MQ_PUBREC) {
+                    Message *publishMessage = this->publishPackets->value(pubrel->getPacketID());
+                    if (publishMessage->getType() == MQ_PUBLISH) {
                         Publish *publish = (Publish *)publishMessage;
                         emit pubackReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain(), 0);
                     }
@@ -209,61 +227,61 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 }
             }
             break;
-            case PUBCOMP:
+            case MQ_PUBCOMP:
             {
                 Pubcomp *pubcomp = (Pubcomp *)message;
                 Message *mess = this->timers->stopTimer(pubcomp->getPacketID());
-                if (mess->getType() == PUBREL) {
-                    Message *publishMessage = this->exactlyOncePublishPackets->value(pubcomp->getPacketID());
-                    if (publishMessage->getType() == PUBLISH) {
+                if (mess->getType() == MQ_PUBREL) {
+                    Message *publishMessage = this->publishPackets->value(pubcomp->getPacketID());
+                    if (publishMessage->getType() == MQ_PUBLISH) {
                         Publish *publish = (Publish *)publishMessage;
                         emit pubackReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain(), 0);
                     }
                 }
             }
             break;
-            case SUBSCRIBE:
+            case MQ_SUBSCRIBE:
             {
                 emit errorReceived(this, "Packet 'Subscribe' did receive");
             }
             break;
-            case SUBACK:
+            case MQ_SUBACK:
             {
                 Suback *suback = (Suback *)message;
                 Message *mess = this->timers->stopTimer(suback->getPacketID());
-                if (mess->getType() == SUBSCRIBE) {
+                if (mess->getType() == MQ_SUBSCRIBE) {
                     Subscribe *subsctibe = (Subscribe *)mess;
-                    Topic topic = subsctibe->getTopics()->last();
+                    MQTopic topic = subsctibe->getTopics()->last();
                     emit subackReceived(this, topic.getName(), topic.getQoS()->getValue(), 0);
                 }
             }
             break;
-            case UNSUBSCRIBE:
+            case MQ_UNSUBSCRIBE:
             {
                 emit errorReceived(this, "Packet 'Unsubscribe' did receive");
             }
             break;
-            case UNSUBACK:
+            case MQ_UNSUBACK:
             {
                 Unsuback *unsuback = (Unsuback *)message;
                 Message *mess = this->timers->stopTimer(unsuback->getPacketID());
-                if (mess->getType() == UNSUBSCRIBE) {
+                if (mess->getType() == MQ_UNSUBSCRIBE) {
                     Unsubscribe *unsubscribe = (Unsubscribe *)mess;
                     emit unsubackReceived(this, unsubscribe->getTopics()->last());
                 }
             }
             break;
-            case PINGREQ:
+            case MQ_PINGREQ:
             {
                 emit errorReceived(this, "Packet 'Pingreq' did receive");
             }
             break;
-            case PINGRESP:
+            case MQ_PINGRESP:
             {
                 emit pingrespReceived(this);
             }
             break;
-            case DISCONNECT:
+            case MQ_DISCONNECT:
             {
                 this->timers->stopAllTimers();
                 emit disconnectReceived(this);
@@ -302,4 +320,9 @@ void MQTT::didFailWithError(InternetProtocol *protocol, QAbstractSocket::SocketE
         case QAbstractSocket::TemporaryError:                    emit errorReceived(this, QString("temporary error"));                     break;
         case QAbstractSocket::UnknownSocketError:                emit errorReceived(this, QString("unknown socket error"));                break;
     }
+}
+
+void MQTT::parseFailWithError(QString *error)
+{
+    emit errorReceived(this, *error);
 }

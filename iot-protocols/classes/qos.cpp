@@ -19,6 +19,7 @@
  */
 
 #include "qos.h"
+#include "iot-protocols/mqtt/classes/mqttenums.h"
 
 QoS::QoS( )
 {
@@ -53,9 +54,17 @@ QoS *QoS::calculate(QoS *subscriberQos, QoS *publisherQos)
     }
 }
 
-bool QoS::isValid()
+bool QoS::isValidForMQTT()
 {
     if (this->value == AT_MOST_ONCE || this->value == AT_LEAST_ONCE || this->value == EXACTLY_ONCE) {
+        return true;
+    }
+    return false;
+}
+
+bool QoS::isValidForMQTTSN()
+{
+    if (this->value == AT_MOST_ONCE || this->value == AT_LEAST_ONCE || this->value == EXACTLY_ONCE || this->value == LEVEL_ONE) {
         return true;
     }
     return false;
