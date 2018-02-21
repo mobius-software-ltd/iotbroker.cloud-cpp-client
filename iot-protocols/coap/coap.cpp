@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -27,6 +27,7 @@ CoAP::CoAP(AccountEntity account)
     this->timers = new TimersMap(this);
     this->messageParser = new CoAPParser();
     this->internetProtocol = new UDPSocket(account.serverHost, account.port);
+    //this->internetProtocol->start();
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),                             this, SLOT(connectionDidStart(InternetProtocol*)));
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStop(InternetProtocol*)),                              this, SLOT(connectionDidStop(InternetProtocol*)));
@@ -45,7 +46,7 @@ bool CoAP::send(Message *message)
 
 void CoAP::goConnect()
 {
-
+    this->internetProtocol->start();
 }
 
 void CoAP::publish(MessageEntity message)
@@ -87,7 +88,7 @@ void CoAP::pingreq()
 
 void CoAP::disconnectWith(int duration)
 {
-
+    this->timers->stopAllTimers();
 }
 
 Message *CoAP::getPingreqMessage()

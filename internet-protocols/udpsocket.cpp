@@ -4,8 +4,6 @@ UDPSocket::UDPSocket() : InternetProtocol()
 {
     this->socket = new QUdpSocket(this);
 
-    //QObject::connect(socket, SIGNAL(aboutToClose()),                                             this, SLOT(aboutToCloseSlot()));
-
     QObject::connect(this->socket, SIGNAL(readyRead()),                                  this, SLOT(readyRead()));
     QObject::connect(this->socket, SIGNAL(disconnected()),                               this, SLOT(disconnected()));
     QObject::connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)),          this, SLOT(error(QAbstractSocket::SocketError)));
@@ -67,11 +65,12 @@ void UDPSocket::stateDidChanged(QAbstractSocket::SocketState state)
         case QAbstractSocket::UnconnectedState: this->setState(IP_CONNECTION_CLOSED);   break;
         case QAbstractSocket::ConnectingState:  this->setState(IP_CONNECTION_OPENING);  break;
         case QAbstractSocket::ConnectedState:   this->setState(IP_CONNECTION_OPEN);     break;
+        case QAbstractSocket::BoundState:       this->setState(IP_CONNECTION_OPEN);     break;
         case QAbstractSocket::ClosingState:     this->setState(IP_CONNECTION_CLOSING);  break;
         default: break;
     }
 
-    if (state == QAbstractSocket::ConnectedState) {
+    if (state == QAbstractSocket::BoundState) {
         emit connectionDidStart(this);
     }
 }

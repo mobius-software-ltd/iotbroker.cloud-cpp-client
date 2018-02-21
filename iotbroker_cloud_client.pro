@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------
 #
 # Mobius Software LTD
-# Copyright 2015-2017, Mobius Software LTD
+# Copyright 2015-2018, Mobius Software LTD
 #
 # This is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as
@@ -52,7 +52,6 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     database/database.cpp \
     database/accountmanager.cpp \
-    logindialog.cpp \
     listwidget.cpp \
     cells/cellwithcheckbox.cpp \
     cells/cellwitheditline.cpp \
@@ -62,8 +61,6 @@ SOURCES += main.cpp\
     tabs/sendmessagetab.cpp \
     tabs/messageslisttab.cpp \
     cells/cellmessageitem.cpp \
-    loadingdialog.cpp \
-    accountslistdialog.cpp \
     cells/cellaccountitem.cpp \
     timer/timertask.cpp \
     timer/timersmap.cpp \
@@ -209,7 +206,11 @@ SOURCES += main.cpp\
     iot-protocols/amqp/classes/headersasl/amqpsaslresponse.cpp \
     iot-protocols/amqp/classes/parser/amqpparser.cpp \
     iot-protocols/amqp/classes/amqp.cpp \
-    iot-protocols/classes/iotenumprotocol.cpp
+    iot-protocols/classes/iotenumprotocol.cpp \
+    loadingform.cpp \
+    generalform.cpp \
+    accountlistform.cpp \
+    loginform.cpp
 
 HEADERS  += mainwindow.h \
     database/entities/accountentity.h \
@@ -217,7 +218,6 @@ HEADERS  += mainwindow.h \
     database/database.h \
     database/entities/messageentity.h \
     database/accountmanager.h \
-    logindialog.h \
     listwidget.h \
     cells/cellwithcheckbox.h \
     cells/cellwitheditline.h \
@@ -227,8 +227,6 @@ HEADERS  += mainwindow.h \
     tabs/sendmessagetab.h \
     tabs/messageslisttab.h \
     cells/cellmessageitem.h \
-    loadingdialog.h \
-    accountslistdialog.h \
     cells/cellaccountitem.h \
     timer/timertask.h \
     timer/timersmap.h \
@@ -386,10 +384,13 @@ HEADERS  += mainwindow.h \
     iot-protocols/amqp/classes/headersasl/amqpsaslresponse.h \
     iot-protocols/amqp/classes/parser/amqpparser.h \
     iot-protocols/amqp/classes/amqp.h \
-    iot-protocols/classes/iotenumprotocol.h
+    iot-protocols/classes/iotenumprotocol.h \
+    loadingform.h \
+    generalform.h \
+    accountlistform.h \
+    loginform.h
 
 FORMS    += mainwindow.ui \
-    logindialog.ui \
     cells/cellwithcheckbox.ui \
     cells/cellwitheditline.ui \
     cells/cellwithcombobox.ui \
@@ -398,9 +399,11 @@ FORMS    += mainwindow.ui \
     tabs/sendmessagetab.ui \
     tabs/messageslisttab.ui \
     cells/cellmessageitem.ui \
-    loadingdialog.ui \
-    accountslistdialog.ui \
-    cells/cellaccountitem.ui
+    cells/cellaccountitem.ui \
+    loadingform.ui \
+    generalform.ui \
+    accountlistform.ui \
+    loginform.ui
 
 RESOURCES += \
     resources.qrc

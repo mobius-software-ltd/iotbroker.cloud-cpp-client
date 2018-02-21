@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -40,6 +40,12 @@ CellWithEditLine *CellWithEditLine::createCellWith(QString imagePath, QString te
     widget->addItem(item);
     widget->setItemWidget(item, widgetForm);
     return widgetForm;
+}
+
+void CellWithEditLine::setNumbersValidator()
+{
+    QRegExpValidator *validator = new QRegExpValidator(QRegExp("\\d*"), this);
+    ui->lineEdit->setValidator(validator);
 }
 
 QImage CellWithEditLine::getImage()

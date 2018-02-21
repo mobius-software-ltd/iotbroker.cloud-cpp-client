@@ -79,7 +79,7 @@ void TCPSocket::stateDidChanged(QAbstractSocket::SocketState state)
         case QAbstractSocket::ClosingState:     this->setState(IP_CONNECTION_CLOSING);  break;
         default: break;
     }
-    qDebug() << "STATE = " << state;
+
     if (state == QAbstractSocket::ConnectedState) {
         emit connectionDidStart(this);
     }

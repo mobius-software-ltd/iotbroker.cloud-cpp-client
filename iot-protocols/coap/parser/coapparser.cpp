@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -135,8 +135,6 @@ QByteArray CoAPParser::encode(Message *message)
     final->append(QString().sprintf("%04lX", (unsigned long)msg->getMessageID()));
     final->append(tokerAsString);
 
-    qDebug() << " = "<< *final;
-
     QList<CoAPOptionDefinitions> sortedArray = msg->getOptionMap().keys();
 
     uint previousDelta = 0;
@@ -145,9 +143,6 @@ QByteArray CoAPParser::encode(Message *message)
         CoAPOptionDefinitions key = sortedArray.at(i);
 
         QList<QString> valueArray = msg->getOptionMap().value(key);
-
-        qDebug() << "VALUE == " << msg->getOptionMap().value(key);
-
 
         for (int i = 0; i < valueArray.count(); i++) {
 

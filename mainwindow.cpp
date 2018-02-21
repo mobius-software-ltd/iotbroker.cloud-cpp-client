@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -24,77 +24,54 @@
 #include <QDebug>
 #include <QDir>
 #include <QMessageBox>
-
-// 198.41.30.241
+#include <QDesktopWidget>
+#include "iot-protocols/mqtt/mqtt.h"
+#include "iot-protocols/mqtt-sn/mqttsn.h"
+#include "iot-protocols/coap/coap.h"
+#include "iot-protocols/amqp/classes/amqp.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    this->setStyleSheet("QMainWindow {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-    this->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
-
-    this->accountManager = AccountManager::getInstance();
-    this->currentAccount = this->accountManager->readDefaultAccount();
-
-    connect(ui->topicsTab, SIGNAL(addNewTopic(TopicEntity)), this, SLOT(willSubscribeSlot(TopicEntity)));
-    connect(ui->topicsTab, SIGNAL(deleteTopic(TopicEntity)), this, SLOT(willUnsubscribeSlot(TopicEntity)));
-    connect(ui->sendMessageTab, SIGNAL(donePublishForSending(MessageEntity)), this, SLOT(willPublishSlot(MessageEntity)));
-    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(logoutSlot(int)));
-
     this->progressTimer = new QTimer(this);
-
-    ui->progressBar->setValue(0);
-
     connect(this->progressTimer, SIGNAL(timeout()), this, SLOT(timeoutProgressBar()));
     this->progressTimer->setInterval(32);
 
-    this->startNewSession();
-    this->initMainWindow();
+    this->accountManager = AccountManager::getInstance();
+    this->init();
 }
 
-void MainWindow::startNewSession()
+void MainWindow::init()
 {
-    DQList<AccountEntity> accounts = this->accountManager->accounts();
-
-    if (accounts.size() > 0) {
-        this->accountsListDialog = new AccountsListDialog();
-        this->accountsListDialog->setAccountList(accounts);
-
-        connect(this->accountsListDialog, SIGNAL(deleteAccount(AccountEntity*)),      this, SLOT(deleteAccountSlot(AccountEntity*)));
-        connect(this->accountsListDialog, SIGNAL(accountDidSelect(AccountEntity*)),   this, SLOT(accountDidSelectSlot(AccountEntity*)));
-        connect(this->accountsListDialog, SIGNAL(newAccountDidClick()),               this, SLOT(newAccountDidClickSlot()));
-
-        if (this->accountsListDialog->exec() == 0) {
-            QTimer::singleShot(0, this, SLOT(close()));
-        }
+    if (this->accountManager->accounts().size() > 0) {
+        this->accountListForm = new AccountListForm(ui->stackedWidget);
+        this->accountListForm->setAccountList(this->accountManager->accounts());
+        connect(this->accountListForm, SIGNAL(accountDidSelect(AccountEntity*)), this, SLOT(accountDidSelect(AccountEntity*)));
+        connect(this->accountListForm, SIGNAL(deleteAccount(AccountEntity*)), this, SLOT(deleteAccount(AccountEntity*)));
+        connect(this->accountListForm, SIGNAL(newAccountDidClick()), this, SLOT(newAccountDidClick()));
+        ui->stackedWidget->addWidget(this->accountListForm);
+        this->setSizeToWindowWithCentralPosition(this->accountListForm->getSize());
     } else {
-        if (showLogIn() == true) {
-            this->setEnabled(false);
-            this->showLoading();
-        } else {
-            QTimer::singleShot(0, this, SLOT(close()));
-        }
+        this->loginForm = new LoginForm(ui->stackedWidget);
+        connect(this->loginForm, SIGNAL(accountToSave(AccountEntity)), this, SLOT(loginWithAccount(AccountEntity)));
+        ui->stackedWidget->addWidget(this->loginForm);
+        this->setSizeToWindowWithCentralPosition(this->loginForm->getSize());
     }
 }
 
-void MainWindow::initMainWindow()
+void MainWindow::startWithAccount(AccountEntity account)
 {
-    this->setWindowTitle(this->currentAccount.username);
-
-    ui->topicsTab->setTopicsList(this->accountManager->topicsForDefaultAccount());
-    ui->messagesListTab->setMessageList(this->accountManager->messagesForDefaultAccount());
-
-    int protocolType = currentAccount.protocol.get().toInt();
+    int protocolType = account.protocol.get().toInt();
 
     if (protocolType == MQTT_PROTOCOL) {
-        this->iotProtocol = new MQTT(this->currentAccount);
+        this->iotProtocol = new MQTT(account);
     } else if (protocolType == MQTT_SN_PROTOCOL) {
-        this->iotProtocol = new MqttSN(this->currentAccount);
+        this->iotProtocol = new MqttSN(account);
     } else if (protocolType == COAP_PROTOCOL) {
-        this->iotProtocol = new CoAP(this->currentAccount);
+        this->iotProtocol = new CoAP(account);
     } else if (protocolType == AMQP_PROTOCOL) {
-        this->iotProtocol = new AMQP(this->currentAccount);
+        this->iotProtocol = new AMQP(account);
     }
 
     connect(this->iotProtocol, SIGNAL(connackReceived(IotProtocol*,int)),                                   this, SLOT(connackReceived(IotProtocol*,int)));
@@ -102,7 +79,6 @@ void MainWindow::initMainWindow()
     connect(this->iotProtocol, SIGNAL(pubackReceived(IotProtocol*,QString,int,QByteArray,bool,bool,int)),   this, SLOT(pubackReceived(IotProtocol*,QString,int,QByteArray,bool,bool,int)));
     connect(this->iotProtocol, SIGNAL(subackReceived(IotProtocol*,QString,int,int)),                        this, SLOT(subackReceived(IotProtocol*,QString,int,int)));
     connect(this->iotProtocol, SIGNAL(unsubackReceived(IotProtocol*,QString)),                              this, SLOT(unsubackReceived(IotProtocol*,QString)));
-    connect(this->iotProtocol, SIGNAL(pingrespReceived(IotProtocol*)),                                      this, SLOT(pingrespReceived(IotProtocol*)));
     connect(this->iotProtocol, SIGNAL(disconnectReceived(IotProtocol*)),                                    this, SLOT(disconnectReceived(IotProtocol*)));
     connect(this->iotProtocol, SIGNAL(timeout(IotProtocol*)),                                               this, SLOT(timeout(IotProtocol*)));
     connect(this->iotProtocol, SIGNAL(errorReceived(IotProtocol*,QString)),                                 this, SLOT(errorReceived(IotProtocol*,QString)));
@@ -110,21 +86,13 @@ void MainWindow::initMainWindow()
     this->iotProtocol->goConnect();
 }
 
-bool MainWindow::showLogIn()
+void MainWindow::setSizeToWindowWithCentralPosition(QSize size)
 {
-    this->login = new LogInDialog();
-    this->login->setWindowFlags (Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
-    connect(this->login, SIGNAL(accountToSave(AccountEntity)), this, SLOT(saveNewAccount(AccountEntity)));
-    return this->login->exec();
-}
-
-void MainWindow::showLoading()
-{
-    ui->tabWidget->tabBar()->setEnabled(false);
-    this->loading = new LoadingDialog(this);
-    this->loading->move(0, -10);
-    this->loading->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint);
-    this->loading->show();
+    this->setMinimumSize(size);
+    this->setMaximumSize(size);
+    QRect rect = this->geometry();
+    rect.moveCenter(QApplication::desktop()->availableGeometry().center());
+    this->setGeometry(rect);
 }
 
 void MainWindow::saveTopic(QString topicName, int qos, QByteArray content, bool isRetain, bool isDub, bool isIncoming)
@@ -137,107 +105,138 @@ void MainWindow::saveTopic(QString topicName, int qos, QByteArray content, bool 
     message.isDub = isDub;
     this->accountManager->addMessageForDefaultAccount(message, isIncoming);
 
-    ui->messagesListTab->setMessageList(this->accountManager->messagesForDefaultAccount());
+    this->generalForm->setMessages(this->accountManager->messagesForDefaultAccount());
 }
 
-// -
-// SLOTS
-// -
-
-// Accounts list dialog
-
-void MainWindow::deleteAccountSlot(AccountEntity *account)
+void MainWindow::subscribeToAllTopicsForCurrentAccount()
 {
-    this->accountManager->deleteAccount(*account);
-    this->accountsListDialog->setAccountList(this->accountManager->accounts());
-}
-
-void MainWindow::accountDidSelectSlot(AccountEntity *account)
-{
-    this->accountsListDialog = NULL;
-    this->accountManager->setDefaultAccountWithClientID(account->clientID);
-    this->showLoading();
-}
-
-void MainWindow::newAccountDidClickSlot()
-{
-    this->accountsListDialog->close();
-    this->accountsListDialog = NULL;
-
-    if (showLogIn() == true) {
-        this->showLoading();
-    } else {
-        QTimer::singleShot(0, this, SLOT(close()));
+    QList<TopicEntity> topics = this->accountManager->topicsForDefaultAccount();
+    for(int i = 0; i < topics.size(); i++) {
+        this->iotProtocol->subscribeTo(topics.at(i));
     }
 }
 
-//
-
-//Account list dialog
-
-void MainWindow::saveNewAccount(AccountEntity account)
+bool MainWindow::isTopicAlreadyExistForCurrentAccount(QString topic)
 {
-    this->accountManager->addAccount(account);
-    this->accountManager->setDefaultAccountWithClientID(account.clientID);
+    QList<TopicEntity> topics = this->accountManager->topicsForDefaultAccount();
+    for(int i = 0; i < topics.size(); i++) {
+        if (topics.at(i).topicName == topic) {
+            return true;
+        }
+    }
+    return false;
 }
 
-//
+// AccountListForm
 
-// Topic list tab
+void MainWindow::accountDidSelect(AccountEntity* account)
+{
+    this->accountManager->setDefaultAccountWithClientID(account->clientID);
+    this->startWithAccount(this->accountManager->readDefaultAccount());
 
-void MainWindow::willSubscribeSlot(TopicEntity topic)
+    if (account->protocol.get().toInt() != COAP_PROTOCOL) {
+        ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+
+        this->loadingForm = new LoadingForm(ui->stackedWidget);
+        ui->stackedWidget->addWidget(this->loadingForm);
+        this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
+    }
+}
+
+void MainWindow::deleteAccount(AccountEntity* account)
+{
+    this->accountManager->deleteAccount(*account);
+    this->accountListForm->setAccountList(this->accountManager->accounts());
+}
+
+void MainWindow::newAccountDidClick()
+{
+    ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+
+    this->loginForm = new LoginForm(ui->stackedWidget);
+    connect(this->loginForm, SIGNAL(accountToSave(AccountEntity)), this, SLOT(loginWithAccount(AccountEntity)));
+    ui->stackedWidget->addWidget(this->loginForm);
+    this->setSizeToWindowWithCentralPosition(this->loginForm->getSize());
+}
+
+// GeneralForm
+
+void MainWindow::willSubscribeToTopic(TopicEntity topicEntity)
 {
     this->progressTimer->start();
-    this->iotProtocol->subscribeTo(topic);
+    this->iotProtocol->subscribeTo(topicEntity);
 }
 
-void MainWindow::willUnsubscribeSlot(TopicEntity topic)
+void MainWindow::willUnsubscribeFromTopic(TopicEntity topicEntity)
 {
     this->progressTimer->start();
-    this->iotProtocol->unsubscribeFrom(topic);
+    this->iotProtocol->unsubscribeFrom(topicEntity);
 }
 
-//
-
-// Send message tab
-
-void MainWindow::willPublishSlot(MessageEntity message)
+void MainWindow::willPublish(MessageEntity message)
 {
+    int qos = message.qos.get().toInt();
+    if (qos == AT_MOST_ONCE) {
+        this->saveTopic(message.topicName.get().toString(), qos, message.content.get().toByteArray(), message.isRetain.get().toBool(), message.isDub.get().toBool(), false);
+    } else {
+        this->progressTimer->start();
+    }
     this->iotProtocol->publish(message);
 }
 
-// QTabWidget
-
-void MainWindow::logoutSlot(int tabIndex)
+void MainWindow::topicsTabDidClick()
 {
-    int logoutIndex = ui->tabWidget->indexOf(ui->logoutTab);
-    if (tabIndex == logoutIndex) {
-        this->iotProtocol->disconnectWith(0);
-        this->startNewSession();
-        this->initMainWindow();
-        ui->tabWidget->setCurrentIndex(1);
-    }
+    this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
 }
 
-//
-
-// QProgressBar
-
-void MainWindow::timeoutProgressBar()
+void MainWindow::messagesTabDidCLick()
 {
-    if ((ui->progressBar->value() < ui->progressBar->maximum() - 5) && ui->progressBar->value() >= ui->progressBar->minimum()) {
-        ui->progressBar->setValue(ui->progressBar->value() + 1);
-    }
+    this->generalForm->setMessages(this->accountManager->messagesForDefaultAccount());
 }
 
-//
+void MainWindow::logoutTabDidCLick()
+{
+    ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+
+    this->iotProtocol->disconnectWith(0);
+
+    this->accountManager->uncheckDefaultAccount();
+    this->init();
+}
+
+// LoginForm
+
+void MainWindow::loginWithAccount(AccountEntity account)
+{
+    this->accountManager->addAccount(account);
+    this->accountManager->setDefaultAccountWithClientID(account.clientID);
+    this->startWithAccount(this->accountManager->readDefaultAccount());
+
+    ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+
+    this->loadingForm = new LoadingForm(ui->stackedWidget);
+    ui->stackedWidget->addWidget(this->loadingForm);
+    this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
+}
 
 // Iot protocol
 
-void MainWindow::connackReceived(IotProtocol*,int)
+void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
 {
-    this->loading->accept();
-    ui->tabWidget->tabBar()->setEnabled(true);
+    if (returnCode == MQ_ACCEPTED) {
+        ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+
+        this->generalForm = new GeneralForm(ui->stackedWidget);
+        connect(this->generalForm, SIGNAL(willSubscribeToTopic(TopicEntity)), this, SLOT(willSubscribeToTopic(TopicEntity)));
+        connect(this->generalForm, SIGNAL(willUnsubscribeFromTopic(TopicEntity)), this, SLOT(willUnsubscribeFromTopic(TopicEntity)));
+        connect(this->generalForm, SIGNAL(willPublish(MessageEntity)), this, SLOT(willPublish(MessageEntity)));
+        connect(this->generalForm, SIGNAL(topicsTabDidClick()), this, SLOT(topicsTabDidClick()));
+        connect(this->generalForm, SIGNAL(messagesTabDidCLick()), this, SLOT(messagesTabDidCLick()));
+        connect(this->generalForm, SIGNAL(logoutTabDidCLick()), this, SLOT(logoutTabDidCLick()));
+        ui->stackedWidget->addWidget(this->generalForm);
+        this->setSizeToWindowWithCentralPosition(this->generalForm->getSize());
+        this->subscribeToAllTopicsForCurrentAccount();
+    }
 }
 
 void MainWindow::publishReceived(IotProtocol*, QString topic, int qos, QByteArray content, bool isDub, bool isRetain)
@@ -249,7 +248,7 @@ void MainWindow::pubackReceived(IotProtocol*, QString topic, int qos, QByteArray
 {
     this->saveTopic(topic, qos, content, isRetain, isDub, false);
     this->progressTimer->stop();
-    ui->progressBar->setValue(0);
+    this->generalForm->setProgress(0);
 }
 
 void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int)
@@ -258,30 +257,27 @@ void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int)
     entity.topicName = topic;
     entity.qos = qos;
 
-    this->accountManager->addTopicForDefaultAccount(entity);
-    ui->topicsTab->setTopicsList(this->accountManager->topicsForDefaultAccount());
-
+    if (!this->isTopicAlreadyExistForCurrentAccount(topic)) {
+        this->accountManager->addTopicForDefaultAccount(entity);
+        this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
+    }
     this->progressTimer->stop();
-    ui->progressBar->setValue(0);
+    this->generalForm->setProgress(0);
 }
 
 void MainWindow::unsubackReceived(IotProtocol*,QString topic)
 {
     this->accountManager->deleteTopic(this->accountManager->topicByName(topic));
-    ui->topicsTab->setTopicsList(this->accountManager->topicsForDefaultAccount());
+    this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
 
     this->progressTimer->stop();
-    ui->progressBar->setValue(0);
-}
-
-void MainWindow::pingrespReceived(IotProtocol*)
-{
-
+    this->generalForm->setProgress(0);
 }
 
 void MainWindow::disconnectReceived(IotProtocol*)
 {
     this->accountManager->uncheckDefaultAccount();
+    this->logoutTabDidCLick();
 }
 
 void MainWindow::timeout(IotProtocol*)
@@ -289,9 +285,7 @@ void MainWindow::timeout(IotProtocol*)
     QMessageBox *messageBox = new QMessageBox("Warrning", "Timeout", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
     messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
     messageBox->exec();
-
-    this->startNewSession();
-    this->initMainWindow();
+    this->logoutTabDidCLick();
 }
 
 void MainWindow::errorReceived(IotProtocol*,QString error)
@@ -301,7 +295,14 @@ void MainWindow::errorReceived(IotProtocol*,QString error)
     messageBox->exec();
 }
 
-//
+// QProgressBar
+
+void MainWindow::timeoutProgressBar()
+{
+    if ((this->generalForm->getProgress() < this->generalForm->getProgressMax() - 5) && this->generalForm->getProgress() >= this->generalForm->getProgressMin()) {
+        this->generalForm->setProgress(this->generalForm->getProgress() + 1);
+    }
+}
 
 MainWindow::~MainWindow()
 {

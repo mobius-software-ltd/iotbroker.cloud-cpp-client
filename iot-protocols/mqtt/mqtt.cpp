@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -179,11 +179,12 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             case MQ_PUBLISH:
             {
                 Publish *publish = (Publish *)message;
+                emit publishReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain());
+
                 int qos = publish->getTopic()->getQoS()->getValue();
                 if (qos == AT_LEAST_ONCE) {
                     Puback *puback = new Puback(publish->getPacketID());
                     this->send(puback);
-                    emit pubackReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain(), 0);
                 } else if (qos == EXACTLY_ONCE) {
                     this->publishPackets->insert(publish->getPacketID(), publish);
                     Pubrec *pubrec = new Pubrec(publish->getPacketID());
@@ -220,7 +221,7 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                     Message *publishMessage = this->publishPackets->value(pubrel->getPacketID());
                     if (publishMessage->getType() == MQ_PUBLISH) {
                         Publish *publish = (Publish *)publishMessage;
-                        emit pubackReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain(), 0);
+                        emit publishReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain());
                     }
                     Pubcomp *pubcomp = new Pubcomp(pubrel->getPacketID());
                     this->send(pubcomp);

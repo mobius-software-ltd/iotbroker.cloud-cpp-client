@@ -80,6 +80,9 @@
       <string notr="true">background-color: rgba(255, 255, 255, 0);
 border-color: rgb(254, 198, 66);</string>
      </property>
+     <property name="inputMask">
+      <string/>
+     </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>

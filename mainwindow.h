@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,15 +22,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "logindialog.h"
-#include "loadingdialog.h"
-#include "accountslistdialog.h"
 #include "database/accountmanager.h"
-#include "iot-protocols/mqtt/classes/will.h"
-#include "iot-protocols/mqtt/mqtt.h"
-#include "iot-protocols/mqtt-sn/mqttsn.h"
-#include "iot-protocols/coap/coap.h"
-#include "iot-protocols/amqp/classes/amqp.h"
+#include "iot-protocols/iotprotocol.h"
+#include "loadingform.h"
+#include "loginform.h"
+#include "generalform.h"
+#include "accountlistform.h"
 
 namespace Ui {
 class MainWindow;
@@ -45,19 +42,21 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
     IotProtocol *iotProtocol;
-
     AccountManager *accountManager;
-    LogInDialog *login;
-    AccountsListDialog *accountsListDialog;
-    AccountEntity currentAccount;
-    QTimer *progressTimer;
-    LoadingDialog *loading;
 
-    void startNewSession();
-    void initMainWindow();
-    bool showLogIn();
-    void showLoading();
+    AccountListForm *accountListForm;
+    GeneralForm *generalForm;
+    LoadingForm *loadingForm;
+    LoginForm *loginForm;
+
+    QTimer *progressTimer;
+
+    void init();
+    void startWithAccount(AccountEntity account);
+    void setSizeToWindowWithCentralPosition(QSize size);
     void saveTopic(QString topicName, int qos, QByteArray content, bool isRetain, bool isDub, bool isIncoming);
+    void subscribeToAllTopicsForCurrentAccount();
+    bool isTopicAlreadyExistForCurrentAccount(QString topic);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -68,44 +67,35 @@ private:
 
 private slots:
 
+    // AccountListForm
+    void accountDidSelect(AccountEntity* account);
+    void deleteAccount(AccountEntity* account);
+    void newAccountDidClick();
+
+    // GeneralForm
+    void willSubscribeToTopic(TopicEntity topicEntity);
+    void willUnsubscribeFromTopic(TopicEntity topicEntity);
+    void willPublish(MessageEntity message);
+    void topicsTabDidClick();
+    void messagesTabDidCLick();
+    void logoutTabDidCLick();
+
+    // LoginForm
+    void loginWithAccount(AccountEntity account);
+
     //Iot protocol
     void connackReceived(IotProtocol*,int);
     void publishReceived(IotProtocol*,QString,int,QByteArray,bool,bool);
     void pubackReceived(IotProtocol*,QString,int,QByteArray,bool,bool,int);
     void subackReceived(IotProtocol*,QString,int,int);
     void unsubackReceived(IotProtocol*,QString);
-    void pingrespReceived(IotProtocol*);
     void disconnectReceived(IotProtocol*);
     void timeout(IotProtocol*);
     void errorReceived(IotProtocol*,QString);
-    //
-
-    // Accounts list dialog
-    void deleteAccountSlot(AccountEntity *account);
-    void accountDidSelectSlot(AccountEntity *account);
-    void newAccountDidClickSlot();
-    //
-
-    //Account list dialog
-    void saveNewAccount(AccountEntity account);
-    //
-
-    // Topic list tab
-    void willSubscribeSlot(TopicEntity topic);
-    void willUnsubscribeSlot(TopicEntity topic);
-    //
-
-    // Send message tab
-    void willPublishSlot(MessageEntity message);
-    //
-
-    // QTabWidget
-    void logoutSlot(int tabIndex);
-    //
 
     // QProgressBar
     void timeoutProgressBar();
-    //
+
 };
 
 #endif // MAINWINDOW_H

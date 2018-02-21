@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>390</width>
-    <height>512</height>
+    <height>483</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,186 +43,12 @@
      <number>0</number>
     </property>
     <item row="0" column="0">
-     <widget class="QProgressBar" name="progressBar">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>4</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>4</height>
-       </size>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">QProgressBar {
-	background-color: rgba(255, 255, 255, 0);
-}
-
-QProgressBar::chunk {
-    background-color: rgb(25, 163, 219);
-}</string>
-      </property>
-      <property name="value">
-       <number>24</number>
-      </property>
-      <property name="format">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="minimumSize">
-       <size>
-        <width>390</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>390</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">QTabBar::tab:selected {
-	background-color: rgb(255,255,255);
-	padding : 0px 0px 0px 16px;
-}
-QTabBar::tab:!selected {
-	background-color: rgb(255,255,255);
-	border-bottom-color: rgb(140,140,140);
-	padding : 0px 0px 0px 16px;
-}
-QTabBar::tab {
-	border-style: outset;
-	border: 1px solid rgb(180,180,180);
-	background-color: rgb(255,255,255);
-}
-QTabWidget:pane{
-background: red;
-}
-
-
-</string>
-      </property>
-      <property name="tabPosition">
-       <enum>QTabWidget::South</enum>
-      </property>
-      <property name="tabShape">
-       <enum>QTabWidget::Rounded</enum>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>64</width>
-        <height>52</height>
-       </size>
-      </property>
-      <property name="elideMode">
-       <enum>Qt::ElideRight</enum>
-      </property>
-      <property name="usesScrollButtons">
-       <bool>false</bool>
-      </property>
-      <property name="documentMode">
-       <bool>true</bool>
-      </property>
-      <property name="tabsClosable">
-       <bool>false</bool>
-      </property>
-      <property name="movable">
-       <bool>false</bool>
-      </property>
-      <property name="tabBarAutoHide">
-       <bool>false</bool>
-      </property>
-      <widget class="TopicListTab" name="topicsTab">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <attribute name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/resources/resources/ic_topics_list_blue.png</normaloff>
-         <normalon>:/resources/resources/ic_topics_list_blue-1.png</normalon>:/resources/resources/ic_topics_list_blue.png</iconset>
-       </attribute>
-       <attribute name="title">
-        <string/>
-       </attribute>
-      </widget>
-      <widget class="SendMessageTab" name="sendMessageTab">
-       <attribute name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/resources/resources/is_message_list_blue-1.png</normaloff>
-         <normalon>:/resources/resources/is_message_list_blue-2.png</normalon>:/resources/resources/is_message_list_blue-1.png</iconset>
-       </attribute>
-       <attribute name="title">
-        <string/>
-       </attribute>
-      </widget>
-      <widget class="MessagesListTab" name="messagesListTab">
-       <attribute name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/resources/resources/is_message_list_blue-03.png</normaloff>
-         <normalon>:/resources/resources/is_message_list_blue-03-1.png</normalon>:/resources/resources/is_message_list_blue-03.png</iconset>
-       </attribute>
-       <attribute name="title">
-        <string/>
-       </attribute>
-      </widget>
-      <widget class="QWidget" name="logoutTab">
-       <attribute name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/resources/resources/logout.png</normaloff>
-         <normalon>:/resources/resources/logoutBlue.png</normalon>:/resources/resources/logout.png</iconset>
-       </attribute>
-       <attribute name="title">
-        <string/>
-       </attribute>
-      </widget>
-     </widget>
+     <widget class="QStackedWidget" name="stackedWidget"/>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>390</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>TopicListTab</class>
-   <extends>QWidget</extends>
-   <header>tabs/topiclisttab.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>SendMessageTab</class>
-   <extends>QWidget</extends>
-   <header>tabs/sendmessagetab.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>MessagesListTab</class>
-   <extends>QWidget</extends>
-   <header>tabs/messageslisttab.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
- <resources>
-  <include location="resources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

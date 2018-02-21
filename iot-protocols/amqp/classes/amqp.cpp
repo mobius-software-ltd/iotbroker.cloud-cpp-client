@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@
 AMQP::AMQP(AccountEntity account) : IotProtocol(account)
 {
     this->timers = new TimersMap(this);
-    this->isSASLСonfirm = false;
+    this->isSASLConfirm = false;
     this->isPublishAllow = false;
     this->transferMap = new AMQPTransferMap();
 
@@ -178,7 +178,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             case AMQP_PROTOCOL_HEADER_CODE:
             {
                 AMQPProtoHeader *protoHeader = (AMQPProtoHeader *)message;
-                if (this->isSASLСonfirm == true && protoHeader->getProtocolId() == AMQPProtocolId) {
+                if (this->isSASLConfirm == true && protoHeader->getProtocolId() == AMQPProtocolId) {
                     this->channel = protoHeader->getChannel();
 
                     AMQPOpen *open = new AMQPOpen();
@@ -325,7 +325,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             case AMQP_CLOSE_HEADER_CODE:
             {
                 this->timers->stopAllTimers();
-                this->isSASLСonfirm = false;
+                this->isSASLConfirm = false;
             } break;
             case AMQP_MECHANISMS_HEADER_CODE:
             {
@@ -354,7 +354,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 AMQPSASLOutcome *outcome = (AMQPSASLOutcome *)message;
 
                 if (outcome->getOutcomeCode()->getValue() == AMQP_OK_SASL_CODE) {
-                    this->isSASLСonfirm = true;
+                    this->isSASLConfirm = true;
                     AMQPProtoHeader *header = new AMQPProtoHeader();
                     header->setProtocolId(AMQPProtocolId);
                     header->setVersionMajor(1);

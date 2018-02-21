@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -44,7 +44,7 @@ class CoAPMessage : public Message
 
     bool isResponse;
 
-    QMap<CoAPOptionDefinitions, QList<QString>> optionMap;
+    QMap<CoAPOptionDefinitions, QList<QString> > optionMap;
 
 public:
     CoAPMessage();

@@ -1,6 +1,6 @@
 /**
  * Mobius Software LTD
- * Copyright 2015-2017, Mobius Software LTD
+ * Copyright 2015-2018, Mobius Software LTD
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
 CoAPMessage::CoAPMessage()
 {
     this->version = 1;
-    this->optionMap = QMap<CoAPOptionDefinitions, QList<QString>>();
+    this->optionMap = QMap<CoAPOptionDefinitions, QList<QString> >();
 }
 
 CoAPMessage::CoAPMessage(int code, bool confirmableFlag, bool tokenFlag, QString payload) : CoAPMessage()
