@@ -29,8 +29,9 @@ class CoAP : public IotProtocol
 private:
 
     CoAPParser *messageParser;
+    QString clientId;
     int messageID;
-    int token;
+    long token;
 
     void startSendMessage(Message *message);
 

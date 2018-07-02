@@ -40,6 +40,7 @@ bool TCPSocket::send(QByteArray data)
         if (bytes == -1) {
             return false;
         }
+        return true;
     }
     return false;
 }

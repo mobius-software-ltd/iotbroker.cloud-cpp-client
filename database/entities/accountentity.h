@@ -45,6 +45,9 @@ public:
     DQField<bool>       isRetain;
     DQField<int>        qos;
     DQField<bool>       isDefault;
+    DQField<bool>       isSecure;
+    DQField<QString>    keyPath;
+    DQField<QString>    keyPass;
 };
 
 DQ_DECLARE_MODEL(AccountEntity,
@@ -61,7 +64,10 @@ DQ_DECLARE_MODEL(AccountEntity,
                  DQ_FIELD(willTopic),
                  DQ_FIELD(isRetain),
                  DQ_FIELD(qos),
-                 DQ_FIELD(isDefault)
+                 DQ_FIELD(isDefault),
+                 DQ_FIELD(isSecure),
+                 DQ_FIELD(keyPath),
+                 DQ_FIELD(keyPass)
                  )
 
 #endif // ACCOUNT_H

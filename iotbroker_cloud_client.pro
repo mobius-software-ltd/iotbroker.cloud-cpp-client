@@ -210,7 +210,10 @@ SOURCES += main.cpp\
     loadingform.cpp \
     generalform.cpp \
     accountlistform.cpp \
-    loginform.cpp
+    loginform.cpp \
+    internet-protocols/sslsocket.cpp \
+    iot-protocols/coap/classes/coapoption.cpp \
+    classes/convertor.cpp
 
 HEADERS  += mainwindow.h \
     database/entities/accountentity.h \
@@ -388,7 +391,10 @@ HEADERS  += mainwindow.h \
     loadingform.h \
     generalform.h \
     accountlistform.h \
-    loginform.h
+    loginform.h \
+    internet-protocols/sslsocket.h \
+    iot-protocols/coap/classes/coapoption.h \
+    classes/convertor.h
 
 FORMS    += mainwindow.ui \
     cells/cellwithcheckbox.ui \

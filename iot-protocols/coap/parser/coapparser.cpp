@@ -20,10 +20,7 @@
 
 #include "coapparser.h"
 #include <QDebug>
-
-static int const CoAP_13_Optional_Faild_Constant = 13;
-static int const CoAP_14_Optional_Faild_Constant = 14;
-static int const CoAP_15_Optional_Faild_Constant = 15;
+#include "classes/convertor.h"
 
 CoAPParser::CoAPParser()
 {
@@ -32,241 +29,168 @@ CoAPParser::CoAPParser()
 
 Message *CoAPParser::decode(QByteArray data)
 {
-    ByteArray *buffer = new ByteArray(data);
-
-    int size = buffer->getSize();
-
+    ByteArray buf = ByteArray(data);
     CoAPMessage *message = new CoAPMessage();
 
-    int zeroByte = buffer->readChar();
-    int version = (zeroByte >> 6) & 0x3;
+    int firstByte = buf.readChar();
 
-    if (version != message->getVersion()) {
-        return NULL;
+    int version = firstByte >> 6;
+    if (version != 1) {
+        throw QString("COAP: Invalid version: " + QString::number(version));
+    }
+    message->setVersion(version);
+
+    int typeValue = (firstByte >> 4) & 3;
+    message->setType((CoAPTypes)typeValue);
+
+    int tokenLength = firstByte & 0xf;
+    if (tokenLength > 8) {
+        throw QString("COAP: Invalid token length: " + QString::number(tokenLength));
     }
 
-    CoAPTypes type = (CoAPTypes)((zeroByte >> 4) & 0x3);
-    message->setType(type);
-    int tokenLength = (zeroByte >> 0) & 0xF;
+    int codeByte = buf.readChar();
+    int codeValue = (codeByte >> 5) * 100;
+    codeValue += codeByte & 0x1F;
+    CoAPCode code = (CoAPCode)codeValue;
 
-    message->setIsTokenExist((tokenLength == 0) ? false : true);
-    message->setCode((CoAPMethods)buffer->readChar());
+    message->setCode(code);
+    message->setMessageID(buf.readShort());
 
-    message->setMessageID(buffer->numberWithLength(2));
-
-    if (message->getIsTokenExist()) {
-        message->setToken(buffer->numberWithLength(tokenLength));
+    if (tokenLength > 0) {
+        QByteArray tokenBytes = buf.readRawData(tokenLength);
+        QString token = QString(tokenBytes);
+        message->setToken(token.toInt());
     }
 
-    int previousOptionDelta = 0;
+    int number = 0;
 
-    while (buffer->getSize() > 0) {
-
-        char optionByte = buffer->readChar();
-        char optionDelta = (optionByte >> 4) & 0xF;
-        char optionLength = optionByte & 0xF;
-
-        if (optionDelta == CoAP_15_Optional_Faild_Constant) {
-            if (optionLength != CoAP_15_Optional_Faild_Constant) {
-                return NULL;
-            }
+    while (buf.getSize() > 0) {
+        unsigned char nextByte = buf.readChar();
+        if (nextByte == 0xFF) {
             break;
         }
+        int delta = (nextByte >> 4) & 15;
 
-        int extendedDelta = 0;
-        char optionIndexOffset = 1;
-
-        if (optionDelta == CoAP_13_Optional_Faild_Constant) {
-            optionIndexOffset += 1;
-        } else if (optionDelta == CoAP_14_Optional_Faild_Constant) {
-            optionIndexOffset += 2;
+        if (delta == 13) {
+            delta = ((unsigned char)buf.readChar()) + 13;
+        } else if (delta == 14) {
+            delta = buf.readShort() + 269;
+        } else if (delta > 14) {
+            throw QString("COAP: Invalid option delta value: " + QString::number(delta));
         }
 
-        if ((size - buffer->getSize()) + optionIndexOffset <= size) {
-            extendedDelta = buffer->numberWithLength(optionIndexOffset - 1);
-        } else {
-            return NULL;
+        number += delta;
+
+        int optionLength = nextByte & 15;
+        if (optionLength == 13) {
+            optionLength = ((unsigned char)buf.readChar()) + 13;
+        } else if (optionLength == 14) {
+            optionLength = buf.readShort() + 269;
+        } else if (optionLength > 14) {
+            throw QString("COAP: Invalid option delta value: " + QString::number(optionLength));
         }
 
-        int optionLengthExtendedOffsetIndex = optionIndexOffset;
-
-        if (optionLength == CoAP_13_Optional_Faild_Constant) {
-            optionIndexOffset += 1;
-        } else if (optionLength == CoAP_14_Optional_Faild_Constant) {
-            optionIndexOffset += 2;
-        } else if (optionLength == CoAP_15_Optional_Faild_Constant) {
-            return NULL;
-        }
-        optionLength += buffer->numberWithLength(optionIndexOffset - optionLengthExtendedOffsetIndex);
-
-        if ((size - buffer->getSize()) + optionIndexOffset + optionLength > size) {
-            return NULL;
+        QByteArray optionValue;
+        if (optionLength > 0) {
+            optionValue = buf.readRawData(optionLength);
         }
 
-        int newOptionNumber = optionDelta + extendedDelta + previousOptionDelta;
-        QString optionValue = buffer->readStringWithLength(optionLength);
-        message->addOperation((CoAPOptionDefinitions)newOptionNumber, optionValue);
-        previousOptionDelta += optionDelta + extendedDelta;
+        message->addOption(CoapOption(number, optionLength, optionValue));
     }
 
-    if ((size - buffer->getSize()) < size) {
-        int length = buffer->getSize();
-        message->setPayload(buffer->readStringWithLength(length));
+    if (buf.getSize() > 0) {
+        int size = buf.getInitSize() - buf.getSize();
+        message->setPayload(buf.readStringWithLength(size).toUtf8());
     }
 
     return message;
 }
 
-QByteArray CoAPParser::encode(Message *message)
+QByteArray CoAPParser::encode(Message *m)
 {
-    CoAPMessage *msg = (CoAPMessage *)message;
+    CoAPMessage *message = (CoAPMessage *)m;
+    ByteArray buf = ByteArray();
 
-    QString *final = new QString();
-    QString tokerAsString = this->hexStringFromInt((int)msg->getToken());
+    char firstByte = 0;
 
-    int zeroByte = 0;
+    firstByte += message->getVersion() << 6;
+    firstByte += message->getType() << 4;
 
-    zeroByte |= (01 << 6);
-    zeroByte |= (message->getType() << 4);
-    zeroByte |= tokerAsString.length() / 2;
-
-    final->append(QString().sprintf("%02X", zeroByte));
-    final->append(QString().sprintf("%02lX", (unsigned long)msg->getCode()));
-    final->append(QString().sprintf("%04lX", (unsigned long)msg->getMessageID()));
-    final->append(tokerAsString);
-
-    QList<CoAPOptionDefinitions> sortedArray = msg->getOptionMap().keys();
-
-    uint previousDelta = 0;
-
-    for (int i = 0; i < sortedArray.length(); i++) {
-        CoAPOptionDefinitions key = sortedArray.at(i);
-
-        QList<QString> valueArray = msg->getOptionMap().value(key);
-
-        for (int i = 0; i < valueArray.count(); i++) {
-
-            uint delta = key - previousDelta;
-            QString valueForKey = QString();
-
-            if (key == COAP_ETAG_OPTION || key == COAP_IF_MATCH_OPTION) {
-                valueForKey = valueArray.at(i);
-            } else if (key == COAP_BLOCK2_OPTION    || key == COAP_URI_PORT_OPTION  || key == COAP_CONTENT_FORMAT_OPTION    ||
-                       key == COAP_MAX_AGE_OPTION   || key == COAP_ACCEPT_OPTION    || key == COAP_SIZE1_OPTION             ||
-                       key == COAP_SIZE2_OPTION     || key == COAP_OBSERVE_OPTION) {
-                valueForKey = this->hexStringFromInt(valueArray.at(i).toInt());
-            } else {
-                valueForKey = this->hexStringFromString(valueArray.at(i));
-            }
-
-            int length = (int)(valueForKey.length() / 2);
-
-            QString extendedDelta = QString();
-            QString extendedLength = QString();
-
-            if (delta >= 269) {
-                final->append(QString().sprintf("%01X", CoAP_14_Optional_Faild_Constant));
-                extendedDelta = QString().sprintf("%04X", delta - 269);
-            } else if (delta >= 13) {
-                final->append(QString().sprintf("%01X", CoAP_13_Optional_Faild_Constant));
-                extendedDelta = QString().sprintf("%02X", delta - CoAP_13_Optional_Faild_Constant);
-            } else {
-                final->append(QString().sprintf("%01X", delta));
-            }
-
-            if (length >= 269) {
-                final->append(QString().sprintf("%01X", CoAP_14_Optional_Faild_Constant));
-                extendedLength = QString().sprintf("%04X", length - 269);
-            } else if (length >= CoAP_13_Optional_Faild_Constant) {
-                final->append(QString().sprintf("%01X", CoAP_13_Optional_Faild_Constant));
-                extendedLength = QString().sprintf("%02X", length - CoAP_13_Optional_Faild_Constant);
-            } else {
-                final->append(QString().sprintf("%01X", length));
-            }
-
-            final->append(extendedDelta);
-            final->append(extendedLength);
-            final->append(valueForKey);
-
-            previousDelta += delta;
-        }
+    if (message->getToken() != - 1) {
+        firstByte += QString::number(message->getToken()).length();
     }
 
-    if (msg->getPayload().length() > 0) {
-        if (this->payloadDecodeForMessage(msg)) {
-            final->append(QString().sprintf("%02X", 255));
-            final->append(this->hexStringFromString(msg->getPayload()));
+    buf.writeChar(firstByte);
+
+    int codeMsb = (message->getCode() / 100);
+    int codeLsb = (unsigned char) (message->getCode() % 100);
+    int codeByte = ((codeMsb << 5) + codeLsb);
+
+    buf.writeChar(codeByte);
+    buf.writeShort(message->getMessageID());
+
+    if (message->getToken() != - 1) {
+        buf.writeRawData(QString::number(message->getToken()).toUtf8());
+    }
+
+    int previousNumber = 0;
+    for (int i = 0; i < message->getOptions().size(); i++) {
+        CoapOption option = message->getOptions().at(i);
+        int delta = option.getNumber() - previousNumber;
+        int nextByte = 0;
+
+        int extendedDelta = -1;
+        if (delta < 13) {
+            nextByte += delta << 4;
         } else {
-            final->append(QString().sprintf("%02X", 255));
-            final->append(msg->getPayload());
+            extendedDelta = delta;
+            if (delta < 0xFF) {
+                nextByte = 13 << 4;
+            } else {
+                nextByte = 14 << 4;
+            }
         }
-    }
 
-    return this->getHexDataFromString(final);
-}
-
-// private
-
-QString CoAPParser::hexStringFromInt(int value)
-{
-    QString string = NULL;
-
-    if (value == 0) {
-        string = QString();
-    } else if (value < 255) {
-        string = QString().sprintf("%02X", value);
-    } else if (value <= 65535) {
-        string = QString().sprintf("%04X", value);
-    } else if (value <= 16777215) {
-        string = QString().sprintf("%06X", value);
-    } else {
-        string = QString().sprintf("%08X", value);
-    }
-
-    return string;
-}
-
-bool CoAPParser::payloadDecodeForMessage(Message *message)
-{
-    CoAPMessage *msg = (CoAPMessage *)message;
-
-    if (msg->getOptionMap().value(COAP_CONTENT_FORMAT_OPTION).count()) {
-        QList<QString> values = msg->getOptionMap().value(COAP_CONTENT_FORMAT_OPTION);
-        if (values.at(0).toInt() == COAP_PLAIN_CONTENT_FORMAT ||
-                values.at(0).toInt() == COAP_LINK_CONTENT_FORMAT ||
-                values.at(0).toInt() == COAP_XML_CONTENT_FORMAT ||
-                values.at(0).toInt() == COAP_JSON_CONTENT_FORMAT) {
-            return true;
+        int extendedLength = -1;
+        if (option.getLength() < 13) {
+            nextByte += option.getLength();
+        } else {
+            extendedLength = option.getLength();
+            if (option.getLength() < 0xFF) {
+                nextByte += 13;
+            } else {
+                nextByte += 14;
+            }
         }
-    } else {
-        return true;
+
+        buf.writeChar((unsigned char)(nextByte));
+
+        if (extendedDelta != -1) {
+            if (extendedDelta < 0xFF) {
+                buf.writeChar((unsigned char)(extendedDelta - 13));
+            } else {
+                buf.writeShort(extendedDelta - 269);
+            }
+        }
+
+        if (extendedLength != -1) {
+            if (extendedLength < 0xFF) {
+                buf.writeChar((unsigned char)(extendedLength - 13));
+            } else {
+                buf.writeShort(extendedLength - 269);
+            }
+        }
+
+        buf.writeRawData(option.getValue());
+        previousNumber = option.getNumber();
     }
-    return false;
-}
 
-QByteArray CoAPParser::getHexDataFromString(QString *string)
-{
-    QByteArray commandData = QByteArray();
-    char byteRepresentation;
-    char byte_chars[3] = {'\0','\0','\0'};
+    buf.writeChar((unsigned char)0xFF);
 
-    QByteArray data = QByteArray(string->toUtf8());
-
-    for (int i = 0; i < data.length() / 2; i++) {
-        byte_chars[0] = data.at(i * 2);
-        byte_chars[1] = data.at(i * 2 + 1);
-        byteRepresentation = strtol(byte_chars, NULL, 16);
-        commandData.append(byteRepresentation);
+    if (!message->getPayload().isEmpty()) {
+        buf.writeRawData(message->getPayload());
     }
-    return commandData;
+
+    return buf.getByteArray();
 }
 
-QString CoAPParser::hexStringFromString(QString string)
-{
-    return this->stringFromDataWithHex(string.toUtf8());
-}
-
-QString CoAPParser::stringFromDataWithHex(QByteArray data)
-{
-    return data.toHex();
-}

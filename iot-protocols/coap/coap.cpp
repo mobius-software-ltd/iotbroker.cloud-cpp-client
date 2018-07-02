@@ -20,9 +20,11 @@
 
 #include "coap.h"
 #include "internet-protocols/udpsocket.h"
+#include "classes/convertor.h"
 
 CoAP::CoAP(AccountEntity account)
 {
+    this->clientId = account.clientID;
     this->currentAccount = account;
     this->timers = new TimersMap(this);
     this->messageParser = new CoAPParser();
@@ -53,8 +55,9 @@ void CoAP::publish(MessageEntity message)
 {
     QString topicName = message.topicName.get().toString();
     QString content = QString(message.content.get().toByteArray());
-    CoAPMessage *coapMessage = new CoAPMessage(COAP_PUT_METHOD, true, true, content);
-    coapMessage->addOperation(COAP_URI_PATH_OPTION, topicName);
+    CoAPMessage *coapMessage = new CoAPMessage(COAP_PUT_METHOD, true, content);
+    coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
+    coapMessage->addOption(COAP_URI_PATH_OPTION, topicName);
     coapMessage->setType(COAP_CONFIRMABLE_TYPE);
     this->startSendMessage(coapMessage);
 }
@@ -63,9 +66,10 @@ void CoAP::subscribeTo(TopicEntity topic)
 {
     QString topicName = topic.topicName.get().toString();
 
-    CoAPMessage *coapMessage = new CoAPMessage(COAP_GET_METHOD, true, true, QString());
-    coapMessage->addOperation(COAP_OBSERVE_OPTION, QString::number(0));
-    coapMessage->addOperation(COAP_URI_PATH_OPTION, topicName);
+    CoAPMessage *coapMessage = new CoAPMessage(COAP_GET_METHOD, true, QString());
+    coapMessage->addOption(COAP_OBSERVE_OPTION, QString::number(0));
+    coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
+    coapMessage->addOption(COAP_URI_PATH_OPTION, topicName);
     coapMessage->setType(COAP_CONFIRMABLE_TYPE);
     this->startSendMessage(coapMessage);
 }
@@ -74,9 +78,10 @@ void CoAP::unsubscribeFrom(TopicEntity topic)
 {
     QString topicName = topic.topicName.get().toString();
 
-    CoAPMessage *coapMessage = new CoAPMessage(COAP_GET_METHOD, true, true, QString());
-    coapMessage->addOperation(COAP_OBSERVE_OPTION, QString::number(1));
-    coapMessage->addOperation(COAP_URI_PATH_OPTION, topicName);
+    CoAPMessage *coapMessage = new CoAPMessage(COAP_GET_METHOD, true, QString());
+    coapMessage->addOption(COAP_OBSERVE_OPTION, QString::number(1));
+    coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
+    coapMessage->addOption(COAP_URI_PATH_OPTION, topicName);
     coapMessage->setType(COAP_CONFIRMABLE_TYPE);
     this->startSendMessage(coapMessage);
 }
@@ -93,7 +98,9 @@ void CoAP::disconnectWith(int duration)
 
 Message *CoAP::getPingreqMessage()
 {
-    return NULL;
+    CoAPMessage *coapMessage = new CoAPMessage(COAP_PUT_METHOD, true, "");
+    coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
+    return coapMessage;
 }
 
 void CoAP::timeoutMethod()
@@ -111,10 +118,7 @@ void CoAP::startSendMessage(Message *message)
     this->token++;
 
     coapMessage->setMessageID(this->messageID % 65536);
-
-    if (coapMessage->getIsTokenExist() == true) {
-        coapMessage->setToken(this->token % INT_MAX);
-    }
+    coapMessage->setToken(this->token % LONG_MAX);
 
     this->timers->goCoAPMessageTimer(coapMessage);
 }
@@ -138,17 +142,18 @@ void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
     CoAPMessage *message = (CoAPMessage *)this->messageParser->decode(data);
 
     if (message->getCode() == COAP_POST_METHOD || message->getCode() == COAP_PUT_METHOD) {
-        QString topic = message->getOptionMap().value(COAP_URI_PATH_OPTION).last();
-        QByteArray content = message->getPayload().toUtf8();
-
-        emit publishReceived(this, topic, 0, content, false, false);
-
-        CoAPMessage *ack = new CoAPMessage(COAP_METHOD_NOT_ALLOWED_RESPONSE_CODE, false, true, QString());
-        ack->addOperation(COAP_CONTENT_FORMAT_OPTION, QString("text/plain"));
-        ack->setType(COAP_ACKNOWLEDGMENT_TYPE);
-        ack->setMessageID(message->getMessageID());
-        ack->setToken(message->getToken());
-        this->send(ack);
+        QString topic = message->getOptionValue(COAP_URI_PATH_OPTION);
+        if (topic.size() > 0) {
+            QByteArray content = message->getPayload();
+            emit publishReceived(this, topic, 0, content, false, false);
+        } else {
+            CoAPMessage *ack = new CoAPMessage(COAP_METHOD_NOT_ALLOWED_RESPONSE_CODE, false, QString());
+            ack->addOption(COAP_CONTENT_FORMAT_OPTION, QString("text/plain"));
+            ack->setType(COAP_ACKNOWLEDGMENT_TYPE);
+            ack->setMessageID(message->getMessageID());
+            ack->setToken(message->getToken());
+            this->send(ack);
+        }
     }
 
     switch (message->getType()) {
@@ -162,24 +167,23 @@ void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
     case COAP_ACKNOWLEDGMENT_TYPE: {
         CoAPMessage *ack = (CoAPMessage *)this->timers->removeTimer(message->getToken());
         if (message->getCode() == COAP_CONTENT_RESPONSE_CODE) {
-            QString topic = message->getOptionMap().value(COAP_URI_PATH_OPTION).last();
-            QByteArray content = message->getPayload().toUtf8();
-
-            emit publishReceived(this, topic, 0, content, false, false);
+            QString topic = message->getOptionValue(COAP_URI_PATH_OPTION);
+            if (topic.size() > 0) {
+                QByteArray content = message->getPayload();
+                emit publishReceived(this, topic, 0, content, false, false);
+            }
         }
         if (ack->getCode() == COAP_GET_METHOD) {
-            int observeOptionValue = ack->getOptionMap().value(COAP_OBSERVE_OPTION).last().toInt();
-            QString topic = message->getOptionMap().value(COAP_URI_PATH_OPTION).last();
-
+            int observeOptionValue = ack->getOptionValue(COAP_OBSERVE_OPTION).toInt();
+            QString topic = message->getOptionValue(COAP_URI_PATH_OPTION);
             if (observeOptionValue == 0) {
                 emit subackReceived(this, topic, 0, 0);
             } else if (observeOptionValue == 1) {
                 emit unsubackReceived(this, topic);
             }
         } else if (ack->getCode() == COAP_PUT_METHOD) {
-            QList<QString> values = ack->getOptionMap().value(COAP_URI_PATH_OPTION);
-            QString topic = values.last();
-            QByteArray content = message->getPayload().toUtf8();
+            QString topic = ack->getOptionValue(COAP_URI_PATH_OPTION);
+            QByteArray content = message->getPayload();
 
             emit pubackReceived(this, topic, 0, content, false, false, 0);
         }

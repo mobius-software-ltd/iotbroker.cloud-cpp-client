@@ -61,7 +61,7 @@ public:
     void goPingTimer(int keepalive);
     void stopPingTimer();
 
-    void goRegisterTimer(Message *reg);
+    int goRegisterTimer(Message *reg);
     void stopRegisterTimer();
 
     void goTimeoutTimer();

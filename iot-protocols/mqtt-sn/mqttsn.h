@@ -32,7 +32,7 @@ private:
     SNConnect *connect;
     SNMessagesParser *messageParser;
     QMap<int, Message *> *publishPackets;
-    SNPublish *publishObj;
+    QMap<int, SNPublish *> *forPublish;
 
 public:
     MqttSN(AccountEntity account);

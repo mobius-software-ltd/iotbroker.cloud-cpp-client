@@ -46,6 +46,7 @@ class LoginForm : public QWidget
     CellWithEditLine *clientIDCell;
     CellWithEditLine *serverHostCell;
     CellWithEditLine *portCell;
+    CellWithCheckbox *secureCell;
 
     CellWithCheckbox *cleanSessionCell;
     CellWithEditLine *keepaliveCell;
@@ -53,6 +54,10 @@ class LoginForm : public QWidget
     CellWithEditLine *willTopicCell;
     CellWithCheckbox *retainCell;
     CellWithComboBox *qosCell;
+
+    CellWithEditLine *securityKeyCell;
+    CellWithEditLine *keyPassword;
+
 
     QList<QString> getInformation();
     bool isFieldsFill(QList<QString> list);
@@ -63,13 +68,17 @@ public:
 
     QSize getSize();
 
+    void setKeyPath(QString path);
+
 private:
     Ui::LoginForm *ui;
 
 signals:
     void accountToSave(AccountEntity account);
+    void securityKeyCellDidClick();
 
 public slots:
+    void lineEditDidClick(QLineEdit *lineEdit);
     void logInButtonDidClick();
 };
 

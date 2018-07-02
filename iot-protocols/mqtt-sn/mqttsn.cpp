@@ -29,7 +29,7 @@ MqttSN::MqttSN(AccountEntity account) : IotProtocol(account)
 
     this->messageParser = new SNMessagesParser(this);
     this->publishPackets = new QMap<int, Message *>();
-    this->publishObj = NULL;
+    this->forPublish = new QMap<int, SNPublish *>();
 
     this->internetProtocol = new UDPSocket(account.serverHost, account.port);
     this->internetProtocol->start();
@@ -75,9 +75,11 @@ void MqttSN::publish(MessageEntity message)
     SNRegister *registerPacket = new SNRegister(0, 0, topicName);
     Topic *topic = new SNFullTopic(topicName, qos);
 
-    this->publishObj = new SNPublish(0, topic, content, isDup, isRetain);
+    SNPublish *publish = new SNPublish(0, topic, content, isDup, isRetain);
 
-    this->timers->goRegisterTimer(registerPacket);
+    int i = this->timers->goRegisterTimer(registerPacket);
+
+    this->forPublish->insert(i, publish);
 }
 
 void MqttSN::subscribeTo(TopicEntity topic)
@@ -203,13 +205,16 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             this->timers->stopRegisterTimer();
 
             if (regack->getCode() == SN_ACCEPTED_RETURN_CODE) {
-                SNIdentifierTopic *topic = new SNIdentifierTopic(regack->getTopicID(), this->publishObj->getTopic()->getQoS());
-                this->publishObj->setPacketID(regack->getPacketID());
-                this->publishObj->setTopic(topic);
-                if (this->publishObj->getTopic()->getQoS()->getValue() == AT_MOST_ONCE) {
-                    this->send(this->publishObj);
-                } else {
-                    this->timers->goMessageTimer(this->publishObj);
+                SNPublish *publish = this->forPublish->value(regack->getPacketID());
+                if (publish != NULL) {
+                    SNIdentifierTopic *topic = new SNIdentifierTopic(regack->getTopicID(), publish->getTopic()->getQoS());
+                    publish->setPacketID(regack->getPacketID());
+                    publish->setTopic(topic);
+                    if (publish->getTopic()->getQoS()->getValue() == AT_MOST_ONCE) {
+                        this->send(publish);
+                    } else {
+                        this->timers->goMessageTimer(publish);
+                    }
                 }
             }
 

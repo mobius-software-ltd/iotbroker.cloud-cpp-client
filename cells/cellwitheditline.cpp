@@ -21,6 +21,7 @@
 #include "cellwitheditline.h"
 #include "ui_cellwitheditline.h"
 #include <QGraphicsPixmapItem>
+#include <QDebug>
 
 CellWithEditLine::CellWithEditLine(QWidget *parent) :
     QWidget(parent),
@@ -31,6 +32,7 @@ CellWithEditLine::CellWithEditLine(QWidget *parent) :
 
 CellWithEditLine *CellWithEditLine::createCellWith(QString imagePath, QString text, QString placeholder, ListWidget *widget)
 {
+
     CellWithEditLine *widgetForm = new CellWithEditLine();
     widgetForm->setImage(imagePath);
     widgetForm->setText(text);
@@ -101,7 +103,36 @@ void CellWithEditLine::setInputText(QString text)
     ui->lineEdit->setText(text);
 }
 
+void CellWithEditLine::setPasswordMode(bool mode) {
+    if (mode) {
+        ui->lineEdit->setEchoMode(QLineEdit::Password);
+    } else {
+        ui->lineEdit->setEchoMode(QLineEdit::Normal);
+    }
+}
+
+void CellWithEditLine::setLineEditClickFilter(bool flag)
+{
+    if (flag) {
+        ui->lineEdit->installEventFilter(this);
+        ui->lineEdit->setReadOnly(true);
+    } else {
+        ui->lineEdit->removeEventFilter(this);
+        ui->lineEdit->setReadOnly(false);
+    }
+}
+
+
 CellWithEditLine::~CellWithEditLine()
 {
     delete ui;
+}
+
+bool CellWithEditLine::eventFilter(QObject *obj, QEvent *event)
+{
+    if(event->type() == QEvent::MouseButtonPress)
+    {
+        emit didClick(ui->lineEdit);
+    }
+    return false;
 }

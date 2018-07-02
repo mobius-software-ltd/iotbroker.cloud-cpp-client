@@ -19,21 +19,32 @@
  */
 
 #include "coapmessage.h"
+#include <algorithm>
 
 CoAPMessage::CoAPMessage()
 {
     this->version = 1;
-    this->optionMap = QMap<CoAPOptionDefinitions, QList<QString> >();
+    this->messageID = 0;
+    this->token = -1;
+    this->options = QList<CoapOption>();
 }
 
-CoAPMessage::CoAPMessage(int code, bool confirmableFlag, bool tokenFlag, QString payload) : CoAPMessage()
+CoAPMessage::CoAPMessage(int version, CoAPTypes type, CoAPCode code, short messageId, long token, QList<CoapOption> options, QByteArray payload)
+{
+    this->version = version;
+    this->type = type;
+    this->code = code;
+    this->messageID = messageId;
+    this->token = token;
+    this->options = options;
+    this->payload = payload;
+}
+
+CoAPMessage::CoAPMessage(CoAPCode code, bool confirmableFlag, QString payload) : CoAPMessage()
 {
     this->code = code;
     this->type = (confirmableFlag == true) ? COAP_CONFIRMABLE_TYPE : COAP_NONCONFIRMABLE_TYPE;
-    this->isTokenExist = tokenFlag;
-    this->payload = payload;
-    this->messageID = 0;
-    this->token = 0;
+    this->payload = payload.toUtf8();
 }
 
 int CoAPMessage::getLength()
@@ -51,18 +62,44 @@ IotEnumProtocol *CoAPMessage::getProtocol()
     return new IotEnumProtocol(COAP_PROTOCOL);
 }
 
-void CoAPMessage::addOperation(CoAPOptionDefinitions option, QString value)
+void CoAPMessage::addOption(CoAPOptionDefinitions type, QString string)
 {
-    QList<QString> values = this->optionMap.value(option);
-
-    if (values.count() == 0) {
-        values = QList<QString>();
-    }
-
-    values.append(value);
-    this->optionMap.insert(option, values);
+    CoapOption option = CoapOption(type, string.length(), string.toUtf8());
+    this->options.append(option);
 }
 
+void CoAPMessage::addOption(CoapOption option)
+{
+    this->options.append(option);
+}
+
+QString CoAPMessage::getOptionValue(CoAPOptionDefinitions type)
+{
+    for (int i = 0; i < this->options.size(); i++) {
+        CoapOption option = this->options.at(i);
+        if (option.getNumber() == type) {
+            return QString(option.getValue());
+        }
+    }
+    return QString();
+}
+
+QList<CoapOption> CoAPMessage::getOptions()
+{
+    std::sort(this->options.begin(), this->options.end(),CoapOption::numberLessThan);
+    return options;
+}
+
+QString CoAPMessage::toString()
+{
+    return "version: " + QString::number(this->version) + "\n" +
+            "type: " + QString::number(this->type) + "\n" +
+            "token: " + QString::number(this->token) + "\n" +
+            "code: " + QString::number(this->code) + "\n" +
+            "messageID: " + QString::number(this->messageID) + "\n" +
+            "payload: " + QString(this->payload) + "\n" +
+            "options size: " + QString::number(this->options.size()) + "\n";
+}
 
 
 int CoAPMessage::getVersion() const
@@ -70,9 +107,9 @@ int CoAPMessage::getVersion() const
     return version;
 }
 
-CoAPTypes CoAPMessage::getType() const
+void CoAPMessage::setVersion(int value)
 {
-    return type;
+    version = value;
 }
 
 void CoAPMessage::setType(const CoAPTypes &value)
@@ -80,67 +117,42 @@ void CoAPMessage::setType(const CoAPTypes &value)
     type = value;
 }
 
-bool CoAPMessage::getIsTokenExist() const
-{
-    return isTokenExist;
-}
-
-void CoAPMessage::setIsTokenExist(bool value)
-{
-    isTokenExist = value;
-}
-
-int CoAPMessage::getToken() const
+long CoAPMessage::getToken() const
 {
     return token;
 }
 
-void CoAPMessage::setToken(int value)
+void CoAPMessage::setToken(const long &value)
 {
     token = value;
 }
 
-int CoAPMessage::getCode() const
+CoAPCode CoAPMessage::getCode() const
 {
     return code;
 }
 
-void CoAPMessage::setCode(const int &value)
+void CoAPMessage::setCode(const CoAPCode &value)
 {
     code = value;
 }
 
-int CoAPMessage::getMessageID() const
+short CoAPMessage::getMessageID() const
 {
     return messageID;
 }
 
-void CoAPMessage::setMessageID(int value)
+void CoAPMessage::setMessageID(short value)
 {
     messageID = value;
 }
 
-QString CoAPMessage::getPayload() const
+QByteArray CoAPMessage::getPayload() const
 {
     return payload;
 }
 
-void CoAPMessage::setPayload(const QString &value)
+void CoAPMessage::setPayload(const QByteArray &value)
 {
     payload = value;
-}
-
-bool CoAPMessage::getIsResponse() const
-{
-    return isResponse;
-}
-
-void CoAPMessage::setIsResponse(bool value)
-{
-    isResponse = value;
-}
-
-QMap<CoAPOptionDefinitions, QList<QString> > CoAPMessage::getOptionMap() const
-{
-    return optionMap;
 }

@@ -21,6 +21,7 @@
 #include "mqtt.h"
 #include "timer/timersmap.h"
 #include "internet-protocols/tcpsocket.h"
+#include "internet-protocols/sslsocket.h"
 
 MQTT::MQTT(AccountEntity account) : IotProtocol(account)
 {
@@ -31,7 +32,11 @@ MQTT::MQTT(AccountEntity account) : IotProtocol(account)
 
     this->messageParser = new MessagesParser(this);
 
-    this->internetProtocol = new TCPSocket(account.serverHost, account.port);
+    if (account.isSecure) {
+        this->internetProtocol = new SslSocket(account.serverHost, account.port, account.keyPath, account.keyPass);
+    } else {
+        this->internetProtocol = new TCPSocket(account.serverHost, account.port);
+    }
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),                             this, SLOT(connectionDidStart(InternetProtocol*)));
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStop(InternetProtocol*)),                              this, SLOT(connectionDidStop(InternetProtocol*)));

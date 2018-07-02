@@ -21,6 +21,7 @@
 #include "timersmap.h"
 #include "iot-protocols/classes/countablemessage.h"
 #include "iot-protocols/iotprotocol.h"
+#include "classes/convertor.h"
 
 TimersMap::TimersMap(IotProtocol *iotProtocol)
 {
@@ -69,11 +70,13 @@ void TimersMap::stopPingTimer()
     }
 }
 
-void TimersMap::goRegisterTimer(Message *reg)
+int TimersMap::goRegisterTimer(Message *reg)
 {
     if (this->reg != NULL) {
         this->reg->stop();
     }
+
+    int packetID = 0;
 
     SNRegister *regPacket  = (SNRegister *)reg;
     if (regPacket->getPacketID() == 0) {
@@ -81,8 +84,10 @@ void TimersMap::goRegisterTimer(Message *reg)
         regPacket->setPacketID(packetID);
     }
 
-    this->reg = new TimerTask(reg, this->iotProtocol, 3000);
+    this->reg = new TimerTask(regPacket, this->iotProtocol, 3000);
     this->reg->start();
+
+    return packetID;
 }
 
 void TimersMap::stopRegisterTimer()

@@ -28,6 +28,7 @@
 #include "loginform.h"
 #include "generalform.h"
 #include "accountlistform.h"
+#include <QSslSocket>
 
 namespace Ui {
 class MainWindow;
@@ -82,6 +83,7 @@ private slots:
 
     // LoginForm
     void loginWithAccount(AccountEntity account);
+    void securityKeyCellDidClick();
 
     //Iot protocol
     void connackReceived(IotProtocol*,int);

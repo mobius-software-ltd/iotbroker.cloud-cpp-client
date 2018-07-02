@@ -63,8 +63,8 @@ short ByteArray::readShort()
 {
     char msb = static_cast<char>(this->byteArray.at(0));
     char lsb = static_cast<char>(this->byteArray.at(1));
-    this->byteArray.remove(0, 2);
-    return (msb << 8) | lsb;
+    this->byteArray.remove(0, 2);    
+    return (((msb & 0xFF) << 8) | (lsb & 0xFF));    //(msb << 8) | lsb;
 }
 
 char ByteArray::readChar()
@@ -129,6 +129,13 @@ QString ByteArray::readStringWithLength(int length)
     QString string = QString::fromUtf8(this->byteArray.left(length));
     this->byteArray.remove(0, length);
     return string;
+}
+
+QByteArray ByteArray::readRawData(int length)
+{
+    QByteArray array = this->byteArray.left(length);
+    this->byteArray.remove(0, length);
+    return array;
 }
 
 void ByteArray::writeInt(const int number)

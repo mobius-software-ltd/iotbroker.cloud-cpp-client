@@ -57,6 +57,7 @@ public:
 
     QString readString();
     QString readStringWithLength(int length);
+    QByteArray readRawData(int length);
     int numberWithLength(int length);
 
     void writeInt(const int number);

@@ -21,25 +21,12 @@
 #ifndef COAPENUMS_H
 #define COAPENUMS_H
 
-enum CoAPMethods
+enum CoAPCode
 {
-    COAP_GET_METHOD     = 1,
-    COAP_POST_METHOD    = 2,
-    COAP_PUT_METHOD     = 3,
-    COAP_DELETE_METHOD  = 4,
-};
-
-enum CoAPTypes
-{
-    COAP_CONFIRMABLE_TYPE       = 0,
-    COAP_NONCONFIRMABLE_TYPE    = 1,
-    COAP_ACKNOWLEDGMENT_TYPE    = 2,
-    COAP_RESET_TYPE             = 3,
-};
-
-enum CoAPResponseCodes
-{
-    COAP_EMPTY_RESPONSE_CODE                        = 0,
+    COAP_GET_METHOD                                 = 1,
+    COAP_POST_METHOD                                = 2,
+    COAP_PUT_METHOD                                 = 3,
+    COAP_DELETE_METHOD                              = 4,
     COAP_CREATED_RESPONSE_CODE                      = 65,
     COAP_DELETED_RESPONSE_CODE                      = 66,
     COAP_VALID_RESPONSE_CODE                        = 67,
@@ -63,6 +50,14 @@ enum CoAPResponseCodes
     COAP_PROXYING_NOT_SUPPORTED_RESPONSE_CODE       = 165
 };
 
+enum CoAPTypes
+{
+    COAP_CONFIRMABLE_TYPE       = 0,
+    COAP_NONCONFIRMABLE_TYPE    = 1,
+    COAP_ACKNOWLEDGMENT_TYPE    = 2,
+    COAP_RESET_TYPE             = 3,
+};
+
 enum CoAPOptionDefinitions
 {
     COAP_IF_MATCH_OPTION        = 1,
@@ -84,6 +79,7 @@ enum CoAPOptionDefinitions
     COAP_PROXY_URI_OPTION       = 35,
     COAP_PROXY_SCHEME_OPTION    = 39,
     COAP_SIZE1_OPTION           = 60,
+    COAP_NODE_ID_OPTION         = 2050,
 };
 
 enum CoAPContentFormats

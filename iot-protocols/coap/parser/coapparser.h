@@ -26,20 +26,11 @@
 
 class CoAPParser
 {
-private:
-
-    QString hexStringFromInt(int value);
-    bool payloadDecodeForMessage(Message *message);
-    QByteArray getHexDataFromString(QString *string);
-
-    QString hexStringFromString(QString string);
-    QString stringFromDataWithHex(QByteArray data);
-
 public:
     CoAPParser();
 
     Message *decode(QByteArray data);
-    QByteArray encode(Message *message);
+    QByteArray encode(Message *m);
 };
 
 #endif // COAPPARSER_H

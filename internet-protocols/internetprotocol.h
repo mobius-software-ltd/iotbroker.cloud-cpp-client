@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QObject>
+#include <QSslSocket>
 #include <QTcpSocket>
 #include <QUdpSocket>
 

@@ -46,24 +46,40 @@ LoginForm::LoginForm(QWidget *parent) :
 
     this->protocolCell      = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"), "Protocol:", protocolsList, "protocol",     ui->registrationInfoWidget);
 
-    this->usernameCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/username.png"), "Username:",      "username",     ui->registrationInfoWidget);
-    this->passwordCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/password.png"), "Password:",      "password",     ui->registrationInfoWidget);
-    this->clientIDCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/clienid.png"),  "Client ID:",     "client id",    ui->registrationInfoWidget);
-    this->serverHostCell    = CellWithEditLine::createCellWith(QString(":/resources/resources/host.png"),     "Server host:",   "server host",  ui->registrationInfoWidget);
-    this->portCell          = CellWithEditLine::createCellWith(QString(":/resources/resources/host.png"),     "Port:",          "port",         ui->registrationInfoWidget);
+    this->usernameCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/username.png"), "Username:",          "username",     ui->registrationInfoWidget);
+    this->passwordCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/password.png"), "Password:",          "password",     ui->registrationInfoWidget);
+    this->clientIDCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/clienid.png"),  "Client ID:",         "client id",    ui->registrationInfoWidget);
+    this->serverHostCell    = CellWithEditLine::createCellWith(QString(":/resources/resources/host.png"),     "Server host:",       "server host",  ui->registrationInfoWidget);
+    this->portCell          = CellWithEditLine::createCellWith(QString(":/resources/resources/host.png"),     "Port:",              "port",         ui->registrationInfoWidget);
+    this->secureCell        = CellWithCheckbox::createCellWith(QString(":/resources/resources/settings.png"), "Secure connection:", false,          ui->registrationInfoWidget);
 
     this->cleanSessionCell  = CellWithCheckbox::createCellWith(QString(":/resources/resources/cleansession.png"), "Clean session:", false,          ui->settingsWidget);
     this->keepaliveCell     = CellWithEditLine::createCellWith(QString(":/resources/resources/keepalive.png"),    "Keepalive:",     "keepalive",    ui->settingsWidget);
     this->willCell          = CellWithEditLine::createCellWith(QString(":/resources/resources/settings.png"),     "Will:",          "will",         ui->settingsWidget);
     this->willTopicCell     = CellWithEditLine::createCellWith(QString(":/resources/resources/settings.png"),     "Will topic:",    "will topic",   ui->settingsWidget);
     this->retainCell        = CellWithCheckbox::createCellWith(QString(":/resources/resources/settings.png"),     "Retain:",        false,          ui->settingsWidget);
-    this->qosCell           = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"),     "QoS:",   qosList, "0",            ui->settingsWidget);
+    this->qosCell           = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"),     "QoS:",   qosList, "0",           ui->settingsWidget);
+
+    this->securityKeyCell   = CellWithEditLine::createCellWith(QString(":/resources/resources/settings.png"),     "Security key:",  "click to select file", ui->securityWidget);
+    this->keyPassword       = CellWithEditLine::createCellWith(QString(":/resources/resources/password.png"),     "Key password:",  "key password", ui->securityWidget);
 
     this->portCell->setNumbersValidator();
     this->keepaliveCell->setNumbersValidator();
+    this->passwordCell->setPasswordMode(true);
+    this->keyPassword->setPasswordMode(true);
 
-    connect(ui->pushButton, SIGNAL(clicked(bool)), this, SLOT(logInButtonDidClick()));
+
+    this->securityKeyCell->setLineEditClickFilter(true);
+    QObject::connect(this->securityKeyCell, SIGNAL(didClick(QLineEdit*)), this, SLOT(lineEditDidClick(QLineEdit*)));
+
+    QObject::connect(ui->pushButton, SIGNAL(clicked(bool)), this, SLOT(logInButtonDidClick()));
 }
+
+void LoginForm::lineEditDidClick(QLineEdit *lineEdit)
+{
+    emit securityKeyCellDidClick();
+}
+
 
 void LoginForm::logInButtonDidClick()
 {
@@ -90,7 +106,10 @@ void LoginForm::logInButtonDidClick()
         account.willTopic   = this->willTopicCell->getInputText();
         account.isRetain    = this->retainCell->getState();
         account.qos         = this->qosCell->getValue().toInt();
-        account.isDefault = true;
+        account.isDefault   = true;
+        account.isSecure    = this->secureCell->getState();
+        account.keyPath     = this->securityKeyCell->getInputText();
+        account.keyPass     = this->keyPassword->getInputText();
 
         emit accountToSave(account);
     }
@@ -127,6 +146,7 @@ QList<QString> LoginForm::getInformation()
             }
         }
     }
+
     return list;
 }
 
@@ -144,7 +164,12 @@ bool LoginForm::isFieldsFill(QList<QString> list) {
 
 QSize LoginForm::getSize()
 {
-    return QSize(360, 550);
+    return QSize(360, 690);
+}
+
+void LoginForm::setKeyPath(QString path)
+{
+    this->securityKeyCell->setInputText(path);
 }
 
 LoginForm::~LoginForm()

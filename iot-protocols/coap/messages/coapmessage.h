@@ -23,6 +23,7 @@
 
 #include "iot-protocols/classes/message.h"
 #include "iot-protocols/coap/classes/coapenums.h"
+#include "iot-protocols/coap/classes/coapoption.h"
 #include <QString>
 #include <QList>
 #include <QMap>
@@ -31,57 +32,41 @@ class CoAPMessage : public Message
 {
 
     int version;
-
     CoAPTypes type;
-
-    bool isTokenExist;
-    int token;
-
-    int code;
-
-    int messageID;
-    QString payload;
-
-    bool isResponse;
-
-    QMap<CoAPOptionDefinitions, QList<QString> > optionMap;
+    long token;
+    CoAPCode code;
+    short messageID;
+    QByteArray payload;
+    QList<CoapOption> options;
 
 public:
     CoAPMessage();
-    CoAPMessage(int code, bool confirmableFlag, bool tokenFlag, QString payload);
+    CoAPMessage(int version, CoAPTypes type, CoAPCode code, short messageId, long token, QList<CoapOption> options, QByteArray payload);
+    CoAPMessage(CoAPCode code, bool confirmableFlag, QString payload);
 
     virtual int getLength();
     virtual int getType();
     virtual IotEnumProtocol *getProtocol();
 
-    void addOperation(CoAPOptionDefinitions option, QString value);
+    void addOption(CoAPOptionDefinitions type, QString string);
+    void addOption(CoapOption option);
 
-
+    QString getOptionValue(CoAPOptionDefinitions type);
 
     int getVersion() const;
-
-    CoAPTypes getType() const;
+    void setVersion(int value);
     void setType(const CoAPTypes &value);
+    long getToken() const;
+    void setToken(const long &value);
+    CoAPCode getCode() const;
+    void setCode(const CoAPCode &value);
+    short getMessageID() const;
+    void setMessageID(short value);
+    QByteArray getPayload() const;
+    void setPayload(const QByteArray &value);
+    QList<CoapOption> getOptions();
 
-    bool getIsTokenExist() const;
-    void setIsTokenExist(bool value);
-
-    int getToken() const;
-    void setToken(int value);
-
-    int getCode() const;
-    void setCode(const int &value);
-
-    int getMessageID() const;
-    void setMessageID(int value);
-
-    QString getPayload() const;
-    void setPayload(const QString &value);
-
-    bool getIsResponse() const;
-    void setIsResponse(bool value);
-
-    QMap<CoAPOptionDefinitions, QList<QString> > getOptionMap() const;
+    QString toString();
 };
 
 #endif // COAPMESSAGE_H

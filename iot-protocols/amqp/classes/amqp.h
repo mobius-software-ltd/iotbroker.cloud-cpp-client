@@ -24,16 +24,22 @@
 #include "iot-protocols/iotprotocol.h"
 #include "iot-protocols/amqp/classes/parser/amqpparser.h"
 #include "iot-protocols/amqp/classes/amqptransfermap.h"
+#include <QMap>
 
 class AMQP : public IotProtocol
 {
 private:
 
     int channel;
+    long nextHandle;
     bool isSASLConfirm;
-    bool isPublishAllow;
-    AMQPTransferMap *transferMap;
+
     AMQPParser *messageParser;
+
+    QMap<QString, long> usedIncomingMappings;
+    QMap<QString, long> usedOutgoingMappings;
+    QMap<long, QString> usedMappings;
+    QList<AMQPTransfer *> pendingMessages;
 
 public:
     AMQP(AccountEntity account);

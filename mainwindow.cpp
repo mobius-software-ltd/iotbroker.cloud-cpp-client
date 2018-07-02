@@ -24,11 +24,15 @@
 #include <QDebug>
 #include <QDir>
 #include <QMessageBox>
+#include <QFileDialog>
 #include <QDesktopWidget>
 #include "iot-protocols/mqtt/mqtt.h"
 #include "iot-protocols/mqtt-sn/mqttsn.h"
 #include "iot-protocols/coap/coap.h"
 #include "iot-protocols/amqp/classes/amqp.h"
+#include "iot-protocols/coap/coap.h"
+#include "iot-protocols/coap/parser/coapparser.h"
+#include "classes/convertor.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -54,6 +58,7 @@ void MainWindow::init()
         this->setSizeToWindowWithCentralPosition(this->accountListForm->getSize());
     } else {
         this->loginForm = new LoginForm(ui->stackedWidget);
+        connect(this->loginForm, SIGNAL(securityKeyCellDidClick()), this, SLOT(securityKeyCellDidClick()));
         connect(this->loginForm, SIGNAL(accountToSave(AccountEntity)), this, SLOT(loginWithAccount(AccountEntity)));
         ui->stackedWidget->addWidget(this->loginForm);
         this->setSizeToWindowWithCentralPosition(this->loginForm->getSize());
@@ -154,6 +159,7 @@ void MainWindow::newAccountDidClick()
     ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
     this->loginForm = new LoginForm(ui->stackedWidget);
+    connect(this->loginForm, SIGNAL(securityKeyCellDidClick()), this, SLOT(securityKeyCellDidClick()));
     connect(this->loginForm, SIGNAL(accountToSave(AccountEntity)), this, SLOT(loginWithAccount(AccountEntity)));
     ui->stackedWidget->addWidget(this->loginForm);
     this->setSizeToWindowWithCentralPosition(this->loginForm->getSize());
@@ -217,6 +223,12 @@ void MainWindow::loginWithAccount(AccountEntity account)
     this->loadingForm = new LoadingForm(ui->stackedWidget);
     ui->stackedWidget->addWidget(this->loadingForm);
     this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
+}
+
+void MainWindow::securityKeyCellDidClick()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Get certificate file"), "", tr("All Files (*)"));
+    this->loginForm->setKeyPath(fileName);
 }
 
 // Iot protocol

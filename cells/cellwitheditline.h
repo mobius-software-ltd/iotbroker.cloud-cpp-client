@@ -55,8 +55,16 @@ public:
     QString getInputText();
     void setInputText(QString text);
 
+    void setPasswordMode(bool mode);
+
+    void setLineEditClickFilter(bool flag);
+
 private:
     Ui::CellWithEditLine *ui;
+    bool eventFilter(QObject *obj, QEvent *event);
+
+signals:
+    void didClick(QLineEdit *);
 };
 
 #endif // CELLWITHEDITLINE_H
