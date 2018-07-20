@@ -27,6 +27,8 @@ public:
     InternetProtocol();
     InternetProtocol(QString withHost, int andPort);
 
+    virtual bool setCertificate(QString path, QString pass) = 0;
+
     virtual void start() = 0;
     virtual void stop() = 0;
     virtual bool send(QByteArray data) = 0;
@@ -40,8 +42,14 @@ public:
     int getPort() const;
     void setPort(int value);
 
+    static QString socketErrorToString(QAbstractSocket::SocketError error);
+
 
 public slots:
+
+    virtual void connected();
+    virtual void received(char*);
+    virtual void errorString(char *);
 
     virtual void readyRead() = 0;
     virtual void disconnected() = 0;
@@ -53,7 +61,7 @@ signals:
     void connectionDidStart(InternetProtocol *protocol);
     void connectionDidStop(InternetProtocol *protocol);
     void didReceiveMessage(InternetProtocol *protocol, QByteArray data);
-    void didFailWithError(InternetProtocol *protocol, QAbstractSocket::SocketError error);
+    void didFailWithError(InternetProtocol *protocol, QString error);
 
 };
 

@@ -33,15 +33,15 @@ MQTT::MQTT(AccountEntity account) : IotProtocol(account)
     this->messageParser = new MessagesParser(this);
 
     if (account.isSecure) {
-        this->internetProtocol = new SslSocket(account.serverHost, account.port, account.keyPath, account.keyPass);
+        this->internetProtocol = new SslSocket(account.serverHost, account.port);
     } else {
         this->internetProtocol = new TCPSocket(account.serverHost, account.port);
     }
 
-    QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),                             this, SLOT(connectionDidStart(InternetProtocol*)));
-    QObject::connect(this->internetProtocol, SIGNAL(connectionDidStop(InternetProtocol*)),                              this, SLOT(connectionDidStop(InternetProtocol*)));
-    QObject::connect(this->internetProtocol, SIGNAL(didReceiveMessage(InternetProtocol*,QByteArray)),                   this, SLOT(didReceiveMessage(InternetProtocol*,QByteArray)));
-    QObject::connect(this->internetProtocol, SIGNAL(didFailWithError(InternetProtocol*,QAbstractSocket::SocketError)),  this, SLOT(didFailWithError(InternetProtocol*,QAbstractSocket::SocketError)));
+    QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),             this, SLOT(connectionDidStart(InternetProtocol*)));
+    QObject::connect(this->internetProtocol, SIGNAL(connectionDidStop(InternetProtocol*)),              this, SLOT(connectionDidStop(InternetProtocol*)));
+    QObject::connect(this->internetProtocol, SIGNAL(didReceiveMessage(InternetProtocol*,QByteArray)),   this, SLOT(didReceiveMessage(InternetProtocol*,QByteArray)));
+    QObject::connect(this->internetProtocol, SIGNAL(didFailWithError(InternetProtocol*,QString)),       this, SLOT(didFailWithError(InternetProtocol*,QString)));
 }
 
 bool MQTT::send(Message *message)
@@ -55,6 +55,12 @@ bool MQTT::send(Message *message)
 
 void MQTT::goConnect()
 {
+    if (this->currentAccount.isSecure) {
+        if (!this->internetProtocol->setCertificate(this->currentAccount.keyPath, this->currentAccount.keyPass)) {
+            return;
+        }
+    }
+
     QString topicName = this->currentAccount.willTopic.get().toString();
     QByteArray content = this->currentAccount.will.get().toString().toUtf8();
     bool retain = this->currentAccount.isRetain.get().toBool();
@@ -129,6 +135,7 @@ void MQTT::pingreq()
 
 void MQTT::disconnectWith(int duration)
 {
+    Q_UNUSED(duration);
     this->send(new Disconnect());
     this->timers->stopAllTimers();
 }
@@ -148,18 +155,21 @@ void MQTT::timeoutMethod()
 
 void MQTT::connectionDidStart(InternetProtocol *protocol)
 {
+    Q_UNUSED(protocol);
     this->isConnect = true;
     this->timers->goConnectTimer(this->connect);
 }
 
 void MQTT::connectionDidStop(InternetProtocol *protocol)
 {
+    Q_UNUSED(protocol);
     this->isConnect = false;
     this->timers->stopAllTimers();
 }
 
 void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 {
+    Q_UNUSED(protocol);
     do {
         QByteArray barray = this->messageParser->nextMessage(data);
         Message *message = this->messageParser->decodeMessage(barray);
@@ -298,34 +308,10 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
     } while (data.length() > 0);
 }
 
-void MQTT::didFailWithError(InternetProtocol *protocol, QAbstractSocket::SocketError error)
+void MQTT::didFailWithError(InternetProtocol *protocol, QString error)
 {
-    switch (error) {
-        case QAbstractSocket::ConnectionRefusedError:            emit errorReceived(this, QString("connection refused error"));            break;
-        case QAbstractSocket::RemoteHostClosedError:             emit errorReceived(this, QString("remote host closed error"));            break;
-        case QAbstractSocket::HostNotFoundError:                 emit errorReceived(this, QString("host not found error"));                break;
-        case QAbstractSocket::SocketAccessError:                 emit errorReceived(this, QString("socket access error"));                 break;
-        case QAbstractSocket::SocketResourceError:               emit errorReceived(this, QString("socket resource error"));               break;
-        case QAbstractSocket::SocketTimeoutError:                emit errorReceived(this, QString("socket timeout error"));                break;
-        case QAbstractSocket::DatagramTooLargeError:             emit errorReceived(this, QString("datagram too large error"));            break;
-        case QAbstractSocket::NetworkError:                      emit errorReceived(this, QString("network error"));                       break;
-        case QAbstractSocket::AddressInUseError:                 emit errorReceived(this, QString("address in use error"));                break;
-        case QAbstractSocket::SocketAddressNotAvailableError:    emit errorReceived(this, QString("socket address not available error"));  break;
-        case QAbstractSocket::UnsupportedSocketOperationError:   emit errorReceived(this, QString("unsupported socket operation error"));  break;
-        case QAbstractSocket::UnfinishedSocketOperationError:    emit errorReceived(this, QString("unfinished socket operation error"));   break;
-        case QAbstractSocket::ProxyAuthenticationRequiredError:  emit errorReceived(this, QString("proxy authentication required error")); break;
-        case QAbstractSocket::SslHandshakeFailedError:           emit errorReceived(this, QString("ssl handshake failed error"));          break;
-        case QAbstractSocket::ProxyConnectionRefusedError:       emit errorReceived(this, QString("proxy connection refused error"));      break;
-        case QAbstractSocket::ProxyConnectionClosedError:        emit errorReceived(this, QString("proxy connection closed error"));       break;
-        case QAbstractSocket::ProxyConnectionTimeoutError:       emit errorReceived(this, QString("proxy connection timeout error"));      break;
-        case QAbstractSocket::ProxyNotFoundError:                emit errorReceived(this, QString("proxy not found error"));               break;
-        case QAbstractSocket::ProxyProtocolError:                emit errorReceived(this, QString("proxy protocol error"));                break;
-        case QAbstractSocket::OperationError:                    emit errorReceived(this, QString("operation error"));                     break;
-        case QAbstractSocket::SslInternalError:                  emit errorReceived(this, QString("ssl internal error"));                  break;
-        case QAbstractSocket::SslInvalidUserDataError:           emit errorReceived(this, QString("ssl invalid user data error"));         break;
-        case QAbstractSocket::TemporaryError:                    emit errorReceived(this, QString("temporary error"));                     break;
-        case QAbstractSocket::UnknownSocketError:                emit errorReceived(this, QString("unknown socket error"));                break;
-    }
+    Q_UNUSED(protocol);
+    emit errorReceived(this, error);
 }
 
 void MQTT::parseFailWithError(QString *error)

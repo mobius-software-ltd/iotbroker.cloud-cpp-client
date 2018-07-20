@@ -16,6 +16,13 @@ UDPSocket::UDPSocket(QString withHost, int andPort) : UDPSocket()
     this->setPort(andPort);
 }
 
+bool UDPSocket::setCertificate(QString path, QString pass)
+{
+    Q_UNUSED(path);
+    Q_UNUSED(pass);
+    return true;
+}
+
 void UDPSocket::start()
 {
     this->socket->bind(QHostAddress(this->getHost()), 0);
@@ -56,7 +63,8 @@ void UDPSocket::disconnected()
 
 void UDPSocket::error(QAbstractSocket::SocketError error)
 {
-    emit didFailWithError(this, error);
+    QString stringError = InternetProtocol::socketErrorToString(error);
+    emit didFailWithError(this, stringError);
 }
 
 void UDPSocket::stateDidChanged(QAbstractSocket::SocketState state)

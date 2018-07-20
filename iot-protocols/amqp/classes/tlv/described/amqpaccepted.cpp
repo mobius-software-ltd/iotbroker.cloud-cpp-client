@@ -29,7 +29,7 @@ AMQPAccepted::AMQPAccepted()
 
 void AMQPAccepted::fill(AMQPTLVList *list)
 {
-
+    Q_UNUSED(list);
 }
 
 AMQPTLVList *AMQPAccepted::getList()

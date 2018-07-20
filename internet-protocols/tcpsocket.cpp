@@ -18,6 +18,13 @@ TCPSocket::TCPSocket(QString withHost, int andPort) : TCPSocket()
     this->setPort(andPort);
 }
 
+bool TCPSocket::setCertificate(QString path, QString pass)
+{
+    Q_UNUSED(path);
+    Q_UNUSED(pass);
+    return true;
+}
+
 void TCPSocket::start()
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
@@ -68,7 +75,8 @@ void TCPSocket::disconnected()
 
 void TCPSocket::error(QAbstractSocket::SocketError error)
 {
-    emit didFailWithError(this, error);
+    QString stringError = InternetProtocol::socketErrorToString(error);
+    emit didFailWithError(this, stringError);
 }
 
 void TCPSocket::stateDidChanged(QAbstractSocket::SocketState state)

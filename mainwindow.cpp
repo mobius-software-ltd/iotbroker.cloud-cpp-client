@@ -235,6 +235,7 @@ void MainWindow::securityKeyCellDidClick()
 
 void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
 {
+    Q_UNUSED(iotProtocol);
     if (returnCode == MQ_ACCEPTED) {
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 

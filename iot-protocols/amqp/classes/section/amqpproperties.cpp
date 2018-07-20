@@ -107,6 +107,7 @@ AMQPSectionCode *AMQPProperties::getCode()
 
 void AMQPProperties::fill(TLVAMQP *value)
 {
+    Q_UNUSED(value);
     AMQPTLVList *list = new AMQPTLVList();
 
     if (list->getList().count() > 0) {

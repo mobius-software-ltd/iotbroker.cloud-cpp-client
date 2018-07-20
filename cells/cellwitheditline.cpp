@@ -130,6 +130,7 @@ CellWithEditLine::~CellWithEditLine()
 
 bool CellWithEditLine::eventFilter(QObject *obj, QEvent *event)
 {
+    Q_UNUSED(obj);
     if(event->type() == QEvent::MouseButtonPress)
     {
         emit didClick(ui->lineEdit);

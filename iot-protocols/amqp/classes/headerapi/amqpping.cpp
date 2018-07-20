@@ -42,5 +42,6 @@ AMQPTLVList *AMQPPing::arguments()
 
 void AMQPPing::fillArguments(AMQPTLVList *list)
 {
+    Q_UNUSED(list);
     return;
 }

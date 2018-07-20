@@ -77,6 +77,7 @@ LoginForm::LoginForm(QWidget *parent) :
 
 void LoginForm::lineEditDidClick(QLineEdit *lineEdit)
 {
+    Q_UNUSED(lineEdit);
     emit securityKeyCellDidClick();
 }
 

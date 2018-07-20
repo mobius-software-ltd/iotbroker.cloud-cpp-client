@@ -1,12 +1,12 @@
 #include "sslsocket.h"
-#include <QFile>
-#include <QSslKey>
+#include "classes/p12fileextractor.h"
+#include "classes/messageexception.h"
 
 SslSocket::SslSocket() : InternetProtocol()
 {
     this->socket = new QSslSocket(this);
 
-    //QObject::connect(socket, SIGNAL(aboutToClose()),                                             this, SLOT(aboutToCloseSlot()));
+    //QObject::connect(socket, SIGNAL(aboutToClose()),                              this, SLOT(aboutToCloseSlot()));
 
     QObject::connect(socket, SIGNAL(channelReadyRead(int)),                         this, SLOT(readyRead()));
     QObject::connect(socket, SIGNAL(disconnected()),                                this, SLOT(disconnected()));
@@ -20,20 +20,18 @@ SslSocket::SslSocket(QString withHost, int port) : SslSocket()
     this->setPort(port);
 }
 
-SslSocket::SslSocket(QString withHost, int port, QString certificatePath, QString certificatePass) : SslSocket()
+bool SslSocket::setCertificate(QString path, QString pass)
 {
-    this->setHost(withHost);
-    this->setPort(port);
-
-    QFile pkcs(certificatePath);
-    pkcs.open(QFile::ReadOnly);
-    QSslKey key;
-    QSslCertificate cert;
-    QList<QSslCertificate> imported_certs;
-    QByteArray pass = QByteArray::fromStdString(certificatePass.toStdString());
-    QSslCertificate::importPkcs12(&pkcs, &key, &cert, &imported_certs, pass);
-
-    this->socket->setLocalCertificate(cert);
+    try {
+        P12FileExtractor extractor = P12FileExtractor(path.toUtf8().data(), pass.toUtf8().data());
+        QByteArray certData = QByteArray(extractor.getCertificate(), strlen(extractor.getCertificate()));
+        QSslCertificate certificate = QSslCertificate(certData);
+        this->socket->setLocalCertificate(certificate);
+    } catch (MessageException e) {
+        emit didFailWithError(this, e.getMessage());
+        return false;
+    }
+    return true;
 }
 
 void SslSocket::start()
@@ -86,7 +84,8 @@ void SslSocket::disconnected()
 
 void SslSocket::error(QAbstractSocket::SocketError error)
 {
-    emit didFailWithError(this, error);
+    QString stringError = InternetProtocol::socketErrorToString(error);
+    emit didFailWithError(this, stringError);
 }
 
 void SslSocket::stateDidChanged(QAbstractSocket::SocketState state)

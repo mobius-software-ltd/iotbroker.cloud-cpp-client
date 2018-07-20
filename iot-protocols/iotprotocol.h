@@ -66,7 +66,7 @@ public slots:
     virtual void connectionDidStart(InternetProtocol *protocol) = 0;
     virtual void connectionDidStop(InternetProtocol *protocol) = 0;
     virtual void didReceiveMessage(InternetProtocol *protocol, QByteArray data) = 0;
-    virtual void didFailWithError(InternetProtocol *protocol, QAbstractSocket::SocketError error) = 0;
+    virtual void didFailWithError(InternetProtocol *protocol, QString error) = 0;
 
 signals:
 

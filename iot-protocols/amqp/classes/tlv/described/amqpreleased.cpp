@@ -29,7 +29,7 @@ AMQPReleased::AMQPReleased()
 
 void AMQPReleased::fill(AMQPTLVList *list)
 {
-
+    Q_UNUSED(list);
 }
 
 AMQPTLVList *AMQPReleased::getList()

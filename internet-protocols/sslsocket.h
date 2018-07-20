@@ -12,7 +12,8 @@ private:
 public:
     SslSocket();
     SslSocket(QString withHost, int port);
-    SslSocket(QString withHost, int port, QString certificatePath, QString certificatePass);
+
+    virtual bool setCertificate(QString path, QString pass);
 
     virtual void start();
     virtual void stop();
@@ -20,17 +21,9 @@ public:
 
 public slots:
 
-    //void aboutToCloseSlot();
-    //void bytesWrittenSlot(qint64 bytes);
-    //void channelBytesWrittenSlot(int channel, qint64 bytes);
     virtual void readyRead();
-    //void destroyedSlot(QObject *object);
     virtual void disconnected();
     virtual void error(QAbstractSocket::SocketError error);
-    //void hostDidFoundSlot();
-    //void objectNameChangedSlot(QString objectName);
-    //void readChannelFinishedSlot();
-    //void readyReadSlot();
     virtual void stateDidChanged(QAbstractSocket::SocketState state);
 
 };

@@ -67,6 +67,7 @@ AMQPSectionCode *AMQPMessageHeader::getCode()
 
 void AMQPMessageHeader::fill(TLVAMQP *value)
 {
+    Q_UNUSED(value);
     AMQPTLVList *list = new AMQPTLVList();
 
     if (list->getList().count() > 0) {

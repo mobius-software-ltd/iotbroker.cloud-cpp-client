@@ -55,7 +55,7 @@ public slots:
     void connectionDidStart(InternetProtocol *protocol);
     void connectionDidStop(InternetProtocol *protocol);
     void didReceiveMessage(InternetProtocol *protocol, QByteArray data);
-    void didFailWithError(InternetProtocol *protocol, QAbstractSocket::SocketError error);
+    void didFailWithError(InternetProtocol *protocol, QString error);
 
     void parseFailWithError(QString *error);
 };

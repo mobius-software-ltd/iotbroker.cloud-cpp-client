@@ -59,10 +59,9 @@ AMQPTLVList *AMQPProtoHeader::arguments()
 
 void AMQPProtoHeader::fillArguments(AMQPTLVList *list)
 {
+    Q_UNUSED(list);
     return;
 }
-
-
 
 AMQPProtocolIds AMQPProtoHeader::getProtocolId() const
 {
