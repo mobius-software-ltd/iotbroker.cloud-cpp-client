@@ -30,9 +30,7 @@
 #include "iot-protocols/mqtt-sn/mqttsn.h"
 #include "iot-protocols/coap/coap.h"
 #include "iot-protocols/amqp/classes/amqp.h"
-#include "iot-protocols/coap/coap.h"
-#include "iot-protocols/coap/parser/coapparser.h"
-#include "classes/convertor.h"
+#include "iot-protocols/websocket/websocketmqtt.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -69,6 +67,8 @@ void MainWindow::startWithAccount(AccountEntity account)
 {
     int protocolType = account.protocol.get().toInt();
 
+    qDebug() << protocolType;
+
     if (protocolType == MQTT_PROTOCOL) {
         this->iotProtocol = new MQTT(account);
     } else if (protocolType == MQTT_SN_PROTOCOL) {
@@ -77,6 +77,8 @@ void MainWindow::startWithAccount(AccountEntity account)
         this->iotProtocol = new CoAP(account);
     } else if (protocolType == AMQP_PROTOCOL) {
         this->iotProtocol = new AMQP(account);
+    } else if (protocolType == WEBSOCKET) {
+        this->iotProtocol = new WebsocketMQTT(account);
     }
 
     connect(this->iotProtocol, SIGNAL(connackReceived(IotProtocol*,int)),                                   this, SLOT(connackReceived(IotProtocol*,int)));

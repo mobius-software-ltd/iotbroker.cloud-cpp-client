@@ -27,7 +27,7 @@
 class MQTT : public IotProtocol
 {
 
-private:
+protected:
 
     int keepAlive;
     Connect *connect;

@@ -26,6 +26,7 @@
 #
 #-------------------------------------------------
 
+QT       += core websockets
 QT       += core gui
 QT       += network
 QT       += sql
@@ -217,7 +218,11 @@ SOURCES += main.cpp\
     classes/p12fileextractor.cpp \
     classes/messageexception.cpp \
     internet-protocols/dtlssocket.cpp \
-    classes/dtls.cpp
+    classes/dtls.cpp \
+    iot-protocols/mqtt/classes/mqjsonparser.cpp \
+    internet-protocols/websocket.cpp \
+    internet-protocols/sslwebsocket.cpp \
+    iot-protocols/websocket/websocketmqtt.cpp
 
 HEADERS  += mainwindow.h \
     database/entities/accountentity.h \
@@ -402,7 +407,11 @@ HEADERS  += mainwindow.h \
     classes/p12fileextractor.h \
     classes/messageexception.h \
     internet-protocols/dtlssocket.h \
-    classes/dtls.h
+    classes/dtls.h \
+    iot-protocols/mqtt/classes/mqjsonparser.h \
+    internet-protocols/websocket.h \
+    internet-protocols/sslwebsocket.h \
+    iot-protocols/websocket/websocketmqtt.h
 
 FORMS    += mainwindow.ui \
     cells/cellwithcheckbox.ui \

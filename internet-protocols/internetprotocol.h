@@ -51,6 +51,8 @@ public slots:
     virtual void received(char*);
     virtual void errorString(char *);
 
+    virtual void receivedByteArray(QByteArray);
+
     virtual void readyRead() = 0;
     virtual void disconnected() = 0;
     virtual void error(QAbstractSocket::SocketError error) = 0;

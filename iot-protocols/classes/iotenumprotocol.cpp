@@ -28,6 +28,7 @@ IotEnumProtocol::IotEnumProtocol()
     this->map.insert(MQTT_SN_PROTOCOL, MQTT_SN_PROTOCOL_STRING);
     this->map.insert(COAP_PROTOCOL, COAP_PROTOCOL_STRING);
     this->map.insert(AMQP_PROTOCOL, AMQP_PROTOCOL_STRING);
+    this->map.insert(WEBSOCKET, WEBSOCKET_PROTOCOL_STRING);
 }
 
 IotEnumProtocol::IotEnumProtocol(int value) : IotEnumProtocol()

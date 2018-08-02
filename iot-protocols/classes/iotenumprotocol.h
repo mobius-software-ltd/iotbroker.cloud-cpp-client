@@ -28,13 +28,15 @@ enum IotEnumProtocols : int
     MQTT_PROTOCOL = 1,
     MQTT_SN_PROTOCOL = 2,
     COAP_PROTOCOL = 3,
-    AMQP_PROTOCOL = 4
+    AMQP_PROTOCOL = 4,
+    WEBSOCKET = 5
 };
 
 static QString const MQTT_PROTOCOL_STRING = QString("MQTT");
 static QString const MQTT_SN_PROTOCOL_STRING = QString("MQTT-SN");
 static QString const COAP_PROTOCOL_STRING = QString("COAP");
 static QString const AMQP_PROTOCOL_STRING = QString("AMQP");
+static QString const WEBSOCKET_PROTOCOL_STRING = QString("WEBSOCKET");
 
 class IotEnumProtocol : public EnumObject
 {

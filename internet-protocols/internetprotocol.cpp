@@ -112,4 +112,9 @@ void InternetProtocol::errorString(char *)
 
 }
 
+void InternetProtocol::receivedByteArray(QByteArray)
+{
+
+}
+
 
