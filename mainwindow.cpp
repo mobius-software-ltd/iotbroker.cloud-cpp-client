@@ -67,8 +67,6 @@ void MainWindow::startWithAccount(AccountEntity account)
 {
     int protocolType = account.protocol.get().toInt();
 
-    qDebug() << protocolType;
-
     if (protocolType == MQTT_PROTOCOL) {
         this->iotProtocol = new MQTT(account);
     } else if (protocolType == MQTT_SN_PROTOCOL) {
@@ -171,8 +169,15 @@ void MainWindow::newAccountDidClick()
 
 void MainWindow::willSubscribeToTopic(TopicEntity topicEntity)
 {
-    this->progressTimer->start();
-    this->iotProtocol->subscribeTo(topicEntity);
+    QString topicName = topicEntity.topicName.get().toString();
+    if (this->accountManager->isTopicExist(topicName)) {
+        QMessageBox *messageBox = new QMessageBox("Warrning", "Topic "+ topicName +" already exists.", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+        messageBox->exec();
+    } else {
+        this->progressTimer->start();
+        this->iotProtocol->subscribeTo(topicEntity);
+    }
 }
 
 void MainWindow::willUnsubscribeFromTopic(TopicEntity topicEntity)
@@ -251,6 +256,10 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         ui->stackedWidget->addWidget(this->generalForm);
         this->setSizeToWindowWithCentralPosition(this->generalForm->getSize());
         this->subscribeToAllTopicsForCurrentAccount();
+
+        if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
+            this->accountManager->removeMessagesForCurrentAccount();
+        }
     }
 }
 
@@ -305,9 +314,11 @@ void MainWindow::timeout(IotProtocol*)
 
 void MainWindow::errorReceived(IotProtocol*,QString error)
 {
-    QMessageBox *messageBox = new QMessageBox("Warrning", error, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-    messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-    messageBox->exec();
+    if (this->iotProtocol->getIsConnect()) {
+        QMessageBox *messageBox = new QMessageBox("Warrning", error, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+        messageBox->exec();
+    }
 }
 
 // QProgressBar

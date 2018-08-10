@@ -88,8 +88,6 @@ void LoginForm::logInButtonDidClick()
     QList<QString> list = this->getInformation();
 
     IotEnumProtocol *p1 = new IotEnumProtocol();
-    qDebug() << p1->EnumObject::getValue(this->protocolCell->getValue());
-    qDebug() << this->protocolCell->getValue();
 
     if (this->isFieldsFill(list) == false) {
         QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);

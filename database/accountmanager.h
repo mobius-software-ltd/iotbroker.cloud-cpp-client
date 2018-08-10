@@ -61,6 +61,10 @@ public:
     void deleteTopic(TopicEntity topic);
     void deleteMessage(MessageEntity message);
 
+    bool isTopicExist(QString topic);
+
+    void removeMessagesForCurrentAccount();
+
     TopicEntity topicByName(QString name);
 };
 

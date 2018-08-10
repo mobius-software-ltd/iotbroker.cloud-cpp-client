@@ -252,6 +252,32 @@ void AccountManager::deleteMessage(MessageEntity message)
     this->dataBase.close();
 }
 
+bool AccountManager::isTopicExist(QString topic)
+{
+    QList<TopicEntity> topics = this->topicsForDefaultAccount();
+
+    for (int i = 0; i < topics.length(); i++) {
+        TopicEntity item = topics.at(i);
+        if (item.topicName.get().toString() == topic) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void AccountManager::removeMessagesForCurrentAccount()
+{
+    QList<MessageEntity> messages = this->messagesForDefaultAccount();
+
+    if (this->dataBase.open() == true) {
+        for (int i = 0; i < messages.length(); i++) {
+            MessageEntity message = messages.at(i);
+            message.remove();
+        }
+    }
+    this->dataBase.close();
+}
+
 TopicEntity AccountManager::topicByName(QString name)
 {
     TopicEntity topic = TopicEntity();

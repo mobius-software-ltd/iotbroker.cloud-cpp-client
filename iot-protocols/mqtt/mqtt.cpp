@@ -136,6 +136,7 @@ void MQTT::pingreq()
 void MQTT::disconnectWith(int duration)
 {
     Q_UNUSED(duration);
+    this->isConnect = false;
     this->send(new Disconnect());
     this->timers->stopAllTimers();
 }
@@ -149,6 +150,7 @@ void MQTT::timeoutMethod()
 {
     this->timers->stopAllTimers();
     emit timeout(this);
+    this->isConnect = false;
 }
 
 // SLOTS
