@@ -91,8 +91,8 @@ void LoginForm::logInButtonDidClick()
 
     if (this->isFieldsFill(list) == false) {
         QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
         messageBox->exec();
-
     } else {
 
         IotEnumProtocol *protocol = new IotEnumProtocol();

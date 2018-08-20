@@ -22,12 +22,19 @@
 #include "iot-protocols/iotprotocol.h"
 #include "iot-protocols/mqtt/messages/publish.h"
 #include "iot-protocols/mqtt/classes/mqttenums.h"
+#include "classes/scheduler.h"
 
 TimerTask::TimerTask(Message *message, IotProtocol *iotProtocol, int period)
 {
-    this->timer = new QTimer(this);
+    this->thread = new QThread(this);
+    this->timer = new QTimer(0);
     this->timer->setTimerType(Qt::PreciseTimer);
+    this->timer->setInterval(period);
+    this->timer->moveToThread(this->thread);
+
     QObject::connect(this->timer, SIGNAL(timeout()), this, SLOT(startSlot()));
+    QObject::connect(this->thread, SIGNAL(started()), this->timer, SLOT(start()));
+    QObject::connect(this->thread, SIGNAL(finished()), this->timer, SLOT(stop()));
 
     this->message = message;
     this->iotProtocol = iotProtocol;
@@ -54,7 +61,8 @@ void TimerTask::setIsTimeoutTask(bool value)
 
 void TimerTask::start()
 {
-    this->timer->start(this->period);
+    this->thread->start();
+    this->thread->setPriority(QThread::TimeCriticalPriority);
 }
 
 void TimerTask::startSlot()
@@ -78,6 +86,8 @@ void TimerTask::startSlot()
 
 void TimerTask::stop()
 {
-    this->timer->stop();
+    if (!this->thread->isFinished()) {
+        this->thread->terminate();
+    }
     this->status = false;
 }

@@ -65,6 +65,7 @@ QByteArray Parser::next(QByteArray &byteArray)
 QByteArray Parser::encode(Message *message)
 {
     int length = message->getLength();
+
     ByteArray *buffer = new ByteArray();
     unsigned char messageType = message->getType();
 
@@ -149,7 +150,8 @@ QByteArray Parser::encode(Message *message)
             firstByte |= (publish->isRetain() == true)? 1 : 0;
 
             buffer->writeChar(firstByte);
-            buffer->writeRawData(getBufferByLength(length));
+            QByteArray array1 = getBufferByLength(length);
+            buffer->writeRawData(array1);
 
             buffer->writeString(publish->getTopic()->getName());
 

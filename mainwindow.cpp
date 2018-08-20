@@ -221,6 +221,16 @@ void MainWindow::logoutTabDidCLick()
 
 void MainWindow::loginWithAccount(AccountEntity account)
 {
+    int keepalive = account.keepAlive.get().toInt();
+    int protocol = account.protocol.get().toInt();
+
+    if (protocol == MQTT_PROTOCOL && (keepalive <= 0 || keepalive > 65535)) {
+        QMessageBox *messageBox = new QMessageBox("Warrning", "Keepalive must be in the range [1, 65535].", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+        messageBox->exec();
+        return;
+    }
+
     this->accountManager->addAccount(account);
     this->accountManager->setDefaultAccountWithClientID(account.clientID);
     this->startWithAccount(this->accountManager->readDefaultAccount());

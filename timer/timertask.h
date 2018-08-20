@@ -23,6 +23,8 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QThread>
+
 #include "iot-protocols/classes/message.h"
 
 /**
@@ -43,6 +45,7 @@ private:
     bool isTimeoutTask;
 
     QTimer *timer;
+    QThread *thread;
 
 public:
     TimerTask(Message *message, IotProtocol *iotProtocol, int period);
