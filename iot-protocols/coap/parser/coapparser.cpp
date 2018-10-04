@@ -19,7 +19,6 @@
  */
 
 #include "coapparser.h"
-#include <QDebug>
 #include "classes/convertor.h"
 
 CoAPParser::CoAPParser()

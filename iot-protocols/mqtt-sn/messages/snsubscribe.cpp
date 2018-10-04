@@ -52,7 +52,7 @@ IotEnumProtocol *SNSubscribe::getProtocol()
     return new IotEnumProtocol(MQTT_SN_PROTOCOL);
 }
 
-int SNSubscribe::getPacketID() const
+int SNSubscribe::getPacketID()
 {
     return packetID;
 }

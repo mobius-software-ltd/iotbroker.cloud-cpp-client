@@ -13,9 +13,9 @@ WebsocketMQTT::WebsocketMQTT(AccountEntity account) : MQTT(account)
     this->messageParser = new MessagesParser(this);
 
     if (account.isSecure) {
-        this->internetProtocol = new SslWebSocket(account.serverHost, account.port);
+        this->internetProtocol = new SslWebSocket(account.serverHost.get().toString(), account.port.get().toInt());
     } else {
-        this->internetProtocol = new WebSocket(account.serverHost, account.port);
+        this->internetProtocol = new WebSocket(account.serverHost.get().toString(), account.port.get().toInt());
     }
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),             this, SLOT(connectionDidStart(InternetProtocol*)));

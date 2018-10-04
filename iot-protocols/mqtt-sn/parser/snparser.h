@@ -21,7 +21,6 @@
 #ifndef SNPARSER_H
 #define SNPARSER_H
 
-#include <QDebug>
 #include "classes/bytearray.h"
 
 #include "iot-protocols/classes/message.h"

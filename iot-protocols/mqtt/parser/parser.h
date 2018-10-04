@@ -21,7 +21,6 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <QDebug>
 #include <QBuffer>
 #include <QByteArray>
 #include "classes/bytearray.h"

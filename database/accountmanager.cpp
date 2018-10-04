@@ -19,8 +19,14 @@
  */
 
 #include "accountmanager.h"
+#include "iot-protocols/classes/iotenumprotocol.h"
 
 AccountManager* AccountManager::instance = 0;
+
+bool dateSort(const MessageEntity &me1, const MessageEntity &me2)
+{
+    return me1.timestamp.get().toUInt() > me2.timestamp.get().toUInt();
+}
 
 AccountManager::AccountManager()
 {
@@ -40,6 +46,22 @@ AccountManager* AccountManager::getInstance()
         instance = new AccountManager();
     }
     return instance;
+}
+
+bool AccountManager::isAccountValid(AccountEntity account)
+{
+    if (account.protocol.get().toInt() == MQTT_PROTOCOL || account.protocol.get().toInt() == WEBSOCKET) {
+        return account.username.get().toString().length() > 0 && account.password.get().toString().length() > 0 && account.clientID.get().toString().length() > 0 &&
+                account.serverHost.get().toString().length() > 0 && account.port.get().toInt() > 0;
+    } else if (account.protocol.get().toInt() == MQTT_SN_PROTOCOL) {
+        return account.clientID.get().toString().length() > 0 && account.serverHost.get().toString().length() > 0 && account.port.get().toInt() > 0;
+    } else if (account.protocol.get().toInt() == COAP_PROTOCOL) {
+        return account.clientID.get().toString().length() > 0 && account.serverHost.get().toString().length() > 0 && account.port.get().toInt() > 0;
+    } else if (account.protocol.get().toInt() == AMQP_PROTOCOL) {
+        return account.username.get().toString().length() > 0 && account.password.get().toString().length() > 0 && account.clientID.get().toString().length() > 0 &&
+                account.serverHost.get().toString().length() > 0 && account.port.get().toInt() > 0;
+    }
+    return false;
 }
 
 bool AccountManager::isDefaultAccountExist()
@@ -186,6 +208,7 @@ void AccountManager::addMessageForDefaultAccount(MessageEntity message, bool inc
     if (this->dataBase.open() == true) {
         message.incoming = incoming;
         message.account = account;
+        message.timestamp = QDateTime::currentMSecsSinceEpoch();
         message.save(true);
     }
     this->dataBase.close();
@@ -213,7 +236,9 @@ QList<MessageEntity> AccountManager::messagesForAccount(AccountEntity account)
 QList<MessageEntity> AccountManager::messagesForDefaultAccount()
 {
     AccountEntity account = this->readDefaultAccount();
-    return this->messagesForAccount(account);
+    QList<MessageEntity> list = this->messagesForAccount(account);
+    std::sort(list.begin(), list.end(), dateSort);
+    return list;
 }
 
 void AccountManager::deleteAccount(AccountEntity account)

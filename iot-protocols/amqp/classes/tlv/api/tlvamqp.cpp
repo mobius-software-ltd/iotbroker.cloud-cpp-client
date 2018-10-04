@@ -19,7 +19,7 @@
  */
 
 #include "tlvamqp.h"
-#include <QDebug>
+
 TLVAMQP::TLVAMQP(AMQPSimpleConstructor *constructor)
 {
     this->constructor = constructor;

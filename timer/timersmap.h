@@ -46,7 +46,6 @@ private:
     TimerTask *connect;
     TimerTask *ping;
     TimerTask *reg;
-    TimerTask *timeout;
 
     int count;
 
@@ -63,9 +62,6 @@ public:
 
     int goRegisterTimer(Message *reg);
     void stopRegisterTimer();
-
-    void goTimeoutTimer();
-    void stopTimeoutTimer();
 
     void goCoAPMessageTimer(Message *message);
 

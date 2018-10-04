@@ -19,7 +19,6 @@
  */
 
 #include "sngwinfo.h"
-#include <QDebug>
 
 SNGWInfo::SNGWInfo()
 {

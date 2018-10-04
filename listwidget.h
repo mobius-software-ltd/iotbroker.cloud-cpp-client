@@ -22,7 +22,6 @@
 #define LISTWIDGET_H
 
 #include <QListWidget>
-#include <QDebug>
 
 /**
  * @brief The ListWidget class

@@ -68,7 +68,7 @@ void SNRegister::setTopicID(int value)
     topicID = value;
 }
 
-int SNRegister::getPacketID() const
+int SNRegister::getPacketID()
 {
     return packetID;
 }

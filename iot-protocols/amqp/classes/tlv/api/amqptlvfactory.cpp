@@ -26,7 +26,6 @@
 #include "iot-protocols/amqp/classes/tlv/compound/amqptlvlist.h"
 #include "iot-protocols/amqp/classes/tlv/compound/amqptlvmap.h"
 #include "iot-protocols/amqp/classes/tlv/array/amqptlvarray.h"
-#include <QDebug>
 
 TLVAMQP *AMQPTLVFactory::tlvByData(ByteArray *data)
 {
@@ -39,8 +38,6 @@ TLVAMQP *AMQPTLVFactory::elementByConstructor(AMQPSimpleConstructor *constructor
 {
     TLVAMQP *tlv = NULL;
     AMQPType *type = constructor->getType();
-
-    qDebug() << data->readerIndex() << "::" << data->getSize() << ":" << type->getValue() << ":" << type->getName();
 
     switch (type->getValue()) {
         case AMQP_NULL_TYPE:

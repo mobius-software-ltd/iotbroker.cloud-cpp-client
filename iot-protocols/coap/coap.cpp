@@ -31,9 +31,9 @@ CoAP::CoAP(AccountEntity account)
     this->messageParser = new CoAPParser();
 
     if (account.isSecure) {
-        this->internetProtocol = new DtlsSocket(account.serverHost, account.port);
+        this->internetProtocol = new DtlsSocket(account.serverHost.get().toString(), account.port.get().toInt());
     } else {
-        this->internetProtocol = new UDPSocket(account.serverHost, account.port);
+        this->internetProtocol = new UDPSocket(account.serverHost.get().toString(), account.port.get().toInt());
     }
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),             this, SLOT(connectionDidStart(InternetProtocol*)));

@@ -33,15 +33,16 @@ MQTT::MQTT(AccountEntity account) : IotProtocol(account)
     this->messageParser = new MessagesParser(this);
 
     if (account.isSecure) {
-        this->internetProtocol = new SslSocket(account.serverHost, account.port);
+        this->internetProtocol = new SslSocket(account.serverHost.get().toString(), account.port.get().toInt());
     } else {
-        this->internetProtocol = new TCPSocket(account.serverHost, account.port);
+        this->internetProtocol = new TCPSocket(account.serverHost.get().toString(), account.port.get().toInt());
     }
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),             this, SLOT(connectionDidStart(InternetProtocol*)));
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStop(InternetProtocol*)),              this, SLOT(connectionDidStop(InternetProtocol*)));
     QObject::connect(this->internetProtocol, SIGNAL(didReceiveMessage(InternetProtocol*,QByteArray)),   this, SLOT(didReceiveMessage(InternetProtocol*,QByteArray)));
     QObject::connect(this->internetProtocol, SIGNAL(didFailWithError(InternetProtocol*,QString)),       this, SLOT(didFailWithError(InternetProtocol*,QString)));
+
 }
 
 bool MQTT::send(Message *message)
@@ -78,7 +79,6 @@ void MQTT::goConnect()
     connect->setWill(will);
 
     this->connect = connect;
-    this->timers->goTimeoutTimer();
     this->internetProtocol->start();
 }
 
@@ -187,7 +187,6 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 this->timers->stopConnectTimer();
                 Connack *connack = (Connack *)message;
                 if (connack->getReturnCode() == MQ_ACCEPTED) {
-                    this->timers->stopTimeoutTimer();
                     this->timers->goPingTimer(this->keepAlive);
                     emit connackReceived(this, connack->getReturnCode());
                 }

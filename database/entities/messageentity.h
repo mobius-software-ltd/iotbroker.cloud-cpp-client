@@ -39,6 +39,7 @@ public:
     DQField<bool>                   incoming;
     DQField<bool>                   isRetain;
     DQField<bool>                   isDub;
+    DQField<unsigned int>           timestamp;
     DQForeignKey<AccountEntity>     account;
 };
 
@@ -50,6 +51,7 @@ DQ_DECLARE_MODEL(MessageEntity,
                  DQ_FIELD(incoming),
                  DQ_FIELD(isRetain),
                  DQ_FIELD(isDub),
+                 DQ_FIELD(timestamp),
                  DQ_FIELD(account)
                  )
 

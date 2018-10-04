@@ -31,7 +31,7 @@ CellAccountItem::CellAccountItem(QWidget *parent) :
 CellAccountItem *CellAccountItem::createCellWith(QString username, QString clientID, QString host, QString port, ListWidget *widget)
 {
     CellAccountItem *widgetForm = new CellAccountItem();
-    widgetForm->setUsername(username);
+    widgetForm->setProtocol(username);
     widgetForm->setClientID(clientID);
     widgetForm->setHost(host);
     widgetForm->setPort(port);
@@ -43,14 +43,14 @@ CellAccountItem *CellAccountItem::createCellWith(QString username, QString clien
     return widgetForm;
 }
 
-QString CellAccountItem::getUsername()
+QString CellAccountItem::getProtocol()
 {
-    return ui->usernameLabel->text();
+    return ui->protocolLabel->text();
 }
 
-void CellAccountItem::setUsername(QString username)
+void CellAccountItem::setProtocol(QString protocol)
 {
-    ui->usernameLabel->setText(username);
+    ui->protocolLabel->setText(protocol);
 }
 
 QString CellAccountItem::getClientID()

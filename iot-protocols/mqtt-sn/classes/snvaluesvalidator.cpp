@@ -19,7 +19,6 @@
  */
 
 #include "snvaluesvalidator.h"
-#include <QDebug>
 
 static QList<int> *reservedPacketIDS = NULL;
 static QList<int> *reservedTopicIDS = NULL;

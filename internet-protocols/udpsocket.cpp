@@ -25,7 +25,7 @@ bool UDPSocket::setCertificate(QString path, QString pass)
 
 void UDPSocket::start()
 {
-    this->socket->bind(QHostAddress(this->getHost()), 0);
+    this->socket->connectToHost(this->getHost(), this->getPort(), QIODevice::ReadWrite);
 }
 
 void UDPSocket::stop()
@@ -35,7 +35,7 @@ void UDPSocket::stop()
 
 bool UDPSocket::send(QByteArray data)
 {
-    qint64 bytes = this->socket->writeDatagram(data, QHostAddress(this->getHost()), this->getPort());
+    qint64 bytes =this->socket->write(data);
     if (bytes == -1) {
         return false;
     }
@@ -58,6 +58,7 @@ void UDPSocket::readyRead()
 
 void UDPSocket::disconnected()
 {
+
     emit connectionDidStop(this);
 }
 
@@ -78,7 +79,7 @@ void UDPSocket::stateDidChanged(QAbstractSocket::SocketState state)
         default: break;
     }
 
-    if (state == QAbstractSocket::BoundState) {
+    if (state == QAbstractSocket::ConnectedState) {
         emit connectionDidStart(this);
     }
 }

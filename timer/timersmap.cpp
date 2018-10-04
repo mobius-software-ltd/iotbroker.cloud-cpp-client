@@ -29,7 +29,6 @@ TimersMap::TimersMap(IotProtocol *iotProtocol)
     this->connect = NULL;
     this->ping = NULL;
     this->reg = NULL;
-    this->timeout = NULL;
     this->iotProtocol = iotProtocol;
     this->count = 0;
 }
@@ -80,7 +79,7 @@ int TimersMap::goRegisterTimer(Message *reg)
 
     SNRegister *regPacket  = (SNRegister *)reg;
     if (regPacket->getPacketID() == 0) {
-        int packetID = this->getNewPacketID();
+        packetID = this->getNewPacketID();
         regPacket->setPacketID(packetID);
     }
 
@@ -95,25 +94,6 @@ void TimersMap::stopRegisterTimer()
     if (this->reg != NULL) {
         this->reg->stop();
         this->reg = NULL;
-    }
-}
-
-void TimersMap::goTimeoutTimer()
-{
-    if (this->timeout != NULL) {
-        this->timeout->stop();
-    }
-
-    this->timeout = new TimerTask(NULL, this->iotProtocol, TIMEOUT_VALUE);
-    this->timeout->setIsTimeoutTask(true);
-    this->timeout->start();
-}
-
-void TimersMap::stopTimeoutTimer()
-{
-    if (this->timeout != NULL) {
-        this->timeout->stop();
-        this->timeout = NULL;
     }
 }
 
@@ -149,9 +129,10 @@ void TimersMap::goMessageTimer(Message *message)
 Message *TimersMap::removeTimer(int id)
 {
     TimerTask *timer = this->timersMap->value(id);
-    Message *message = timer->getMessage();
+    Message *message = NULL;
 
     if (timer != NULL) {
+        message = timer->getMessage();
         timer->stop();
     }
 
@@ -178,7 +159,6 @@ void TimersMap::stopAllTimers()
     this->stopConnectTimer();
     this->stopPingTimer();
     this->stopRegisterTimer();
-    this->stopTimeoutTimer();
 
     QList<int> keys = this->timersMap->keys();
     for (int i = 0; i < this->timersMap->size(); i++) {

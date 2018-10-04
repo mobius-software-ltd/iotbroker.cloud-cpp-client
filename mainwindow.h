@@ -56,7 +56,6 @@ class MainWindow : public QMainWindow
     void startWithAccount(AccountEntity account);
     void setSizeToWindowWithCentralPosition(QSize size);
     void saveTopic(QString topicName, int qos, QByteArray content, bool isRetain, bool isDub, bool isIncoming);
-    void subscribeToAllTopicsForCurrentAccount();
     bool isTopicAlreadyExistForCurrentAccount(QString topic);
 
 public:
@@ -84,6 +83,7 @@ private slots:
     // LoginForm
     void loginWithAccount(AccountEntity account);
     void securityKeyCellDidClick();
+    void needToResizeLoginForm(LoginForm *form);
 
     //Iot protocol
     void connackReceived(IotProtocol*,int);

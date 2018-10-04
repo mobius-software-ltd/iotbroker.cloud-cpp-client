@@ -20,9 +20,13 @@
 
 #include "timertask.h"
 #include "iot-protocols/iotprotocol.h"
-#include "iot-protocols/mqtt/messages/publish.h"
 #include "iot-protocols/mqtt/classes/mqttenums.h"
-#include "classes/scheduler.h"
+#include "iot-protocols/mqtt/messages/connect.h"
+#include "iot-protocols/mqtt-sn/messages/snconnect.h"
+#include "iot-protocols/mqtt/messages/publish.h"
+#include "iot-protocols/mqtt-sn/messages/snpublish.h"
+
+int const CONNECT_REPEAT_TIMES = 5;
 
 TimerTask::TimerTask(Message *message, IotProtocol *iotProtocol, int period)
 {
@@ -41,7 +45,7 @@ TimerTask::TimerTask(Message *message, IotProtocol *iotProtocol, int period)
     this->period = period;
     this->status = false;
 
-    this->isTimeoutTask = false;
+    this->connectCount = 0;
 }
 
 int TimerTask::getPeriod()
@@ -54,29 +58,34 @@ Message *TimerTask::getMessage()
     return this->message;
 }
 
-void TimerTask::setIsTimeoutTask(bool value)
-{
-    this->isTimeoutTask = value;
-}
-
 void TimerTask::start()
 {
+    this->startSlot();
     this->thread->start();
     this->thread->setPriority(QThread::TimeCriticalPriority);
 }
 
 void TimerTask::startSlot()
 {
-    if (this->isTimeoutTask == true) {
-        this->iotProtocol->timeoutMethod();
-        return;
+
+    if (dynamic_cast<SNConnect*>( message ) || dynamic_cast<Connect*>( message )) {
+        this->connectCount += 1;
+        if (this->connectCount >= CONNECT_REPEAT_TIMES) {
+            this->iotProtocol->timeoutMethod();
+            this->connectCount = 0;
+            return;
+        }
     }
 
     if (this->iotProtocol->getIsConnect() == true) {
         if (this->status == true) {
-            if (this->message->getType() == MQ_PUBLISH) {
+            if (dynamic_cast<Publish*>( message )) {
                 Publish *publish = (Publish *)message;
                 publish->setDup(true);
+            }
+            if (dynamic_cast<SNPublish*>( message )) {
+                SNPublish *publish = (SNPublish *)message;
+                publish->setIsDup(true);
             }
         }
         this->iotProtocol->send(this->message);

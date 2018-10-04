@@ -102,6 +102,11 @@ void CellWithComboBox::setValues(QList<QString> values)
     }
 }
 
+QComboBox *CellWithComboBox::getComboBox()
+{
+    return ui->comboBox;
+}
+
 CellWithComboBox::~CellWithComboBox()
 {
     delete ui;

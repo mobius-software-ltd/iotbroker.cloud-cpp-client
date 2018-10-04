@@ -22,6 +22,7 @@
 #define CELLWITHCHECKBOX_H
 
 #include <listwidget.h>
+#include <QCheckBox>
 
 namespace Ui {
 class CellWithCheckbox;
@@ -49,6 +50,8 @@ public:
 
     bool getState();
     void setState(bool state);
+
+    QCheckBox *getCheckBox();
 
 private:
     Ui::CellWithCheckbox *ui;

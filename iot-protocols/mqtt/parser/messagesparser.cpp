@@ -19,7 +19,6 @@
  */
 
 #include "messagesparser.h"
-#include <QDebug>
 
 MessagesParser::MessagesParser(QObject *parent) : QObject(parent)
 {

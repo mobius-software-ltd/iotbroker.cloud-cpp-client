@@ -40,6 +40,8 @@ private:
 public:
     static AccountManager *getInstance();
 
+    bool isAccountValid(AccountEntity account);
+
     bool isDefaultAccountExist();
 
     void addAccount(AccountEntity account);

@@ -21,7 +21,6 @@
 #include "cellwitheditline.h"
 #include "ui_cellwitheditline.h"
 #include <QGraphicsPixmapItem>
-#include <QDebug>
 
 CellWithEditLine::CellWithEditLine(QWidget *parent) :
     QWidget(parent),

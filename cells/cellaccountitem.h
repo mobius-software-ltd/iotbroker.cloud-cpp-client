@@ -39,10 +39,10 @@ public:
     explicit CellAccountItem(QWidget *parent = 0);
     ~CellAccountItem();
 
-    static CellAccountItem *createCellWith(QString username, QString clientID, QString host, QString port, ListWidget *widget);
+    static CellAccountItem *createCellWith(QString protocol, QString clientID, QString host, QString port, ListWidget *widget);
 
-    QString getUsername();
-    void setUsername(QString username);
+    QString getProtocol();
+    void setProtocol(QString protocol);
 
     QString getClientID();
     void setClientID(QString clientID);

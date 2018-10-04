@@ -31,11 +31,12 @@ MqttSN::MqttSN(AccountEntity account) : IotProtocol(account)
     this->messageParser = new SNMessagesParser(this);
     this->publishPackets = new QMap<int, Message *>();
     this->forPublish = new QMap<int, SNPublish *>();
+    this->topics = new QMap<int, QString>();
 
     if (account.isSecure) {
-        this->internetProtocol = new DtlsSocket(account.serverHost, account.port);
+        this->internetProtocol = new DtlsSocket(account.serverHost.get().toString(), account.port.get().toInt());
     } else {
-        this->internetProtocol = new UDPSocket(account.serverHost, account.port);
+        this->internetProtocol = new UDPSocket(account.serverHost.get().toString(), account.port.get().toInt());
     }
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),             this, SLOT(connectionDidStart(InternetProtocol*)));
@@ -70,7 +71,6 @@ void MqttSN::goConnect()
     connect->setClientID(this->currentAccount.clientID.get().toString());
 
     this->connect = connect;
-    this->timers->goTimeoutTimer();
     this->internetProtocol->start();
 }
 
@@ -87,9 +87,12 @@ void MqttSN::publish(MessageEntity message)
 
     SNPublish *publish = new SNPublish(0, topic, content, isDup, isRetain);
 
-    int i = this->timers->goRegisterTimer(registerPacket);
+    int packetID = this->timers->goRegisterTimer(registerPacket);
 
-    this->forPublish->insert(i, publish);
+    this->forPublish->insert(packetID, publish);
+
+    SNPublish *p = new SNPublish(publish->getPacketID(), publish->getTopic(), publish->getContent(), publish->getIsDup(), publish->getIsRetain());
+    this->publishPackets->insert(packetID, p);
 }
 
 void MqttSN::subscribeTo(TopicEntity topic)
@@ -210,6 +213,7 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
         {
             SNRegister *reg = (SNRegister *)message;
             SNRegack *regack = new SNRegack(reg->getTopicID(), reg->getPacketID(), SN_ACCEPTED_RETURN_CODE);
+            this->topics->insert(reg->getTopicID(), reg->getTopicName());
             this->send(regack);
         } break;
         case SN_REGACK:
@@ -220,6 +224,7 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             if (regack->getCode() == SN_ACCEPTED_RETURN_CODE) {
                 SNPublish *publish = this->forPublish->value(regack->getPacketID());
                 if (publish != NULL) {
+                    this->topics->insert(regack->getTopicID(), QString(publish->getTopic()->encode()));
                     SNIdentifierTopic *topic = new SNIdentifierTopic(regack->getTopicID(), publish->getTopic()->getQoS());
                     publish->setPacketID(regack->getPacketID());
                     publish->setTopic(topic);
@@ -235,27 +240,28 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
         case SN_PUBLISH:
         {
             SNPublish *publish = (SNPublish *)message;
-
             if (publish->getTopic()->getQoS()->getValue() == AT_LEAST_ONCE) {
-                QString topicIDString = QString(publish->getTopic()->encode());
-                int topicID = topicIDString.toInt();
-                SNPuback *puback = new SNPuback(topicID, publish->getPacketID(), SN_ACCEPTED_RETURN_CODE);
+                int topicId = ByteArray(publish->getTopic()->encode()).readShort();
+                SNPuback *puback = new SNPuback(topicId, publish->getPacketID(), SN_ACCEPTED_RETURN_CODE);
                 this->send(puback);
             } else if (publish->getTopic()->getQoS()->getValue() == EXACTLY_ONCE) {
                 SNPubrec *pubrec = new SNPubrec(publish->getPacketID());
                 this->publishPackets->insert(publish->getPacketID(), publish);
                 this->timers->goMessageTimer(pubrec);
             }
-            QString topicName = QString(publish->getTopic()->encode());
+            int topicId = ByteArray(publish->getTopic()->encode()).readShort();
+            QString topicName = this->topics->value(topicId);
             emit publishReceived(this, topicName, publish->getTopic()->getQoS()->getValue(), *publish->getContent(), publish->getIsDup(), publish->getIsRetain());
         } break;
         case SN_PUBACK:
         {
             SNPuback *puback = (SNPuback *)message;
-            SNPublish *publish = (SNPublish *)this->timers->removeTimer(puback->getPacketID());
+            this->timers->removeTimer(puback->getPacketID());
+            SNPublish *publish = (SNPublish *)this->publishPackets->value(puback->getPacketID());
             QString topicName = QString(publish->getTopic()->encode());
             emit pubackReceived(this, topicName, publish->getTopic()->getQoS()->getValue(), *publish->getContent(), publish->getIsDup(), publish->getIsRetain(), puback->getCode());
-            this->publishPackets->remove(publish->getPacketID());
+            this->forPublish->remove(puback->getPacketID());
+            this->publishPackets->remove(puback->getPacketID());
         } break;
         case SN_PUBCOMP:
         {
@@ -269,20 +275,20 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
         case SN_PUBREC:
         {
             SNPubrec *pubrec = (SNPubrec *)message;
-            SNPublish *publish = (SNPublish *)this->timers->removeTimer(pubrec->getPacketID());
-            this->publishPackets->insert(publish->getPacketID(), publish);
+            this->timers->removeTimer(pubrec->getPacketID());
             SNPubrel *pubrel = new SNPubrel(pubrec->getPacketID());
-            this->timers->goMessageTimer(pubrel);
+            this->timers->goMessageTimer(pubrel);  
         } break;
         case SN_PUBREL:
         {
             SNPubrel *pubrel = (SNPubrel *)message;
             this->timers->removeTimer(pubrel->getPacketID());
             SNPublish *publish = (SNPublish *)this->publishPackets->value(pubrel->getPacketID());
+            int topicId = ByteArray(publish->getTopic()->encode()).readShort();
+            QString topicName =  this->topics->value(topicId);
+            emit pubackReceived(this, topicName, publish->getTopic()->getQoS()->getValue(), *publish->getContent(), publish->getIsDup(), publish->getIsRetain(), SN_ACCEPTED_RETURN_CODE);
             SNPubcomp *pubcomp = new SNPubcomp(pubrel->getPacketID());
             this->send(pubcomp);
-            QString topicName = QString(publish->getTopic()->encode());
-            emit pubackReceived(this, topicName, publish->getTopic()->getQoS()->getValue(), *publish->getContent(), publish->getIsDup(), publish->getIsRetain(), SN_ACCEPTED_RETURN_CODE);
         } break;
         case SN_SUBSCRIBE:
         {
@@ -293,6 +299,7 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             SNSuback *suback = (SNSuback *)message;
             SNSubscribe *subscribe = (SNSubscribe *)this->timers->removeTimer(suback->getPacketID());
             QString topicName = QString(subscribe->getTopic()->encode());
+            this->topics->insert(suback->getTopicID(), topicName);
             emit subackReceived(this, topicName, subscribe->getTopic()->getQoS()->getValue(), suback->getCode());
         } break;
         case SN_UNSUBSCRIBE:

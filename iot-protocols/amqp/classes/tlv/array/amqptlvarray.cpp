@@ -19,7 +19,6 @@
  */
 
 #include "amqptlvarray.h"
-#include <QDebug>
 
 AMQPTLVArray::AMQPTLVArray() : TLVAMQP(new AMQPSimpleConstructor(new AMQPType(AMQP_ARRAY8_TYPE)))
 {

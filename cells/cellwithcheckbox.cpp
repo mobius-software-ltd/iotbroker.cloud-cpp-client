@@ -85,6 +85,11 @@ void CellWithCheckbox::setState(bool state)
     ui->checkBox->setChecked(state);
 }
 
+QCheckBox *CellWithCheckbox::getCheckBox()
+{
+    return ui->checkBox;
+}
+
 CellWithCheckbox::~CellWithCheckbox()
 {
     delete ui;

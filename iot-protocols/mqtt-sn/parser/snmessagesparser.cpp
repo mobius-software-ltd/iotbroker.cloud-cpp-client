@@ -19,7 +19,6 @@
  */
 
 #include "snmessagesparser.h"
-#include <QDebug>
 
 SNMessagesParser::SNMessagesParser(QObject *parent) : QObject(parent)
 {

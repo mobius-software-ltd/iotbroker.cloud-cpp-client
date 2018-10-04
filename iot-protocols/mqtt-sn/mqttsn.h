@@ -33,6 +33,7 @@ private:
     SNMessagesParser *messageParser;
     QMap<int, Message *> *publishPackets;
     QMap<int, SNPublish *> *forPublish;
+    QMap<int, QString> *topics;
 
 public:
     MqttSN(AccountEntity account);

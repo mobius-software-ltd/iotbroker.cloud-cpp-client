@@ -20,6 +20,7 @@
 
 #include "accountlistform.h"
 #include "ui_accountlistform.h"
+#include "iot-protocols/classes/iotenumprotocol.h"
 
 AccountListForm::AccountListForm(QWidget *parent) :
     QWidget(parent),
@@ -51,7 +52,7 @@ void AccountListForm::setAccountList(DQList<AccountEntity> list)
 
     for (int i = 0; i < this->accounts.size(); i++) {
         AccountEntity *item = this->accounts.at(i);
-        this->addCell(item->username, item->clientID, item->serverHost, item->port);
+        this->addCell(IotEnumProtocol(item->protocol).getName(), item->clientID, item->serverHost, item->port);
     }
 }
 

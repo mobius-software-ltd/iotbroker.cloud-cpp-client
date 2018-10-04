@@ -24,8 +24,9 @@
 #include <QString>
 #include "iot-protocols/classes/message.h"
 #include "iot-protocols/mqtt-sn/classes/mqttsnenums.h"
+#include "iot-protocols/classes/countablemessage.h"
 
-class SNRegister : public Message
+class SNRegister : public CountableMessage
 {
 private:
 
@@ -44,8 +45,8 @@ public:
     int getTopicID() const;
     void setTopicID(int value);
 
-    int getPacketID() const;
-    void setPacketID(int value);
+    virtual int getPacketID();
+    virtual void setPacketID(int value);
 
     QString getTopicName() const;
     void setTopicName(const QString &value);

@@ -20,7 +20,6 @@
 
 #include "generalform.h"
 #include "ui_generalform.h"
-#include <QDebug>
 
 GeneralForm::GeneralForm(QWidget *parent) :
     QWidget(parent),

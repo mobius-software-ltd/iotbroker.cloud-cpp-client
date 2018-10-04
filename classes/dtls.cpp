@@ -1,5 +1,4 @@
 #include "dtls.h"
-#include <QDebug>
 
 #define MAXBUF 1024
 

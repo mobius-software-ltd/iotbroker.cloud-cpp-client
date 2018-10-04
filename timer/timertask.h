@@ -42,18 +42,17 @@ private:
     IotProtocol *iotProtocol;
     int period;
     bool status;
-    bool isTimeoutTask;
 
     QTimer *timer;
     QThread *thread;
+
+    int connectCount;
 
 public:
     TimerTask(Message *message, IotProtocol *iotProtocol, int period);
 
     int getPeriod();
     Message *getMessage();
-
-    void setIsTimeoutTask(bool value);
 
     void start();
     void stop();

@@ -75,7 +75,7 @@
           <property name="maximumSize">
            <size>
             <width>16777215</width>
-            <height>230</height>
+            <height>0</height>
            </size>
           </property>
           <property name="focusPolicy">

@@ -26,6 +26,7 @@
 #include <cells/cellwithcheckbox.h>
 #include <cells/cellwithcombobox.h>
 #include <database/entities/accountentity.h>
+#include "iot-protocols/classes/iotenumprotocol.h"
 
 namespace Ui {
 class LoginForm;
@@ -62,6 +63,10 @@ class LoginForm : public QWidget
     QList<QString> getInformation();
     bool isFieldsFill(QList<QString> list);
 
+    void showFieldsByProtocol(IotEnumProtocols protocol);
+
+    int currentHeight;
+
 public:
     explicit LoginForm(QWidget *parent = 0);
     ~LoginForm();
@@ -76,10 +81,13 @@ private:
 signals:
     void accountToSave(AccountEntity account);
     void securityKeyCellDidClick();
+    void needToResizeLoginForm(LoginForm *form);
 
 public slots:
     void lineEditDidClick(QLineEdit *lineEdit);
     void logInButtonDidClick();
+    void currentProtocolChanged(int protocol);
+    void changeSecureState(bool state);
 };
 
 #endif // LOGINFORM_H

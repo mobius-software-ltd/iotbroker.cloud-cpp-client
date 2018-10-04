@@ -19,7 +19,6 @@
  */
 
 #include "amqpprotoheader.h"
-#include <QDebug>
 
 AMQPProtoHeader::AMQPProtoHeader() : AMQPHeader()
 {

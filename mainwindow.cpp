@@ -21,7 +21,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QByteArray>
-#include <QDebug>
 #include <QDir>
 #include <QMessageBox>
 #include <QFileDialog>
@@ -58,6 +57,7 @@ void MainWindow::init()
         this->loginForm = new LoginForm(ui->stackedWidget);
         connect(this->loginForm, SIGNAL(securityKeyCellDidClick()), this, SLOT(securityKeyCellDidClick()));
         connect(this->loginForm, SIGNAL(accountToSave(AccountEntity)), this, SLOT(loginWithAccount(AccountEntity)));
+        connect(this->loginForm, SIGNAL(needToResizeLoginForm(LoginForm*)), this, SLOT(needToResizeLoginForm(LoginForm*)));
         ui->stackedWidget->addWidget(this->loginForm);
         this->setSizeToWindowWithCentralPosition(this->loginForm->getSize());
     }
@@ -113,14 +113,6 @@ void MainWindow::saveTopic(QString topicName, int qos, QByteArray content, bool 
     this->generalForm->setMessages(this->accountManager->messagesForDefaultAccount());
 }
 
-void MainWindow::subscribeToAllTopicsForCurrentAccount()
-{
-    QList<TopicEntity> topics = this->accountManager->topicsForDefaultAccount();
-    for(int i = 0; i < topics.size(); i++) {
-        this->iotProtocol->subscribeTo(topics.at(i));
-    }
-}
-
 bool MainWindow::isTopicAlreadyExistForCurrentAccount(QString topic)
 {
     QList<TopicEntity> topics = this->accountManager->topicsForDefaultAccount();
@@ -161,6 +153,7 @@ void MainWindow::newAccountDidClick()
     this->loginForm = new LoginForm(ui->stackedWidget);
     connect(this->loginForm, SIGNAL(securityKeyCellDidClick()), this, SLOT(securityKeyCellDidClick()));
     connect(this->loginForm, SIGNAL(accountToSave(AccountEntity)), this, SLOT(loginWithAccount(AccountEntity)));
+    connect(this->loginForm, SIGNAL(needToResizeLoginForm(LoginForm*)), this, SLOT(needToResizeLoginForm(LoginForm*)));
     ui->stackedWidget->addWidget(this->loginForm);
     this->setSizeToWindowWithCentralPosition(this->loginForm->getSize());
 }
@@ -210,9 +203,7 @@ void MainWindow::messagesTabDidCLick()
 void MainWindow::logoutTabDidCLick()
 {
     ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
-
     this->iotProtocol->disconnectWith(0);
-
     this->accountManager->uncheckDefaultAccount();
     this->init();
 }
@@ -221,31 +212,43 @@ void MainWindow::logoutTabDidCLick()
 
 void MainWindow::loginWithAccount(AccountEntity account)
 {
-    int keepalive = account.keepAlive.get().toInt();
-    int protocol = account.protocol.get().toInt();
+    if (this->accountManager->isAccountValid(account)) {
+        int keepalive = account.keepAlive.get().toInt();
+        int protocol = account.protocol.get().toInt();
 
-    if (protocol == MQTT_PROTOCOL && (keepalive <= 0 || keepalive > 65535)) {
-        QMessageBox *messageBox = new QMessageBox("Warrning", "Keepalive must be in the range [1, 65535].", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        if (protocol == MQTT_PROTOCOL && (keepalive <= 0 || keepalive > 65535)) {
+            QMessageBox *messageBox = new QMessageBox("Warrning", "Keepalive must be in the range [1, 65535].", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+            messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+            messageBox->exec();
+            return;
+        }
+
+        this->accountManager->addAccount(account);
+        this->accountManager->setDefaultAccountWithClientID(account.clientID);
+        this->startWithAccount(this->accountManager->readDefaultAccount());
+
+        ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+
+        this->loadingForm = new LoadingForm(ui->stackedWidget);
+        ui->stackedWidget->addWidget(this->loadingForm);
+        this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
+    } else {
+        QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
         messageBox->exec();
-        return;
     }
 
-    this->accountManager->addAccount(account);
-    this->accountManager->setDefaultAccountWithClientID(account.clientID);
-    this->startWithAccount(this->accountManager->readDefaultAccount());
-
-    ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
-
-    this->loadingForm = new LoadingForm(ui->stackedWidget);
-    ui->stackedWidget->addWidget(this->loadingForm);
-    this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
 }
 
 void MainWindow::securityKeyCellDidClick()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Get certificate file"), "", tr("All Files (*)"));
     this->loginForm->setKeyPath(fileName);
+}
+
+void MainWindow::needToResizeLoginForm(LoginForm *form)
+{
+    this->setSizeToWindowWithCentralPosition(form->getSize());
 }
 
 // Iot protocol
@@ -265,7 +268,6 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         connect(this->generalForm, SIGNAL(logoutTabDidCLick()), this, SLOT(logoutTabDidCLick()));
         ui->stackedWidget->addWidget(this->generalForm);
         this->setSizeToWindowWithCentralPosition(this->generalForm->getSize());
-        this->subscribeToAllTopicsForCurrentAccount();
 
         if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
             this->accountManager->removeMessagesForCurrentAccount();
@@ -310,8 +312,9 @@ void MainWindow::unsubackReceived(IotProtocol*,QString topic)
 
 void MainWindow::disconnectReceived(IotProtocol*)
 {
+    ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
     this->accountManager->uncheckDefaultAccount();
-    this->logoutTabDidCLick();
+    this->init();
 }
 
 void MainWindow::timeout(IotProtocol*)

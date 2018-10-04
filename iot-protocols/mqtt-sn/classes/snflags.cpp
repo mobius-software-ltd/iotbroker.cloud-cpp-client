@@ -19,7 +19,6 @@
  */
 
 #include "snflags.h"
-#include <QDebug>
 
 SNFlags::SNFlags()
 {

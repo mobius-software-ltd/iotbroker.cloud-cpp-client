@@ -19,7 +19,6 @@
  */
 
 #include "bytearray.h"
-#include <QDebug>
 
 ByteArray::ByteArray()
 {

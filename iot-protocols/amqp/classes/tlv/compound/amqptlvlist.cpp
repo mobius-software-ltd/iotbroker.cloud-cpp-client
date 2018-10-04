@@ -22,7 +22,6 @@
 #include "iot-protocols/amqp/classes/tlv/fixed/amqptlvnull.h"
 #include "iot-protocols/amqp/classes/tlv/compound/amqptlvmap.h"
 #include "iot-protocols/amqp/classes/tlv/array/amqptlvarray.h"
-#include <QDebug>
 
 AMQPTLVList::AMQPTLVList() : TLVAMQP(new AMQPSimpleConstructor(new AMQPType(AMQP_LIST0_TYPE)))
 {

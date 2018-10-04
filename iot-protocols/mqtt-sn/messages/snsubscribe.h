@@ -24,8 +24,9 @@
 #include "iot-protocols/classes/topic.h"
 #include "iot-protocols/classes/message.h"
 #include "iot-protocols/mqtt-sn/classes/mqttsnenums.h"
+#include "iot-protocols/classes/countablemessage.h"
 
-class SNSubscribe : public Message
+class SNSubscribe : public CountableMessage
 {
 private:
 
@@ -41,8 +42,8 @@ public:
     virtual int getType();
     virtual IotEnumProtocol *getProtocol();
 
-    int getPacketID() const;
-    void setPacketID(int value);
+    virtual int getPacketID();
+    virtual void setPacketID(int value);
 
     Topic *getTopic() const;
     void setTopic(Topic *value);

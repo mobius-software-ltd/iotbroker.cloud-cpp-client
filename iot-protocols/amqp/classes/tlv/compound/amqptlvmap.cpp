@@ -19,7 +19,6 @@
  */
 
 #include "amqptlvmap.h"
-#include <QDebug>
 
 AMQPTLVMap::AMQPTLVMap() : TLVAMQP(new AMQPSimpleConstructor(new AMQPType(AMQP_MAP8_TYPE)))
 {

@@ -36,13 +36,11 @@ AMQP::AMQP(AccountEntity account) : IotProtocol(account)
     this->usedMappings = QMap<long, QString>();
     this->pendingMessages = QList<AMQPTransfer *>();
 
-    this->internetProtocol = new TCPSocket(account.serverHost, account.port);
-
     if (account.isSecure) {
-        this->internetProtocol = new SslSocket(account.serverHost, account.port);
-        this->internetProtocol->setCertificate(account.keyPath, account.keyPass);
+        this->internetProtocol = new SslSocket(account.serverHost.get().toString(), account.port.get().toInt());
+        this->internetProtocol->setCertificate(account.keyPath.get().toString(), account.keyPass.get().toString());
     } else {
-        this->internetProtocol = new TCPSocket(account.serverHost, account.port);
+        this->internetProtocol = new TCPSocket(account.serverHost.get().toString(), account.port.get().toInt());
     }
 
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStart(InternetProtocol*)),             this, SLOT(connectionDidStart(InternetProtocol*)));

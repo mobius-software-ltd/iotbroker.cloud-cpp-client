@@ -22,6 +22,7 @@
 #define CELLWITHCOMBOBOX_H
 
 #include <listwidget.h>
+#include <QComboBox>
 
 namespace Ui {
 class CellWithComboBox;
@@ -52,6 +53,8 @@ public:
 
     QList<QString> getValues();
     void setValues(QList<QString> values);
+
+    QComboBox *getComboBox();
 
 private:
     Ui::CellWithComboBox *ui;

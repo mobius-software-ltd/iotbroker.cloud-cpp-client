@@ -25,6 +25,7 @@
 #include "iot-protocols/mqtt-sn/classes/topics/snfulltopic.h"
 #include "iot-protocols/mqtt-sn/classes/topics/snidentifiertopic.h"
 #include "iot-protocols/mqtt-sn/classes/topics/snshorttopic.h"
+#include <QDebug>
 
 static unsigned char const threeOctetLengthSuffix = 0x01;
 
@@ -43,9 +44,6 @@ QByteArray SNParser::encode(Message *message)
 
     SNMessageType type = (SNMessageType)message->getType();
     data->writeChar(type);
-
-    qDebug() << "LENGTH  = " << length;
-    qDebug() << "TYPE = " << type;
 
     switch(type) {
 
@@ -243,8 +241,6 @@ Message *SNParser::decode(QByteArray data)
     short typeByte = buffer->readChar();
 
     SNMessageType type = (SNMessageType)typeByte;
-
-    qDebug() << "type = " << type;
 
     switch(type) {
 
@@ -565,7 +561,7 @@ Message *SNParser::decode(QByteArray data)
         case SN_DISCONNECT:
         {
             int duration = 0;
-            if (bytesLeft > 0) {
+            if (bytesLeft > 1) {
                 duration = buffer->readShort();
             }
             message = new SNDisconnect(duration);

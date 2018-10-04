@@ -20,9 +20,8 @@
 
 #include "loginform.h"
 #include "ui_loginform.h"
-#include "iot-protocols/classes/iotenumprotocol.h"
 #include <QMessageBox>
-#include <QDebug>
+#include "mainwindow.h"
 
 LoginForm::LoginForm(QWidget *parent) :
     QWidget(parent),
@@ -46,6 +45,7 @@ LoginForm::LoginForm(QWidget *parent) :
     qosList.append(QString::number(2));
 
     this->protocolCell      = CellWithComboBox::createCellWith(QString(":/resources/resources/settings.png"), "Protocol:", protocolsList, "protocol",     ui->registrationInfoWidget);
+    connect(this->protocolCell->getComboBox(), SIGNAL(currentIndexChanged(int)), this, SLOT(currentProtocolChanged(int)));
 
     this->usernameCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/username.png"), "Username:",          "username",     ui->registrationInfoWidget);
     this->passwordCell      = CellWithEditLine::createCellWith(QString(":/resources/resources/password.png"), "Password:",          "password",     ui->registrationInfoWidget);
@@ -53,6 +53,7 @@ LoginForm::LoginForm(QWidget *parent) :
     this->serverHostCell    = CellWithEditLine::createCellWith(QString(":/resources/resources/host.png"),     "Server host:",       "server host",  ui->registrationInfoWidget);
     this->portCell          = CellWithEditLine::createCellWith(QString(":/resources/resources/host.png"),     "Port:",              "port",         ui->registrationInfoWidget);
     this->secureCell        = CellWithCheckbox::createCellWith(QString(":/resources/resources/settings.png"), "Secure connection:", false,          ui->registrationInfoWidget);
+    connect(this->secureCell->getCheckBox(), SIGNAL(clicked(bool)), this, SLOT(changeSecureState(bool)));
 
     this->cleanSessionCell  = CellWithCheckbox::createCellWith(QString(":/resources/resources/cleansession.png"), "Clean session:", false,          ui->settingsWidget);
     this->keepaliveCell     = CellWithEditLine::createCellWith(QString(":/resources/resources/keepalive.png"),    "Keepalive:",     "keepalive",    ui->settingsWidget);
@@ -74,6 +75,9 @@ LoginForm::LoginForm(QWidget *parent) :
     QObject::connect(this->securityKeyCell, SIGNAL(didClick(QLineEdit*)), this, SLOT(lineEditDidClick(QLineEdit*)));
 
     QObject::connect(ui->pushButton, SIGNAL(clicked(bool)), this, SLOT(logInButtonDidClick()));
+
+
+    this->showFieldsByProtocol(MQTT_PROTOCOL);
 }
 
 void LoginForm::lineEditDidClick(QLineEdit *lineEdit)
@@ -85,90 +89,188 @@ void LoginForm::lineEditDidClick(QLineEdit *lineEdit)
 
 void LoginForm::logInButtonDidClick()
 {
-    QList<QString> list = this->getInformation();
+    IotEnumProtocol *protocol = new IotEnumProtocol();
 
-    IotEnumProtocol *p1 = new IotEnumProtocol();
+    AccountEntity account;
+    account.protocol    = protocol->EnumObject::getValue(this->protocolCell->getValue());
+    account.username    = this->usernameCell->getInputText();
+    account.password    = this->passwordCell->getInputText();
+    account.clientID    = this->clientIDCell->getInputText();
+    account.serverHost  = this->serverHostCell->getInputText();
+    account.port        = this->portCell->getInputText().toInt();
+    account.cleanSession = this->cleanSessionCell->getState();
+    account.keepAlive   = this->keepaliveCell->getInputText().toInt();
+    account.will        = this->willCell->getInputText();
+    account.willTopic   = this->willTopicCell->getInputText();
+    account.isRetain    = this->retainCell->getState();
+    account.qos         = this->qosCell->getValue().toInt();
+    account.isDefault   = true;
+    account.isSecure    = this->secureCell->getState();
+    account.keyPath     = this->securityKeyCell->getInputText();
+    account.keyPass     = this->keyPassword->getInputText();
 
-    if (this->isFieldsFill(list) == false) {
-        QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-        messageBox->exec();
+    emit accountToSave(account);
+}
+
+void LoginForm::currentProtocolChanged(int p)
+{
+    IotEnumProtocols protocol = (IotEnumProtocols)(p + 1);
+    this->showFieldsByProtocol(protocol);
+    emit needToResizeLoginForm(this);
+}
+
+void LoginForm::changeSecureState(bool state)
+{
+    int cellHeight = this->protocolCell->size().height() - 2;
+
+    if (state) {
+        this->currentHeight += cellHeight;
+        this->currentHeight += cellHeight;
+        this->currentHeight += ui->label_3->height();
+
+        ui->label_3->setHidden(false);
+        ui->securityWidget->setHidden(false);
+    } else {
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= ui->label_3->height();
+
+        ui->label_3->setHidden(true);
+        ui->securityWidget->setHidden(true);
+    }
+    emit needToResizeLoginForm(this);
+}
+
+void LoginForm::showFieldsByProtocol(IotEnumProtocols protocol)
+{
+    this->currentHeight = 690;
+    int registrationInfoWidgetHeight = 270;
+    int settingsWidgetHeight = 230;
+
+    int cellHeight = this->protocolCell->size().height() - 2;
+
+    if (protocol == MQTT_SN_PROTOCOL) {
+
+        ui->registrationInfoWidget->item(1) ->setHidden(true);
+        ui->registrationInfoWidget->item(2)->setHidden(true);
+        ui->registrationInfoWidget->item(3)->setHidden(false);
+        ui->registrationInfoWidget->item(4)->setHidden(false);
+        ui->registrationInfoWidget->item(5)->setHidden(false);
+        ui->registrationInfoWidget->item(6)->setHidden(false);
+
+        registrationInfoWidgetHeight -= cellHeight;
+        registrationInfoWidgetHeight -= cellHeight;
+
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+
+        ui->settingsWidget->item(0)->setHidden(false);
+        ui->settingsWidget->item(1)->setHidden(false);
+        ui->settingsWidget->item(2)->setHidden(false);
+        ui->settingsWidget->item(3)->setHidden(false);
+        ui->settingsWidget->item(4)->setHidden(false);
+        ui->settingsWidget->item(5)->setHidden(false);
+
+    } else if (protocol == COAP_PROTOCOL) {
+
+        ui->registrationInfoWidget->item(1) ->setHidden(true);
+        ui->registrationInfoWidget->item(2)->setHidden(true);
+        ui->registrationInfoWidget->item(3)->setHidden(false);
+        ui->registrationInfoWidget->item(4)->setHidden(false);
+        ui->registrationInfoWidget->item(5)->setHidden(false);
+        ui->registrationInfoWidget->item(6)->setHidden(false);
+
+        registrationInfoWidgetHeight -= cellHeight;
+        registrationInfoWidgetHeight -= cellHeight;
+
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+
+        ui->settingsWidget->item(0)->setHidden(true);
+        ui->settingsWidget->item(1)->setHidden(false);
+        ui->settingsWidget->item(2)->setHidden(true);
+        ui->settingsWidget->item(3)->setHidden(true);
+        ui->settingsWidget->item(4)->setHidden(true);
+        ui->settingsWidget->item(5)->setHidden(true);
+
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+
+    } else if (protocol == AMQP_PROTOCOL) {
+
+        ui->registrationInfoWidget->item(1) ->setHidden(false);
+        ui->registrationInfoWidget->item(2)->setHidden(false);
+        ui->registrationInfoWidget->item(3)->setHidden(false);
+        ui->registrationInfoWidget->item(4)->setHidden(false);
+        ui->registrationInfoWidget->item(5)->setHidden(false);
+        ui->registrationInfoWidget->item(6)->setHidden(false);
+
+        ui->settingsWidget->item(0)->setHidden(true);
+        ui->settingsWidget->item(1)->setHidden(false);
+        ui->settingsWidget->item(2)->setHidden(true);
+        ui->settingsWidget->item(3)->setHidden(true);
+        ui->settingsWidget->item(4)->setHidden(true);
+        ui->settingsWidget->item(5)->setHidden(true);
+
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+        settingsWidgetHeight -= cellHeight;
+
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+
     } else {
 
-        IotEnumProtocol *protocol = new IotEnumProtocol();
+        ui->registrationInfoWidget->item(1) ->setHidden(false);
+        ui->registrationInfoWidget->item(2)->setHidden(false);
+        ui->registrationInfoWidget->item(3)->setHidden(false);
+        ui->registrationInfoWidget->item(4)->setHidden(false);
+        ui->registrationInfoWidget->item(5)->setHidden(false);
+        ui->registrationInfoWidget->item(6)->setHidden(false);
 
-        AccountEntity account;
-        account.protocol    = protocol->EnumObject::getValue(this->protocolCell->getValue());
-        account.username    = this->usernameCell->getInputText();
-        account.password    = this->passwordCell->getInputText();
-        account.clientID    = this->clientIDCell->getInputText();
-        account.serverHost  = this->serverHostCell->getInputText();
-        account.port        = this->portCell->getInputText().toInt();
-        account.cleanSession = this->cleanSessionCell->getState();
-        account.keepAlive   = this->keepaliveCell->getInputText().toInt();
-        account.will        = this->willCell->getInputText();
-        account.willTopic   = this->willTopicCell->getInputText();
-        account.isRetain    = this->retainCell->getState();
-        account.qos         = this->qosCell->getValue().toInt();
-        account.isDefault   = true;
-        account.isSecure    = this->secureCell->getState();
-        account.keyPath     = this->securityKeyCell->getInputText();
-        account.keyPass     = this->keyPassword->getInputText();
+        ui->settingsWidget->item(0)->setHidden(false);
+        ui->settingsWidget->item(1)->setHidden(false);
+        ui->settingsWidget->item(2)->setHidden(false);
+        ui->settingsWidget->item(3)->setHidden(false);
+        ui->settingsWidget->item(4)->setHidden(false);
+        ui->settingsWidget->item(5)->setHidden(false);
 
-        emit accountToSave(account);
-    }
-}
-
-QList<QString> LoginForm::getInformation()
-{
-    QList<QString> list = QList<QString>();
-
-    for (int i = 0; i < ui->registrationInfoWidget->count(); i++) {
-        QListWidgetItem *item = ui->registrationInfoWidget->item(i);
-        if (item != NULL) {
-            QWidget *widget = ui->registrationInfoWidget->itemWidget(item);
-            if (widget->metaObject()->className() == CellWithEditLine().metaObject()->className()) {
-                CellWithEditLine *cell = (CellWithEditLine *)widget;
-                list.append(cell->getInputText());
-            }
-        }
     }
 
-    for (int i = 0; i < ui->settingsWidget->count(); i++) {
-        QListWidgetItem *item = ui->settingsWidget->item(i);
-        if (item != NULL) {
-            QWidget *widget = ui->settingsWidget->itemWidget(item);
-            if (widget->metaObject()->className() == CellWithEditLine().metaObject()->className()) {
-                CellWithEditLine *cell = (CellWithEditLine *)widget;
-                list.append(cell->getInputText());
-            } else if (widget->metaObject()->className() == CellWithCheckbox().metaObject()->className()) {
-                CellWithCheckbox *cell = (CellWithCheckbox *)widget;
-                list.append(QString::number(cell->getState()));
-            } else if (widget->metaObject()->className() == CellWithComboBox().metaObject()->className()) {
-                CellWithComboBox *cell = (CellWithComboBox *)widget;
-                list.append(cell->getValue());
-            }
-        }
+    ui->registrationInfoWidget->setMinimumHeight(registrationInfoWidgetHeight);
+    ui->settingsWidget->setMinimumHeight(settingsWidgetHeight);
+
+    if (this->secureCell->getState()) {
+        ui->label_3->setHidden(false);
+        ui->securityWidget->setHidden(false);
+    } else {
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= cellHeight;
+        this->currentHeight -= ui->label_3->height();
+
+        ui->label_3->setHidden(true);
+        ui->securityWidget->setHidden(true);
     }
 
-    return list;
-}
-
-bool LoginForm::isFieldsFill(QList<QString> list) {
-
-    bool flag = true;
-
-    for (int i = 0; i < list.size(); i++) {
-        if (list.at(i).isEmpty()) {
-            flag = false;
-        }
-    }
-    return flag;
 }
 
 QSize LoginForm::getSize()
 {
-    return QSize(360, 690);
+    return QSize(360, this->currentHeight);
 }
 
 void LoginForm::setKeyPath(QString path)
