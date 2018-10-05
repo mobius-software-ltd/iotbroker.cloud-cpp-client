@@ -20,7 +20,7 @@
 
 #include "coapmessage.h"
 #include <algorithm>
-
+#include <QDebug>
 CoAPMessage::CoAPMessage()
 {
     this->version = 1;
@@ -62,10 +62,15 @@ IotEnumProtocol *CoAPMessage::getProtocol()
     return new IotEnumProtocol(COAP_PROTOCOL);
 }
 
+void CoAPMessage::addOption(CoAPOptionDefinitions type, QByteArray data)
+{
+    CoapOption option = CoapOption(type, data.length(), data);
+    this->options.append(option);
+}
+
 void CoAPMessage::addOption(CoAPOptionDefinitions type, QString string)
 {
-    CoapOption option = CoapOption(type, string.length(), string.toUtf8());
-    this->options.append(option);
+    this->addOption(type, string.toUtf8());
 }
 
 void CoAPMessage::addOption(CoapOption option)
@@ -73,15 +78,15 @@ void CoAPMessage::addOption(CoapOption option)
     this->options.append(option);
 }
 
-QString CoAPMessage::getOptionValue(CoAPOptionDefinitions type)
+QByteArray CoAPMessage::getOptionValue(CoAPOptionDefinitions type)
 {
     for (int i = 0; i < this->options.size(); i++) {
         CoapOption option = this->options.at(i);
         if (option.getNumber() == type) {
-            return QString(option.getValue());
+            return option.getValue();
         }
     }
-    return QString();
+    return QByteArray();
 }
 
 QList<CoapOption> CoAPMessage::getOptions()

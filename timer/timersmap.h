@@ -63,7 +63,7 @@ public:
     int goRegisterTimer(Message *reg);
     void stopRegisterTimer();
 
-    void goCoAPMessageTimer(Message *message);
+    int goCoAPMessageTimer(Message *message, bool oneSend);
 
     void goMessageTimer(Message *message);
 

@@ -48,10 +48,11 @@ public:
     virtual int getType();
     virtual IotEnumProtocol *getProtocol();
 
+    void addOption(CoAPOptionDefinitions type, QByteArray data);
     void addOption(CoAPOptionDefinitions type, QString string);
     void addOption(CoapOption option);
 
-    QString getOptionValue(CoAPOptionDefinitions type);
+    QByteArray getOptionValue(CoAPOptionDefinitions type);
 
     int getVersion() const;
     void setVersion(int value);

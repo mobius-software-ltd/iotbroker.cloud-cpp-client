@@ -30,10 +30,7 @@ private:
 
     CoAPParser *messageParser;
     QString clientId;
-    int messageID;
-    long token;
-
-    void startSendMessage(Message *message);
+    QMap<int, QString> *topics;
 
 public:
     CoAP(AccountEntity account);

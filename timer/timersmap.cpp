@@ -97,14 +97,24 @@ void TimersMap::stopRegisterTimer()
     }
 }
 
-void TimersMap::goCoAPMessageTimer(Message *message)
+int TimersMap::goCoAPMessageTimer(Message *message, bool oneSend)
 {
     TimerTask *timer = new TimerTask(message, this->iotProtocol, MESSAGE_RESEND_PERIOD);
 
-    CoAPMessage *coapMessage = (CoAPMessage *)message;
-    this->timersMap->insert(coapMessage->getToken(), timer);
+    int number = this->getNewPacketID();
 
-    timer->start();
+    CoAPMessage *coapMessage = (CoAPMessage *)message;
+    coapMessage->setMessageID(number);
+    coapMessage->setToken(number);
+
+    if (oneSend) {
+        this->iotProtocol->send(message);
+    } else {
+        this->timersMap->insert(coapMessage->getToken(), timer);
+        timer->start();
+    }
+
+    return number;
 }
 
 void TimersMap::goMessageTimer(Message *message)

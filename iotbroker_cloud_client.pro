@@ -222,7 +222,8 @@ SOURCES += main.cpp\
     iot-protocols/mqtt/classes/mqjsonparser.cpp \
     internet-protocols/websocket.cpp \
     internet-protocols/sslwebsocket.cpp \
-    iot-protocols/websocket/websocketmqtt.cpp
+    iot-protocols/websocket/websocketmqtt.cpp \
+    iot-protocols/coap/classes/coapoptionparser.cpp
 
 HEADERS  += mainwindow.h \
     database/entities/accountentity.h \
@@ -411,7 +412,8 @@ HEADERS  += mainwindow.h \
     iot-protocols/mqtt/classes/mqjsonparser.h \
     internet-protocols/websocket.h \
     internet-protocols/sslwebsocket.h \
-    iot-protocols/websocket/websocketmqtt.h
+    iot-protocols/websocket/websocketmqtt.h \
+    iot-protocols/coap/classes/coapoptionparser.h
 
 FORMS    += mainwindow.ui \
     cells/cellwithcheckbox.ui \
