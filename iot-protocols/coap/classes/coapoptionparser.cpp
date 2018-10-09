@@ -2,7 +2,18 @@
 #include "classes/bytearray.h"
 #include <QDebug>
 
-QByteArray CoapOptionParser::encode(CoAPOptionDefinitions option, QVariant object)
+CoapOption CoapOptionParser::encode(CoAPOptionDefinitions option, QVariant object)
+{
+    QByteArray value = CoapOptionParser::encodeMethod(option, object);
+    return CoapOption(option, value.length(), value);
+}
+
+QVariant CoapOptionParser::decode(CoapOption option)
+{
+    return CoapOptionParser::decodeMethod((CoAPOptionDefinitions)option.getNumber(), option.getValue());
+}
+
+QByteArray CoapOptionParser::encodeMethod(CoAPOptionDefinitions option, QVariant object)
 {
     ByteArray array = ByteArray();
 
@@ -39,7 +50,7 @@ QByteArray CoapOptionParser::encode(CoAPOptionDefinitions option, QVariant objec
     return array.getByteArray();
 }
 
-QVariant CoapOptionParser::decode(CoAPOptionDefinitions option, QByteArray bytes)
+QVariant CoapOptionParser::decodeMethod(CoAPOptionDefinitions option, QByteArray bytes)
 {
     QVariant variant = QVariant();
     ByteArray array = ByteArray(QByteArray(bytes));

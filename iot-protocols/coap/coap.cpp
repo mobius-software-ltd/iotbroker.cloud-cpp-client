@@ -72,7 +72,7 @@ void CoAP::publish(MessageEntity message)
     CoAPMessage *coapMessage = new CoAPMessage(COAP_PUT_METHOD, true, content);
     coapMessage->addOption(COAP_URI_PATH_OPTION, topicName);
     coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
-    coapMessage->addOption(COAP_ACCEPT_OPTION, CoapOptionParser::encode(COAP_ACCEPT_OPTION, QVariant(qos)));
+    coapMessage->addOption(CoapOptionParser::encode(COAP_ACCEPT_OPTION, QVariant(qos)));
     this->timers->goCoAPMessageTimer(coapMessage, (qos == AT_MOST_ONCE));
 }
 
@@ -84,8 +84,8 @@ void CoAP::subscribeTo(TopicEntity topic)
     CoAPMessage *coapMessage = new CoAPMessage(COAP_GET_METHOD, true, QString());
     coapMessage->addOption(COAP_URI_PATH_OPTION, topicName);
     coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
-    coapMessage->addOption(COAP_OBSERVE_OPTION, CoapOptionParser::encode(COAP_OBSERVE_OPTION, QVariant(0)));
-    coapMessage->addOption(COAP_ACCEPT_OPTION, CoapOptionParser::encode(COAP_ACCEPT_OPTION, QVariant(qos)));
+    coapMessage->addOption(CoapOptionParser::encode(COAP_OBSERVE_OPTION, QVariant(0)));
+    coapMessage->addOption(CoapOptionParser::encode(COAP_ACCEPT_OPTION, QVariant(qos)));
     int token = this->timers->goCoAPMessageTimer(coapMessage, false);
     this->topics->insert(token, topicName);
 }
@@ -99,8 +99,8 @@ void CoAP::unsubscribeFrom(TopicEntity topic)
     CoAPMessage *coapMessage = new CoAPMessage(COAP_GET_METHOD, true, QString());
     coapMessage->addOption(COAP_URI_PATH_OPTION, topicName);
     coapMessage->addOption(COAP_NODE_ID_OPTION, this->clientId);
-    coapMessage->addOption(COAP_OBSERVE_OPTION, CoapOptionParser::encode(COAP_OBSERVE_OPTION, QVariant(1)));
-    coapMessage->addOption(COAP_ACCEPT_OPTION, CoapOptionParser::encode(COAP_ACCEPT_OPTION, QVariant(qos)));
+    coapMessage->addOption(CoapOptionParser::encode(COAP_OBSERVE_OPTION, QVariant(1)));
+    coapMessage->addOption(CoapOptionParser::encode(COAP_ACCEPT_OPTION, QVariant(qos)));
     int token = this->timers->goCoAPMessageTimer(coapMessage, false);
     this->topics->insert(token, topicName);
 }
@@ -153,10 +153,13 @@ void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
     CoAPMessage *message = (CoAPMessage *)this->messageParser->decode(data);
 
     if ((message->getCode() == COAP_POST_METHOD || message->getCode() == COAP_PUT_METHOD) && message->getType() != COAP_ACKNOWLEDGMENT_TYPE) {
-        QString topic = message->getOptionValue(COAP_URI_PATH_OPTION);
-        if (topic.size() > 0) {
+        QVariant qosVariant = CoapOptionParser::decode(message->getOption(COAP_ACCEPT_OPTION));
+        QVariant topicNameVariant = CoapOptionParser::decode(message->getOption(COAP_URI_PATH_OPTION));
+        int qos = qosVariant.toInt();
+        QString topicName = topicNameVariant.toString();
+        if (topicName.size() > 0) {
             QByteArray content = message->getPayload();
-            emit publishReceived(this, topic, 0, content, false, false);
+            emit publishReceived(this, topicName, qos, content, false, false);
         } else {
             CoAPMessage *ack = new CoAPMessage(COAP_METHOD_NOT_ALLOWED_RESPONSE_CODE, false, QString());
             ack->addOption(COAP_CONTENT_FORMAT_OPTION, QString("text/plain"));
@@ -170,8 +173,12 @@ void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 
     switch (message->getType()) {
     case COAP_CONFIRMABLE_TYPE: {
-        message->setType(COAP_ACKNOWLEDGMENT_TYPE);
-        this->send(message);
+        CoAPMessage *ack = new CoAPMessage(COAP_PUT_METHOD, true, "");
+        ack->addOption(COAP_NODE_ID_OPTION, this->clientId);
+        ack->setType(COAP_ACKNOWLEDGMENT_TYPE);
+        ack->setMessageID(message->getMessageID());
+        ack->setToken(message->getToken());
+        this->send(ack);
     } break;
     case COAP_NONCONFIRMABLE_TYPE: {
         this->timers->removeTimer(message->getToken());
@@ -179,30 +186,31 @@ void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
     case COAP_ACKNOWLEDGMENT_TYPE: {
         CoAPMessage *ack = (CoAPMessage *)this->timers->removeTimer(message->getToken());
         if (ack != NULL) {
-            if (message->getCode() == COAP_CONTENT_RESPONSE_CODE) {
-                QString topicName = this->topics->value(message->getToken());
+            if (ack->getCode() == COAP_CONTENT_RESPONSE_CODE) {
+                QString topicName = this->topics->value(ack->getToken());
                 if (topicName.size() > 0) {
-                    QByteArray content = message->getPayload();
+                    QByteArray content = ack->getPayload();
                     emit publishReceived(this, topicName, 0, content, false, false);
                 }
             }
             if (ack->getCode() == COAP_GET_METHOD) {
-                QVariant obsVariant = CoapOptionParser::decode(COAP_OBSERVE_OPTION, message->getOptionValue(COAP_OBSERVE_OPTION));
+                QVariant obsVariant = CoapOptionParser::decode(ack->getOption(COAP_OBSERVE_OPTION));
                 int observeOptionValue = obsVariant.toInt();
-                QString topicName = this->topics->value(message->getToken());
+                QString topicName = this->topics->value(ack->getToken());
                 if (observeOptionValue == 0) {
-                    QVariant qosVariant = CoapOptionParser::decode(COAP_ACCEPT_OPTION, message->getOptionValue(COAP_ACCEPT_OPTION));
+                    QVariant qosVariant = CoapOptionParser::decode(ack->getOption(COAP_ACCEPT_OPTION));
                     int qos = qosVariant.toInt();
                     emit subackReceived(this, topicName, qos, 0);
                 } else if (observeOptionValue == 1) {
                     emit unsubackReceived(this, topicName);
                 }
             } else if (ack->getCode() == COAP_PUT_METHOD) {
-                QVariant qosVariant = CoapOptionParser::decode(COAP_ACCEPT_OPTION, message->getOptionValue(COAP_ACCEPT_OPTION));
+                QVariant qosVariant = CoapOptionParser::decode(ack->getOption(COAP_ACCEPT_OPTION));
+                QVariant topicNameVariant = CoapOptionParser::decode(ack->getOption(COAP_URI_PATH_OPTION));
                 int qos = qosVariant.toInt();
-                QString topicName = this->topics->value(message->getToken());
+                QString topicName = topicNameVariant.toString();
                 if (qos != AT_MOST_ONCE) {
-                    QByteArray content = message->getPayload();
+                    QByteArray content = ack->getPayload();
                     emit pubackReceived(this, topicName, qos, content, false, false, 0);
                 }
             }

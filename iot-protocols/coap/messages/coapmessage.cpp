@@ -78,15 +78,15 @@ void CoAPMessage::addOption(CoapOption option)
     this->options.append(option);
 }
 
-QByteArray CoAPMessage::getOptionValue(CoAPOptionDefinitions type)
+CoapOption CoAPMessage::getOption(CoAPOptionDefinitions type)
 {
     for (int i = 0; i < this->options.size(); i++) {
         CoapOption option = this->options.at(i);
         if (option.getNumber() == type) {
-            return option.getValue();
+            return option;
         }
     }
-    return QByteArray();
+    return CoapOption(0, 0, QByteArray());
 }
 
 QList<CoapOption> CoAPMessage::getOptions()

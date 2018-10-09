@@ -52,7 +52,7 @@ public:
     void addOption(CoAPOptionDefinitions type, QString string);
     void addOption(CoapOption option);
 
-    QByteArray getOptionValue(CoAPOptionDefinitions type);
+    CoapOption getOption(CoAPOptionDefinitions type);
 
     int getVersion() const;
     void setVersion(int value);

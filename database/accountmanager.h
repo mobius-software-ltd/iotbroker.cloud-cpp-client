@@ -44,6 +44,8 @@ public:
 
     bool isDefaultAccountExist();
 
+    bool isAccountWithClientIdExist(QString clientId);
+
     void addAccount(AccountEntity account);
     DQList<AccountEntity> accounts();
     void setDefaultAccountWithClientID(QString clientID);

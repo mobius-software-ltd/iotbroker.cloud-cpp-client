@@ -81,6 +81,23 @@ bool AccountManager::isDefaultAccountExist()
     return flag;
 }
 
+bool AccountManager::isAccountWithClientIdExist(QString clientId)
+{
+    bool flag = false;
+
+    if (this->dataBase.open() == true) {
+        DQQuery<AccountEntity> query;
+        query = query.filter(DQWhere("clientID") == clientId);
+        if (query.exec()) {
+            while (query.next()) {
+                flag = true;
+            }
+        }
+    }
+    this->dataBase.close();
+    return flag;
+}
+
 void AccountManager::addAccount(AccountEntity account)
 {
     if (this->dataBase.open() == true) {

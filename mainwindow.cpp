@@ -213,6 +213,12 @@ void MainWindow::logoutTabDidCLick()
 void MainWindow::loginWithAccount(AccountEntity account)
 {
     if (this->accountManager->isAccountValid(account)) {
+        if (this->accountManager->isAccountWithClientIdExist(account.clientID)) {
+            QMessageBox *messageBox = new QMessageBox("Warning", "This client id have been already use", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+            messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+            messageBox->exec();
+            return;
+        }
         int keepalive = account.keepAlive.get().toInt();
         int protocol = account.protocol.get().toInt();
 
