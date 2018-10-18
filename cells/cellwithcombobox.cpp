@@ -107,6 +107,11 @@ QComboBox *CellWithComboBox::getComboBox()
     return ui->comboBox;
 }
 
+void CellWithComboBox::reset()
+{
+    ui->comboBox->setCurrentIndex(0);
+}
+
 CellWithComboBox::~CellWithComboBox()
 {
     delete ui;

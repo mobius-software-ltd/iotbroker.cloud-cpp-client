@@ -239,9 +239,9 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                         Publish *publish = (Publish *)publishMessage;
                         emit publishReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain());
                     }
-                    Pubcomp *pubcomp = new Pubcomp(pubrel->getPacketID());
-                    this->send(pubcomp);
                 }
+                Pubcomp *pubcomp = new Pubcomp(pubrel->getPacketID());
+                this->send(pubcomp);
             }
             break;
             case MQ_PUBCOMP:

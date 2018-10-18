@@ -53,6 +53,8 @@ public:
 
     QCheckBox *getCheckBox();
 
+    void reset();
+
 private:
     Ui::CellWithCheckbox *ui;
 };

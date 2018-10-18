@@ -28,7 +28,7 @@
 #include <QDebug>
 
 AMQPOpen::AMQPOpen() : AMQPHeader(new AMQPHeaderCode(AMQP_OPEN_HEADER_CODE))
-{     
+{
     this->maxFrameSize = NULL;
     this->channelMax = NULL;
     this->idleTimeout = NULL;

@@ -17,6 +17,7 @@
 #include "iot-protocols/mqtt/messages/suback.h"
 #include "iot-protocols/mqtt/messages/unsubscribe.h"
 #include "iot-protocols/mqtt/messages/unsuback.h"
+#include <QDebug>
 
 QByteArray MQJsonParser::json(Message *message)
 {
@@ -39,7 +40,7 @@ QByteArray MQJsonParser::json(Message *message)
         obj["willFlag"] = connect->isWillFlag();
         obj["usernameFlag"] = connect->isUsernameFlag();
         obj["passwordFlag"] = connect->isPasswordFlag();
-        if (connect->getWill()) {
+        if (connect->isWillFlag()) {
             QJsonObject topic = QJsonObject();
             topic["name"] = connect->getWill()->getTopic()->getName();
             topic["qos"] = connect->getWill()->getTopic()->getQoS()->getValue();
@@ -48,6 +49,8 @@ QByteArray MQJsonParser::json(Message *message)
             will["content"] = QString(connect->getWill()->getContent().toBase64());
             will["retain"] = connect->getWill()->isRetain();
             obj["will"] = will;
+        } else {
+            obj["will"] = QJsonValue::Null;
         }
     } break;
     case MQ_CONNACK: {
@@ -59,7 +62,11 @@ QByteArray MQJsonParser::json(Message *message)
     case MQ_PUBLISH: {
         Publish *publish = (Publish *)message;
         obj["packet"] = publish->getType();
-        obj["packetID"] = publish->getPacketID();
+        if (publish->getPacketID() == 0) {
+            obj["packetID"] = QJsonValue::Null;
+        } else {
+            obj["packetID"] = publish->getPacketID();
+        }
         QJsonObject topic = QJsonObject();
         topic["name"] = publish->getTopic()->getName();
         topic["qos"] = publish->getTopic()->getQoS()->getValue();
@@ -144,7 +151,8 @@ QByteArray MQJsonParser::json(Message *message)
     }
 
     QJsonDocument doc(obj);
-    return doc.toJson();
+    QString strJson(doc.toJson(QJsonDocument::Compact));
+    return strJson.toUtf8();
 }
 
 Message *MQJsonParser::message(QByteArray json)

@@ -65,6 +65,15 @@ void TimerTask::start()
     this->thread->setPriority(QThread::TimeCriticalPriority);
 }
 
+void TimerTask::start(bool withDelay)
+{
+    this->thread->start();
+    this->thread->setPriority(QThread::TimeCriticalPriority);
+    if (withDelay == false) {
+        this->startSlot();
+    }
+}
+
 void TimerTask::startSlot()
 {
 

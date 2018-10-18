@@ -73,6 +73,8 @@ void TopicListTab::addButtonDidClick()
 
     if (topicName.length() != 0) {
         emit addNewTopic(topic);
+        this->topicCell->clear();
+        this->qosCell->reset();
     } else {
         QMessageBox *messageBox = new QMessageBox("Warrning", "Please input topic name", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->exec();

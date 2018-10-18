@@ -31,6 +31,7 @@
 
 AMQPTarget::AMQPTarget()
 {
+    this->expiryPeriod = NULL;
     this->dynamicNodeProperties = QMap<QVariant *, QVariant *>();
     this->capabilities = QList<QVariant *>();
 }
@@ -39,22 +40,28 @@ AMQPTLVList *AMQPTarget::getlist()
 {
     AMQPTLVList *list = new AMQPTLVList();
     
+    qDebug() << "######1";
     if (!this->address.isEmpty()) {
         list->addElementWithIndex(0, AMQPWrapper::wrapString(this->address));
     }
+    qDebug() << "######2";
     if (this->durable != NULL) {
-        list->addElementWithIndex(1, AMQPWrapper::wrapInt(this->durable->getValue()));
+        list->addElementWithIndex(1, AMQPWrapper::wrapUInt(this->durable->getValue()));
     }
+    qDebug() << "######3";
     if (this->expiryPeriod != NULL) {
         AMQPSymbol *symbol = new AMQPSymbol(this->expiryPeriod->getName());
         list->addElementWithIndex(2, AMQPWrapper::wrapSymbol(symbol));
     }
+    qDebug() << "######4";
     if (this->timeout != NULL) {
-        list->addElementWithIndex(3, AMQPWrapper::wrapUInt(this->timeout->toDateTime().currentMSecsSinceEpoch()));
+        list->addElementWithIndex(3, AMQPWrapper::wrapUInt(this->timeout->toUInt()));
     }
+    qDebug() << "######5";
     if (this->dynamic != NULL) {
         list->addElementWithIndex(4, AMQPWrapper::wrapBool(this->dynamic->toBool()));
     }
+    qDebug() << "######6";
     if (this->dynamicNodeProperties.count() != 0) {
         if (this->dynamic != NULL) {
             if (this->dynamic->toBool()) {
@@ -66,10 +73,10 @@ AMQPTLVList *AMQPTarget::getlist()
             qDebug() << "AMQPTarget::getList::dynamicNodeProperties";
         }
     }
+
     if (this->capabilities.count() != 0) {
         list->addElementWithIndex(6, AMQPWrapper::wrapList(this->capabilities));
     }
-
     ByteArray data = ByteArray();
     data.writeChar(0x29);
     AMQPType *type = new AMQPType(AMQP_SMALL_ULONG_TYPE);
@@ -110,9 +117,7 @@ void AMQPTarget::fill(AMQPTLVList *list)
     if (list->getList().count() > 3) {
         TLVAMQP *element = list->getList().at(3);
         if (!element->isNull()) {
-            QDateTime dateTime = QDateTime();
-            dateTime.setMSecsSinceEpoch(AMQPUnwrapper::unwrapUInt(element));
-            this->timeout = new QVariant(dateTime);
+            this->timeout = new QVariant((unsigned int)AMQPUnwrapper::unwrapUInt(element));
         }
     }
     if (list->getList().count() > 4) {

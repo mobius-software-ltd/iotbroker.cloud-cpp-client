@@ -30,7 +30,7 @@
 
 class ProtocolMessage : public QObject
 {
-
+    Q_OBJECT
 public:
     virtual IotEnumProtocol *getProtocol() = 0;
 };

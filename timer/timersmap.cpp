@@ -22,6 +22,8 @@
 #include "iot-protocols/classes/countablemessage.h"
 #include "iot-protocols/iotprotocol.h"
 #include "classes/convertor.h"
+#include "iot-protocols/amqp/classes/headeramqp/amqptransfer.h"
+#include "iot-protocols/amqp/classes/amqpsimpletype.h"
 
 TimersMap::TimersMap(IotProtocol *iotProtocol)
 {
@@ -58,7 +60,7 @@ void TimersMap::goPingTimer(int keepalive)
     }
 
     this->ping = new TimerTask(this->iotProtocol->getPingreqMessage(), this->iotProtocol, keepalive * 1000);
-    this->ping->start();
+    this->ping->start(true);
 }
 
 void TimersMap::stopPingTimer()
@@ -125,14 +127,21 @@ void TimersMap::goMessageTimer(Message *message)
         throw new QString("TimersMap : Outgoing identifier overflow");
     }
 
-    CountableMessage *countableMessage  = (CountableMessage *)message;
-    if (countableMessage->getPacketID() == 0) {
-        int packetID = this->getNewPacketID();
-        countableMessage->setPacketID(packetID);
+    int packetID = this->getNewPacketID();
+
+    if (qobject_cast<CountableMessage *>(message) != NULL) {
+        CountableMessage *countableMessage  = (CountableMessage *)message;
+        if (countableMessage->getPacketID() == 0) {
+            countableMessage->setPacketID(packetID);
+        } else {
+            packetID = countableMessage->getPacketID();
+        }
+    } else if (qobject_cast<AMQPTransfer *>(message) != NULL) {
+        AMQPTransfer *transfer = (AMQPTransfer *)message;
+        transfer->setDeliveryId(AMQPSimpleType::UIntToVariant(packetID));
     }
 
-    this->timersMap->insert(countableMessage->getPacketID(), timer);
-
+    this->timersMap->insert(packetID, timer);
     timer->start();
 }
 

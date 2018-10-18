@@ -57,6 +57,8 @@ public:
 
     virtual void timeoutMethod();
 
+    void setTopics(QList<TopicEntity> topics);
+
 public slots:
 
     void connectionDidStart(InternetProtocol *protocol);

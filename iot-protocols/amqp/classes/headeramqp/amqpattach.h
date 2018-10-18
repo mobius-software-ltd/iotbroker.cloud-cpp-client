@@ -34,6 +34,7 @@
 
 class AMQPAttach : public AMQPHeader
 {
+    Q_OBJECT
 private:
 
     QString name;

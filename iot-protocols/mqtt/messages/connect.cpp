@@ -79,7 +79,7 @@ void Connect::setCleanSession(bool cleanSession)
 
 bool Connect::isWillFlag()
 {
-    return this->will != NULL;
+    return (this->getWill()->getTopic()->getName().length() > 0 && this->getWill()->getContent().size() > 0);
 }
 
 Will *Connect::getWill()

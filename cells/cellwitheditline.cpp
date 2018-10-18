@@ -121,6 +121,10 @@ void CellWithEditLine::setLineEditClickFilter(bool flag)
     }
 }
 
+void CellWithEditLine::clear()
+{
+    ui->lineEdit->clear();
+}
 
 CellWithEditLine::~CellWithEditLine()
 {

@@ -67,6 +67,7 @@ public:
 
     bool isTopicExist(QString topic);
 
+    void removeTopicsForCurrentAccount();
     void removeMessagesForCurrentAccount();
 
     TopicEntity topicByName(QString name);

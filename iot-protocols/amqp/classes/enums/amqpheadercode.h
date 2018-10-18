@@ -41,7 +41,7 @@ enum AMQPHeaderCodes
     AMQP_CHALLENGE_HEADER_CODE      = 0x42,
     AMQP_RESPONSE_HEADER_CODE       = 0x43,
     AMQP_OUTCOME_HEADER_CODE        = 0x44,
-    AMQP_PING_HEADER_CODE           = 0xff,
+    AMQP_PING_HEADER_CODE           = 0x00,
 };
 
 static QString const AMQP_PROTOCOL_HEADER_CODE_STRING       = QString("Protocol header");

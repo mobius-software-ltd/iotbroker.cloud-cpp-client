@@ -55,6 +55,8 @@ public:
     Message *getMessage();
 
     void start();
+    void start(bool withDelay);
+
     void stop();
 
 public slots:

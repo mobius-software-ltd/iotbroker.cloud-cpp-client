@@ -21,10 +21,12 @@
 #ifndef COUNTABLEMESSAGE_H
 #define COUNTABLEMESSAGE_H
 
+#include <QObject>
 #include "iot-protocols/classes/message.h"
 
 class CountableMessage : public Message
 {
+    Q_OBJECT
 public:
 
     virtual int getPacketID() = 0;

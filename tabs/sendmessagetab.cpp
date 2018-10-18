@@ -43,11 +43,11 @@ SendMessageTab::SendMessageTab(QWidget *parent) :
     qosList.append(QString::number(1));
     qosList.append(QString::number(2));
 
-    CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget);
-    CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget);
-    CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
-    CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
-    CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
+    this->contentCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget);
+    this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget);
+    this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
+    this->retainCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
+    this->dupCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
 }
 
 void SendMessageTab::sendButtonDidClick()
@@ -58,13 +58,6 @@ void SendMessageTab::sendButtonDidClick()
         QMessageBox *messageBox = new QMessageBox("Warning", "Please fill all fields", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->exec();
     } else {
-/*
-        DQField<QByteArray>             content;
-        DQField<int>                    qos;
-        DQField<QString>                topicName;
-        DQField<bool>                   incoming;
-        DQField<bool>                   isRetain;
-    */
         MessageEntity message = MessageEntity();
 
         message.topicName = list.at(topicIndex);
@@ -75,6 +68,12 @@ void SendMessageTab::sendButtonDidClick()
         message.incoming = false;
 
         emit donePublishForSending(message);
+
+        this->contentCell->clear();
+        this->topicCell->clear();
+        this->qosCell->reset();
+        this->retainCell->reset();
+        this->dupCell->reset();
     }
 }
 

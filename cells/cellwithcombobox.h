@@ -56,6 +56,8 @@ public:
 
     QComboBox *getComboBox();
 
+    void reset();
+
 private:
     Ui::CellWithComboBox *ui;
 };

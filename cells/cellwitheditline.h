@@ -59,6 +59,8 @@ public:
 
     void setLineEditClickFilter(bool flag);
 
+    void clear();
+
 private:
     Ui::CellWithEditLine *ui;
     bool eventFilter(QObject *obj, QEvent *event);

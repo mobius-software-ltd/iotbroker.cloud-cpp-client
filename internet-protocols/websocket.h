@@ -23,6 +23,7 @@ public:
 public slots:
 
     void receivedByteArray(QByteArray);
+    void receivedString(QString);
 
     virtual void readyRead();
     virtual void disconnected();

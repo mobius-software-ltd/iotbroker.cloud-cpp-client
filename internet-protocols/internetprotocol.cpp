@@ -117,4 +117,9 @@ void InternetProtocol::receivedByteArray(QByteArray)
 
 }
 
+void InternetProtocol::receivedString(QString)
+{
+
+}
+
 

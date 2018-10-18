@@ -39,6 +39,11 @@ class SendMessageTab : public QWidget
 {
     Q_OBJECT
 
+    CellWithEditLine *contentCell;
+    CellWithEditLine *topicCell;
+    CellWithComboBox *qosCell;
+    CellWithCheckbox *retainCell;
+    CellWithCheckbox *dupCell;
 private:
 
     Ui::SendMessageTab *ui;

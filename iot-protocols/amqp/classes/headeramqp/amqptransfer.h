@@ -30,6 +30,7 @@
 
 class AMQPTransfer : public AMQPHeader
 {
+    Q_OBJECT
 private:
 
     QVariant *handle;

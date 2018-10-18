@@ -90,6 +90,12 @@ QCheckBox *CellWithCheckbox::getCheckBox()
     return ui->checkBox;
 }
 
+void CellWithCheckbox::reset()
+{
+    ui->checkBox->setChecked(false);
+}
+
+
 CellWithCheckbox::~CellWithCheckbox()
 {
     delete ui;

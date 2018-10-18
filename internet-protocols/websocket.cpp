@@ -4,10 +4,11 @@ WebSocket::WebSocket() : InternetProtocol()
 {
     this->socket = new QWebSocket();
 
-    QObject::connect(this->socket, SIGNAL(binaryMessageReceived(QByteArray)),             this, SLOT(receivedByteArray(QByteArray)));
-    QObject::connect(this->socket, SIGNAL(disconnected()),                                this, SLOT(disconnected()));
-    QObject::connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)),           this, SLOT(error(QAbstractSocket::SocketError)));
-    QObject::connect(this->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),    this, SLOT(stateDidChanged(QAbstractSocket::SocketState)));
+    QObject::connect(this->socket, SIGNAL(binaryMessageReceived(QByteArray)),               this, SLOT(receivedByteArray(QByteArray)));
+    QObject::connect(this->socket, SIGNAL(textMessageReceived(QString)),                    this, SLOT(receivedString(QString)));
+    QObject::connect(this->socket, SIGNAL(disconnected()),                                  this, SLOT(disconnected()));
+    QObject::connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)),             this, SLOT(error(QAbstractSocket::SocketError)));
+    QObject::connect(this->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),      this, SLOT(stateDidChanged(QAbstractSocket::SocketState)));
 }
 
 WebSocket::WebSocket(QString withHost, int andPort) : WebSocket()
@@ -29,7 +30,8 @@ void WebSocket::start()
         this->socket->disconnected();
     }
 
-    QString urlString = "ws://" + this->getHost() + ":" + QString::number(this->getPort());
+    QString type = "ws";
+    QString urlString = type + "://" + this->getHost() + ":" + QString::number(this->getPort()) + "/" + type;
     QUrl url = QUrl(urlString);
     this->socket->open(url);
 }
@@ -44,7 +46,8 @@ void WebSocket::stop()
 bool WebSocket::send(QByteArray data)
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
-        qint64 bytes = this->socket->sendBinaryMessage(data);
+        QString message = QString(data);
+        qint64 bytes = this->socket->sendTextMessage(message);
         if (bytes == -1) {
             return false;
         }
@@ -57,8 +60,13 @@ bool WebSocket::send(QByteArray data)
 
 void WebSocket::receivedByteArray(QByteArray array)
 {
-    if (array.size() > 0) {
-        emit didReceiveMessage(this, array);
+
+}
+
+void WebSocket::receivedString(QString string)
+{
+    if (string.length() > 0) {
+        emit didReceiveMessage(this, string.toUtf8());
     }
 }
 

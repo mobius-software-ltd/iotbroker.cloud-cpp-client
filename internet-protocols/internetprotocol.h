@@ -52,6 +52,7 @@ public slots:
     virtual void errorString(char *);
 
     virtual void receivedByteArray(QByteArray);
+    virtual void receivedString(QString);
 
     virtual void readyRead() = 0;
     virtual void disconnected() = 0;

@@ -75,6 +75,8 @@ void MainWindow::startWithAccount(AccountEntity account)
         this->iotProtocol = new CoAP(account);
     } else if (protocolType == AMQP_PROTOCOL) {
         this->iotProtocol = new AMQP(account);
+        QList<TopicEntity> topics = this->accountManager->topicsForAccount(account);
+        ((AMQP *)this->iotProtocol)->setTopics(topics);
     } else if (protocolType == WEBSOCKET) {
         this->iotProtocol = new WebsocketMQTT(account);
     }
@@ -163,14 +165,13 @@ void MainWindow::newAccountDidClick()
 void MainWindow::willSubscribeToTopic(TopicEntity topicEntity)
 {
     QString topicName = topicEntity.topicName.get().toString();
-    if (this->accountManager->isTopicExist(topicName)) {
-        QMessageBox *messageBox = new QMessageBox("Warrning", "Topic "+ topicName +" already exists.", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-        messageBox->exec();
-    } else {
-        this->progressTimer->start();
-        this->iotProtocol->subscribeTo(topicEntity);
-    }
+//    if (this->accountManager->isTopicExist(topicName)) {
+//        QMessageBox *messageBox = new QMessageBox("Warrning", "Topic "+ topicName +" already exists.", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+//        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+//        messageBox->exec();
+//    }
+    this->progressTimer->start();
+    this->iotProtocol->subscribeTo(topicEntity);
 }
 
 void MainWindow::willUnsubscribeFromTopic(TopicEntity topicEntity)
@@ -219,10 +220,9 @@ void MainWindow::loginWithAccount(AccountEntity account)
             messageBox->exec();
             return;
         }
-        int keepalive = account.keepAlive.get().toInt();
-        int protocol = account.protocol.get().toInt();
 
-        if (protocol == MQTT_PROTOCOL && (keepalive <= 0 || keepalive > 65535)) {
+        int keepalive = account.keepAlive.get().toInt();
+        if (keepalive <= 0 || keepalive > 65535) {
             QMessageBox *messageBox = new QMessageBox("Warrning", "Keepalive must be in the range [1, 65535].", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
             messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
             messageBox->exec();
@@ -276,7 +276,7 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         this->setSizeToWindowWithCentralPosition(this->generalForm->getSize());
 
         if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
-            this->accountManager->removeMessagesForCurrentAccount();
+            this->accountManager->removeTopicsForCurrentAccount();
         }
     }
 }
@@ -299,10 +299,8 @@ void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int)
     entity.topicName = topic;
     entity.qos = qos;
 
-    if (!this->isTopicAlreadyExistForCurrentAccount(topic)) {
-        this->accountManager->addTopicForDefaultAccount(entity);
-        this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
-    }
+    this->accountManager->addTopicForDefaultAccount(entity);
+    this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
     this->progressTimer->stop();
     this->generalForm->setProgress(0);
 }

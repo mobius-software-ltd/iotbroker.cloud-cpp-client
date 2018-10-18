@@ -22,11 +22,13 @@
 #include "iot-protocols/amqp/classes/amqpsimpletype.h"
 #include "internet-protocols/tcpsocket.h"
 #include "internet-protocols/sslsocket.h"
+#include "iot-protocols/amqp/classes/headerapi/amqpunwrapper.h"
 
 AMQP::AMQP(AccountEntity account) : IotProtocol(account)
 {
     this->timers = new TimersMap(this);
-    this->nextHandle = 0;
+    this->nextHandle = 1;
+    this->channel = 0;
     this->isSASLConfirm = false;
 
     this->messageParser = new AMQPParser();
@@ -76,15 +78,13 @@ void AMQP::publish(MessageEntity message)
 
     AMQPTransfer *transfer = new AMQPTransfer();
     transfer->setChannel(this->channel);
-    transfer->setDeliveryId(AMQPSimpleType::UIntToVariant(0));
-    transfer->setSettled(AMQPSimpleType::boolToVariant(false));
+    if (message.qos.get().toInt() == AT_MOST_ONCE) {
+        transfer->setSettled(AMQPSimpleType::boolToVariant(true));
+    } else {
+        transfer->setSettled(AMQPSimpleType::boolToVariant(false));
+    }
     transfer->setMore(AMQPSimpleType::boolToVariant(false));
     transfer->setMessageFormat(new AMQPMessageFormat(0));
-
-    AMQPMessageHeader *messageHeader = new AMQPMessageHeader();
-    messageHeader->setDurable(AMQPSimpleType::boolToVariant(true));
-    messageHeader->setPriority(AMQPSimpleType::UByteToVariant(3));
-    messageHeader->setMilliseconds(AMQPSimpleType::UIntToVariant(1000));
 
     AMQPData *data = new AMQPData();
     data->setData(ByteArray(content));
@@ -98,6 +98,15 @@ void AMQP::publish(MessageEntity message)
         long handle = this->usedOutgoingMappings.value(topicName);
         transfer->setHandle(AMQPSimpleType::UIntToVariant(handle));
         this->timers->goMessageTimer(transfer);
+        if (transfer->getSettled() != NULL) {
+            bool settled = AMQPSimpleType::variantToBool(transfer->getSettled());
+            if (settled) {
+                if (transfer->getDeliveryId() != NULL) {
+                    int id = AMQPSimpleType::variantToUInt(transfer->getDeliveryId());
+                    this->timers->removeTimer(id);
+                }
+            }
+        }
     } else {
         long currentHandler = this->nextHandle++;
         this->usedOutgoingMappings.insert(topicName, currentHandler);
@@ -111,6 +120,7 @@ void AMQP::publish(MessageEntity message)
         attach->setHandle(AMQPSimpleType::UIntToVariant(currentHandler));
         attach->setRole(new AMQPRoleCode(AMQP_SENDER_ROLE_CODE));
         attach->setSendCodes(new AMQPSendCode(AMQP_MIXED_SEND_CODE));
+        attach->setInitialDeliveryCount(AMQPSimpleType::UIntToVariant(0));
 
         AMQPSource *source = new AMQPSource();
         source->setAddress(topicName);
@@ -126,7 +136,6 @@ void AMQP::publish(MessageEntity message)
 void AMQP::subscribeTo(TopicEntity topic)
 {
     QString topicName = topic.topicName.get().toString();
-
     long currentHandler;
     if (this->usedIncomingMappings.contains(topicName)) {
         currentHandler = this->usedIncomingMappings.value(topicName);
@@ -147,6 +156,7 @@ void AMQP::subscribeTo(TopicEntity topic)
     target->setDurable(new AMQPTerminusDurability(AMQP_NONE_TERMINUS_DURABILITIES));
     target->setTimeout(AMQPSimpleType::UIntToVariant(0));
     target->setDynamic(AMQPSimpleType::boolToVariant(false));
+
     attach->setTarget(target);
 
     this->send(attach);
@@ -193,6 +203,17 @@ void AMQP::timeoutMethod()
 {
     this->timers->stopAllTimers();
     emit timeout(this);
+}
+
+void AMQP::setTopics(QList<TopicEntity> topics)
+{
+    for (int i = 0; i < topics.size(); i++) {
+        TopicEntity topic = topics.at(i);
+        QString topicName = topic.topicName.get().toString();
+        long currentHandler = nextHandle++;
+        this->usedIncomingMappings.insert(topicName, currentHandler);
+        this->usedMappings.insert(currentHandler, topicName);
+    }
 }
 
 // SLOTS
@@ -244,70 +265,94 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 AMQPProtoHeader *protoHeader = (AMQPProtoHeader *)message;
                 if (this->isSASLConfirm == true && protoHeader->getProtocolId() == AMQPProtocolId) {
                     this->channel = protoHeader->getChannel();
-
                     AMQPOpen *open = new AMQPOpen();
-                    QUuid uuid = QUuid().createUuid();
-                    open->setContainerId(uuid.toString());
-
                     open->setChannel(protoHeader->getChannel());
-                    open->setHostname(this->internetProtocol->getHost());
-
+                    open->setContainerId(this->currentAccount.clientID);
+                    open->setIdleTimeout(AMQPSimpleType::UIntToVariant(this->currentAccount.keepAlive * 1000));
                     this->send(open);
-                } else {
-                    this->timers->stopAllTimers();
                 }
             } break;
             case AMQP_OPEN_HEADER_CODE:
             {
+                emit connackReceived(this, 0);
                 AMQPOpen *open = (AMQPOpen *)message;
-                int idleTimeoutInSeconds = AMQPSimpleType::variantToUInt(open->getIdleTimeout()) / 1000;
-                this->timers->goPingTimer(idleTimeoutInSeconds);
-
-                AMQPBegin *begin = new AMQPBegin();
+                if (open->getIdleTimeout() == NULL) {
+                    this->timers->goPingTimer(this->currentAccount.keepAlive);
+                } else {
+                    int keepAlive = AMQPSimpleType::variantToUInt(open->getIdleTimeout());
+                    this->timers->goPingTimer(keepAlive / 1000);
+                }
+                AMQPBegin *begin = new AMQPBegin();                
                 begin->setChannel(this->channel);
                 begin->setNextOutgoingID(AMQPSimpleType::UIntToVariant(0));
                 begin->setIncomingWindow(AMQPSimpleType::UIntToVariant(2147483647));
                 begin->setOutgoingWindow(AMQPSimpleType::UIntToVariant(0));
-
                 this->send(begin);
-
             } break;
             case AMQP_BEGIN_HEADER_CODE:
             {
                 this->isConnect = true;
+                for (int i = 0; i < this->usedIncomingMappings.keys().size(); i++) {
+                    QString topicName = this->usedIncomingMappings.keys().at(i);
+                    TopicEntity topic = TopicEntity();
+                    topic.topicName = topicName;
+                    this->subscribeTo(topic);
+                }
             } break;
             case AMQP_ATTACH_HEADER_CODE:
             {
                 AMQPAttach *attach = (AMQPAttach *)message;
 
-                if (attach->getRole()->getValue() == AMQP_SENDER_ROLE_CODE) {
+                if (attach->getRole()->getValue() == AMQP_RECEIVER_ROLE_CODE) {
                     // publish
                     for (int i = 0; i < pendingMessages.size(); i++) {
                         AMQPTransfer *message = this->pendingMessages.at(i);
-                        if (message->getHandle() == attach->getHandle()) {
+                        int h1 = AMQPSimpleType::variantToUInt(message->getHandle());
+                        int h2 = AMQPSimpleType::variantToUInt(attach->getHandle());
+                        if (h1 == h2) {
                             this->pendingMessages.removeAt(i);
                             i--;
-
                             this->timers->goMessageTimer(message);
+                            if (message->getSettled() != NULL) {
+                                bool settled = AMQPSimpleType::variantToBool(message->getSettled());
+                                if (settled) {
+                                    if (message->getDeliveryId() != NULL) {
+                                        int id = AMQPSimpleType::variantToUInt(message->getDeliveryId());
+                                        this->timers->removeTimer(id);
+                                    }
+                                }
+                            }
                         }
                     }
                 } else {
                     // subscribe
+                    int handle = AMQPSimpleType::variantToUInt(attach->getHandle());
+                    this->usedIncomingMappings.insert(attach->getName(), handle);
+                    this->usedMappings.insert(handle, attach->getName());
+
+                    int qos = AT_LEAST_ONCE;
+                    emit subackReceived(this, attach->getName(), qos, 0);
                 }
 
             } break;
             case AMQP_FLOW_HEADER_CODE:
             {
+//                AMQPFlow *flow = (AMQPFlow *)message;
+//                for (int i = 0; i < this->pendingMessages.size(); i++) {
+//                    AMQPTransfer *transfer = this->pendingMessages[i];
+//                    if (AMQPSimpleType::variantToUInt(transfer->getHandle()) == AMQPSimpleType::variantToUInt(flow->getHandle())) {
+//                        this->send(transfer);
+//                    }
+//                }
+
                 // not implemented for now
             } break;
             case AMQP_TRANSFER_HEADER_CODE:
             {
                 AMQPTransfer *transfer = (AMQPTransfer *)message;
                 AMQPData *data = (AMQPData *)transfer->getData();
-
                 QoS *qos = new QoS(AT_LEAST_ONCE);
-
-                if (AMQPSimpleType::variantToBool(transfer->getSettled())) {
+                if (transfer->getSettled() != NULL && AMQPSimpleType::variantToBool(transfer->getSettled())) {
                     qos->setValue(AT_MOST_ONCE);
                 } else {
                     AMQPDisposition *disposition = new AMQPDisposition();
@@ -319,28 +364,42 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                     disposition->setState(new AMQPAccepted());
                     this->send(disposition);
                 }
-
                 QString topic = QString();
                 long handle = AMQPSimpleType::variantToUInt(transfer->getHandle());
                 if (transfer->getHandle()->isNull() || !this->usedMappings.contains(handle)) {
                     return;
                 }
-
                 topic = this->usedMappings.value(handle);
-
-                emit publishReceived(this, QString(), qos->getValue(), data->getData().getByteArray(), false, false);
+                emit publishReceived(this, topic, qos->getValue(), data->getData().getByteArray(), false, false);
 
             } break;
             case AMQP_DISPOSITION_HEADER_CODE:
             {
                 AMQPDisposition *disposition = (AMQPDisposition *)message;
-
-                unsigned int first = AMQPSimpleType::variantToUInt(disposition->getFirst());
-                unsigned int second = AMQPSimpleType::variantToUInt(disposition->getLast());
-
-                for (unsigned int i = first; i < second; i++) {
-                    this->timers->removeTimer(i);
+                if (disposition->getFirst()) {
+                    unsigned int first = AMQPSimpleType::variantToUInt(disposition->getFirst());
+                    if (disposition->getLast()) {
+                        unsigned int last = AMQPSimpleType::variantToUInt(disposition->getLast());
+                        for (int i = first; i < last; i++) {
+                            AMQPTransfer *transfer = (AMQPTransfer *)this->timers->removeTimer(i);
+                            if (transfer != NULL) {
+                                long handle = AMQPSimpleType::variantToUInt(transfer->getHandle());
+                                QString topic = this->usedMappings.value(handle);
+                                AMQPData *data = (AMQPData *)transfer->getData();
+                                emit pubackReceived(this, topic, 1, data->getData().getByteArray(), false, false, 0);
+                            }
+                        }
+                    } else {
+                        AMQPTransfer *transfer = (AMQPTransfer *)this->timers->removeTimer(first);
+                        if (transfer != NULL) {
+                            long handle = AMQPSimpleType::variantToUInt(transfer->getHandle());
+                            QString topic = this->usedMappings.value(handle);
+                            AMQPData *data = (AMQPData *)transfer->getData();
+                            emit pubackReceived(this, topic, 1, data->getData().getByteArray(), false, false, 0);
+                        }
+                    }
                 }
+
             } break;
             case AMQP_DETACH_HEADER_CODE:
             {
@@ -352,6 +411,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                     if (this->usedOutgoingMappings.contains(topicName)) {
                         this->usedOutgoingMappings.remove(topicName);
                     }
+                    emit unsubackReceived(this, topicName);
                 }
             } break;
             case AMQP_END_HEADER_CODE:
@@ -389,7 +449,6 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 AMQPSASLInit *saslInit = new AMQPSASLInit();
                 saslInit->setTypeValue(mechanisms->getTypeValue());
                 saslInit->setChannel(mechanisms->getChannel());
-                saslInit->setHostName(this->internetProtocol->getHost());
                 saslInit->setMechanism(plainMechanism);
 
                 QByteArray userBytes = this->currentAccount.username.get().toString().toUtf8();

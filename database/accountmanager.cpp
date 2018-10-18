@@ -186,6 +186,9 @@ void AccountManager::addTopicForDefaultAccount(TopicEntity topic)
 {
     AccountEntity account = this->readDefaultAccount();
 
+    TopicEntity te = this->topicByName(topic.topicName);
+    this->deleteTopic(te);
+
     if (this->dataBase.open() == true) {
         topic.account = account;
         topic.save(true);
@@ -305,6 +308,19 @@ bool AccountManager::isTopicExist(QString topic)
         }
     }
     return false;
+}
+
+void AccountManager::removeTopicsForCurrentAccount()
+{
+    QList<TopicEntity> topics = this->topicsForDefaultAccount();
+
+    if (this->dataBase.open() == true) {
+        for (int i = 0; i < topics.length(); i++) {
+            TopicEntity topic = topics.at(i);
+            topic.remove();
+        }
+    }
+    this->dataBase.close();
 }
 
 void AccountManager::removeMessagesForCurrentAccount()

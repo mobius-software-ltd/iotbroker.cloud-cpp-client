@@ -31,6 +31,9 @@
 
 AMQPSource::AMQPSource()
 {
+    this->expiryPeriod = NULL;
+    this->distributionMode = NULL;
+    this->defaultOutcome = NULL;
     this->dynamicNodeProperties = QMap<QVariant *, QVariant *>();
     this->filter = QMap<QVariant *, QVariant *>();
     this->outcomes = QList<QVariant *>();
@@ -41,22 +44,28 @@ AMQPTLVList *AMQPSource::getList()
 {
     AMQPTLVList *list = new AMQPTLVList();
 
+    qDebug() << "#####*1";
     if (!this->address.isEmpty()) {
         list->addElementWithIndex(0, AMQPWrapper::wrapString(this->address));
     }
+    qDebug() << "#####*2";
     if (this->durable != NULL) {
         list->addElementWithIndex(1, AMQPWrapper::wrapUInt(this->durable->getValue()));
     }
+    qDebug() << "#####*3";
     if (this->expiryPeriod != NULL) {
         AMQPSymbol *symbol = new AMQPSymbol(this->expiryPeriod->getName());
         list->addElementWithIndex(2, AMQPWrapper::wrapSymbol(symbol));
     }
+    qDebug() << "#####*4";
     if (this->timeout != NULL) {
         list->addElementWithIndex(3, AMQPWrapper::wrapUInt(this->timeout->toUInt()));
     }
+    qDebug() << "#####*5";
     if (this->dynamic != NULL) {
-        list->addElementWithIndex(4, AMQPWrapper::wrapBool(this->timeout->toBool()));
+        list->addElementWithIndex(4, AMQPWrapper::wrapBool(this->dynamic->toBool()));
     }
+    qDebug() << "#####*6";
     if (this->dynamicNodeProperties.count() != 0) {
         if (this->dynamic != NULL) {
             if (this->dynamic->toBool() == true) {
@@ -68,19 +77,24 @@ AMQPTLVList *AMQPSource::getList()
             qDebug() << "AMQPSource::getList::dynamic";
         }
     }
+    qDebug() << "#####*7";
     if (this->distributionMode != NULL) {
         AMQPSymbol *symbol = new AMQPSymbol(this->distributionMode->getName());
         list->addElementWithIndex(6, AMQPWrapper::wrapSymbol(symbol));
     }
+    qDebug() << "#####*8";
     if (this->filter.count() != 0) {
         list->addElementWithIndex(7, AMQPWrapper::wrapMap(this->filter));
     }
+    qDebug() << "#####*9";
     if (this->defaultOutcome != NULL) {
         list->addElementWithIndex(8, this->defaultOutcome->getList());
     }
+    qDebug() << "#####*10";
     if (this->outcomes.count() != 0) {
         list->addElementWithIndex(9, AMQPWrapper::wrapArray(this->outcomes));
     }
+    qDebug() << "#####*11";
     if (this->capabilities.count() != 0) {
         list->addElementWithIndex(9, AMQPWrapper::wrapList(this->capabilities));
     }
