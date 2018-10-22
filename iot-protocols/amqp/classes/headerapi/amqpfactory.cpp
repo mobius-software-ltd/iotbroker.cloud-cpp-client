@@ -42,8 +42,6 @@ AMQPHeader *AMQPFactory::amqp(ByteArray *data)
     int byteCode = list->getConstructor()->getDescriptorCode();
     AMQPHeaderCode *code = new AMQPHeaderCode(byteCode);
 
-    qDebug() << AMQP_FLOW_HEADER_CODE << "   " << byteCode ;
-
     switch(code->getValue()) {
         case AMQP_OPEN_HEADER_CODE:         header = new AMQPOpen();        break;
         case AMQP_BEGIN_HEADER_CODE:        header = new AMQPBegin();       break;
@@ -94,8 +92,6 @@ AMQPSection *AMQPFactory::section(ByteArray *data)
 
     int byteCode = value->getConstructor()->getDescriptorCode();
     AMQPSectionCode *code = new AMQPSectionCode(byteCode);
-
-    qDebug() << "COUNT = " << data->getSize();
 
     switch(code->getValue()) {
         case AMQP_HEADER_SECTION_CODE:                  section = new AMQPMessageHeader();          break;

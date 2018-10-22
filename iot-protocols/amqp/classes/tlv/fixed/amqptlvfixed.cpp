@@ -19,7 +19,6 @@
  */
 
 #include "amqptlvfixed.h"
-#include <QDebug>
 
 AMQPTLVFixed::AMQPTLVFixed(AMQPType *type, ByteArray value) : TLVAMQP(new AMQPSimpleConstructor(type))
 {

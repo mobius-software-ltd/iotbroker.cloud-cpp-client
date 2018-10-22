@@ -40,28 +40,22 @@ AMQPTLVList *AMQPTarget::getlist()
 {
     AMQPTLVList *list = new AMQPTLVList();
     
-    qDebug() << "######1";
     if (!this->address.isEmpty()) {
         list->addElementWithIndex(0, AMQPWrapper::wrapString(this->address));
     }
-    qDebug() << "######2";
     if (this->durable != NULL) {
         list->addElementWithIndex(1, AMQPWrapper::wrapUInt(this->durable->getValue()));
     }
-    qDebug() << "######3";
     if (this->expiryPeriod != NULL) {
         AMQPSymbol *symbol = new AMQPSymbol(this->expiryPeriod->getName());
         list->addElementWithIndex(2, AMQPWrapper::wrapSymbol(symbol));
     }
-    qDebug() << "######4";
     if (this->timeout != NULL) {
         list->addElementWithIndex(3, AMQPWrapper::wrapUInt(this->timeout->toUInt()));
     }
-    qDebug() << "######5";
     if (this->dynamic != NULL) {
         list->addElementWithIndex(4, AMQPWrapper::wrapBool(this->dynamic->toBool()));
     }
-    qDebug() << "######6";
     if (this->dynamicNodeProperties.count() != 0) {
         if (this->dynamic != NULL) {
             if (this->dynamic->toBool()) {

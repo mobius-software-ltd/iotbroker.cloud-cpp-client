@@ -25,7 +25,6 @@
 #include "iot-protocols/mqtt-sn/classes/topics/snfulltopic.h"
 #include "iot-protocols/mqtt-sn/classes/topics/snidentifiertopic.h"
 #include "iot-protocols/mqtt-sn/classes/topics/snshorttopic.h"
-#include <QDebug>
 
 static unsigned char const threeOctetLengthSuffix = 0x01;
 

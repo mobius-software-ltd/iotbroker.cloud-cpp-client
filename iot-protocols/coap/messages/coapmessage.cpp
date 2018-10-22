@@ -20,7 +20,7 @@
 
 #include "coapmessage.h"
 #include <algorithm>
-#include <QDebug>
+
 CoAPMessage::CoAPMessage()
 {
     this->version = 1;

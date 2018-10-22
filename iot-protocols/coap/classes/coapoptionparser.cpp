@@ -1,6 +1,5 @@
 #include "coapoptionparser.h"
 #include "classes/bytearray.h"
-#include <QDebug>
 
 CoapOption CoapOptionParser::encode(CoAPOptionDefinitions option, QVariant object)
 {

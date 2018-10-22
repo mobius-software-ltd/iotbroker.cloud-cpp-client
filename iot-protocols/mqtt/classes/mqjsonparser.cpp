@@ -17,7 +17,6 @@
 #include "iot-protocols/mqtt/messages/suback.h"
 #include "iot-protocols/mqtt/messages/unsubscribe.h"
 #include "iot-protocols/mqtt/messages/unsuback.h"
-#include <QDebug>
 
 QByteArray MQJsonParser::json(Message *message)
 {

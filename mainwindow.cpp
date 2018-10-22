@@ -223,7 +223,7 @@ void MainWindow::loginWithAccount(AccountEntity account)
 
         int keepalive = account.keepAlive.get().toInt();
         if (keepalive <= 0 || keepalive > 65535) {
-            QMessageBox *messageBox = new QMessageBox("Warrning", "Keepalive must be in the range [1, 65535].", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+            QMessageBox *messageBox = new QMessageBox("Warrning", "Keepalive must be in the range [0, 65535].", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
             messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
             messageBox->exec();
             return;
@@ -293,16 +293,24 @@ void MainWindow::pubackReceived(IotProtocol*, QString topic, int qos, QByteArray
     this->generalForm->setProgress(0);
 }
 
-void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int)
+void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int code)
 {
+    this->progressTimer->stop();
+    this->generalForm->setProgress(0);
+
+    if (code != 0) {
+        QMessageBox *messageBox = new QMessageBox("Warrning", "Wrong topic name", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+        messageBox->exec();
+        return;
+    }
+
     TopicEntity entity = TopicEntity();
     entity.topicName = topic;
     entity.qos = qos;
 
     this->accountManager->addTopicForDefaultAccount(entity);
     this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
-    this->progressTimer->stop();
-    this->generalForm->setProgress(0);
 }
 
 void MainWindow::unsubackReceived(IotProtocol*,QString topic)

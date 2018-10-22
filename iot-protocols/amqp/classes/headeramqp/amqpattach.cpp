@@ -61,71 +61,66 @@ AMQPTLVList *AMQPAttach::arguments()
     AMQPTLVList *list = new AMQPTLVList();
 
     if (this->name.isNull()) {
-        qDebug() << "AMQPAttach::arguments::name";
         return new AMQPTLVList();
     }
     list->addElementWithIndex(0, AMQPWrapper::wrapString(this->name));
 
     if (this->handle == NULL) {
-        qDebug() << "AMQPAttach::arguments::handle";
         return new AMQPTLVList();
     }
     list->addElementWithIndex(1, AMQPWrapper::wrapUInt(AMQPSimpleType::variantToUInt(this->handle)));
 
     if (this->role == NULL) {
-        qDebug() << "AMQPAttach::arguments::role";
         return new AMQPTLVList();
     }
     list->addElementWithIndex(2, AMQPWrapper::wrapBool(this->role->getValue()));
-    qDebug() << " ---01";
 
     if (this->sendCodes != NULL) {
         list->addElementWithIndex(3, AMQPWrapper::wrapUByte(this->sendCodes->getValue()));
-    }    qDebug() << " ---02";
+    }
 
     if (this->receivedCodes != NULL) {
         list->addElementWithIndex(4, AMQPWrapper::wrapUByte(this->receivedCodes->getValue()));
-    }    qDebug() << " ---03";
+    }
 
     if (this->source != NULL) {
         list->addElementWithIndex(5, this->source->getList());
-    }    qDebug() << " ---04";
+    }
 
     if (this->target != NULL) {
         list->addElementWithIndex(6, this->target->getlist());
-    }    qDebug() << " ---05";
+    }
 
     if (this->unsettled.count() != 0) {
         list->addElementWithIndex(7, AMQPWrapper::wrapMap(this->unsettled));
-    }    qDebug() << " ---06";
+    }
 
     if (this->incompleteUnsettled != NULL) {
         list->addElementWithIndex(8, AMQPWrapper::wrapBool(AMQPSimpleType::variantToBool(this->incompleteUnsettled)));
-    }    qDebug() << " ---07";
+    }
 
     if (this->initialDeliveryCount != NULL) {
         list->addElementWithIndex(9, AMQPWrapper::wrapUInt(AMQPSimpleType::variantToUInt(this->initialDeliveryCount)));
     } else if (this->role->getValue() == AMQP_SENDER_ROLE_CODE) {
         qDebug() << "AMQPAttach::arguments::initialDeliveryCount";
         return new AMQPTLVList();
-    }    qDebug() << " ---08";
+    }
 
     if (this->maxMessageSize != NULL) {
         list->addElementWithIndex(10, AMQPWrapper::wrapULong(AMQPSimpleType::variantToULong(this->maxMessageSize)));
-    }    qDebug() << " ---09";
+    }
 
     if (this->offeredCapabilities.count() != 0) {
         list->addElementWithIndex(11, AMQPWrapper::wrapArray(this->offeredCapabilities));
-    }    qDebug() << " ---01";
+    }
 
     if (this->desiredCapabilities.count() != 0) {
         list->addElementWithIndex(12, AMQPWrapper::wrapArray(this->desiredCapabilities));
-    }    qDebug() << " ---01";
+    }
 
     if (this->properties.count() != 0) {
         list->addElementWithIndex(13, AMQPWrapper::wrapMap(this->properties));
-    }    qDebug() << " ---01";
-
+    }
 
     ByteArray data = ByteArray();
     data.writeChar(this->code->getValue());

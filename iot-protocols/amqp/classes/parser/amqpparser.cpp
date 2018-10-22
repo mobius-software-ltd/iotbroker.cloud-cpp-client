@@ -134,23 +134,12 @@ ByteArray AMQPParser::encode(AMQPHeader *header)
         return data;
     }
 
-    qDebug() << " -- - - 1 - - --";
-    qDebug() << header->getLength();
-
-    data.writeInt(header->getLength());    qDebug() << " -- - - 11 - - --";
-
-    data.writeChar(header->getDoff());    qDebug() << " -- - - 12 - - --";
-
-    data.writeChar(header->getTypeValue());    qDebug() << " -- - - 13 - - --";
-
-    data.writeShort(header->getChannel());    qDebug() << " -- - - 14 - - --";
-
-
-    qDebug() << " -- - - 2 - - --";
+    data.writeInt(header->getLength());
+    data.writeChar(header->getDoff());
+    data.writeChar(header->getTypeValue());
+    data.writeShort(header->getChannel());
 
     data.writeRawData(header->arguments()->getData().getByteArray());
-
-    qDebug() << " -- - - 3 - - --";
 
     if (header->getCode()->getValue() == AMQP_TRANSFER_HEADER_CODE) {
         QList<AMQPSection *> sections = ((AMQPTransfer *)header)->getSections().values();

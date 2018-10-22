@@ -112,7 +112,6 @@ void MQTT::subscribeTo(TopicEntity topic)
     topics->append(MQTopic(topicName, qos));
 
     Subscribe *subscribe = new Subscribe(topics);
-
     this->timers->goMessageTimer(subscribe);
 }
 
@@ -172,6 +171,7 @@ void MQTT::connectionDidStop(InternetProtocol *protocol)
 void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 {
     Q_UNUSED(protocol);
+
     do {
         QByteArray barray = this->messageParser->nextMessage(data);
         Message *message = this->messageParser->decodeMessage(barray);
@@ -269,7 +269,7 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 if (mess->getType() == MQ_SUBSCRIBE) {
                     Subscribe *subsctibe = (Subscribe *)mess;
                     MQTopic topic = subsctibe->getTopics()->last();
-                    emit subackReceived(this, topic.getName(), topic.getQoS()->getValue(), 0);
+                    emit subackReceived(this, topic.getName(), topic.getQoS()->getValue(), suback->getReturnCodes()->first());
                 }
             }
             break;

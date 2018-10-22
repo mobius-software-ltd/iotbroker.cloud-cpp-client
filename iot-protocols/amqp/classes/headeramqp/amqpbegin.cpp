@@ -60,19 +60,16 @@ AMQPTLVList *AMQPBegin::arguments()
         list->addElementWithIndex(0, AMQPWrapper::wrapUShort(AMQPSimpleType::variantToUShort(this->remoteChannel)));
     }
     if (this->nextOutgoingID == NULL) {
-        qDebug() << "AMQPBegin::arguments::nextOutgoingID";
         return new AMQPTLVList();
     }
     list->addElementWithIndex(1, AMQPWrapper::wrapUInt(AMQPSimpleType::variantToUInt(this->nextOutgoingID)));
 
     if (this->incomingWindow == NULL) {
-        qDebug() << "AMQPBegin::arguments::incomingWindow";
         return new AMQPTLVList();
     }
     list->addElementWithIndex(2, AMQPWrapper::wrapUInt(AMQPSimpleType::variantToUInt(this->incomingWindow)));
 
     if (this->outgoingWindow == NULL) {
-        qDebug() << "AMQPBegin::arguments::outgoingWindow";
         return new AMQPTLVList();
     }
     list->addElementWithIndex(3, AMQPWrapper::wrapUInt(AMQPSimpleType::variantToUInt(this->outgoingWindow)));

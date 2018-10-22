@@ -528,11 +528,7 @@ Message *Parser::decode(QByteArray byteArray)
             Suback *suback = new Suback(subackID);
 
             while (buffer->getSize() > 0) {
-
                 SubackCode subackByte = (SubackCode)buffer->readChar();
-                if (suback->isValidCode(subackByte) != true) {
-                    throw new QString("Decode. Suback. Invalid suback code");
-                }
                 subackCodes->append(subackByte);
             }
             suback->setReturnCodes(subackCodes);

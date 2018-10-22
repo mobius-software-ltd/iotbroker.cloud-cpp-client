@@ -25,7 +25,6 @@
 #include "iot-protocols/amqp/classes/headerapi/amqpwrapper.h"
 #include "iot-protocols/amqp/classes/headerapi/amqpunwrapper.h"
 #include "iot-protocols/amqp/classes/headerapi/amqpfactory.h"
-#include <QDebug>
 
 AMQPData::AMQPData()
 {
