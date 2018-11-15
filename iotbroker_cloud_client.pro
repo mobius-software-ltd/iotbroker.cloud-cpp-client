@@ -433,45 +433,8 @@ FORMS    += mainwindow.ui \
 RESOURCES += \
     resources.qrc
 
-# OPENSSL
+unix|win32: LIBS += -lssl
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/openssl-master/release/ -lssl
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/openssl-master/debug/ -lssl
-else:unix: LIBS += -L$$PWD/openssl-master/ -lssl
+unix|win32: LIBS += -lcrypto
 
-INCLUDEPATH += $$PWD/openssl-master/include
-DEPENDPATH += $$PWD/openssl-master/include
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/release/libssl.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/debug/libssl.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/release/ssl.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/debug/ssl.lib
-else:unix: PRE_TARGETDEPS += $$PWD/openssl-master/libssl.a
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/openssl-master/release/ -lcrypto
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/openssl-master/debug/ -lcrypto
-else:unix: LIBS += -L$$PWD/openssl-master/ -lcrypto
-
-INCLUDEPATH += $$PWD/openssl-master/include
-DEPENDPATH += $$PWD/openssl-master/include
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/release/libcrypto.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/debug/libcrypto.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/release/crypto.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/openssl-master/debug/crypto.lib
-else:unix: PRE_TARGETDEPS += $$PWD/openssl-master/libcrypto.a
-
-# WOLFSSL
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/wolfssl-3.15.0-stable/src/libs/release/ -lwolfssl
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/wolfssl-3.15.0-stable/src/libs/debug/ -lwolfssl
-else:unix: LIBS += -L$$PWD/wolfssl-3.15.0-stable/src/libs/ -lwolfssl
-
-INCLUDEPATH += $$PWD/wolfssl-3.15.0-stable
-DEPENDPATH += $$PWD/wolfssl-3.15.0-stable
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/wolfssl-3.15.0-stable/src/libs/release/libwolfssl.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/wolfssl-3.15.0-stable/src/libs/debug/libwolfssl.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/wolfssl-3.15.0-stable/src/libs/release/wolfssl.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/wolfssl-3.15.0-stable/src/libs/debug/wolfssl.lib
-else:unix: PRE_TARGETDEPS += $$PWD/wolfssl-3.15.0-stable/src/libs/libwolfssl.a
+unix|win32: LIBS += -lwolfssl
