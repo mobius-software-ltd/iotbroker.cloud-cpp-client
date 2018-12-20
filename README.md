@@ -33,11 +33,12 @@ that need to be controlled or supervised remotely, through standard Internet net
 
 ### Installation 
 * First, you should clone IotBroker.Cloud C++ Client.
-* Next you should install wolfSS library following instructions. Note that you need to download version 3.15.0.
-* Then you need to check whether OpenSSLtoolkit is installed on you PC and which version is. You must be sure that you have 1.0.2g version.
+* Next you should install [wolfSS](https://www.wolfssl.com/) library following instructions. Note that you need to download version 3.15.0.
+* Then you need to check whether [OpenSSL](https://www.openssl.org/) toolkit is installed on you PC and which version is. 
+You must be sure that you have 1.0.2g version.
 * In order to open IoTBroker.Cloud C++ client in Qt Creator, you should press **New project button**. Then **choose Import project and Import existing project**.
-* Then insert the project name, set the root directory of project and press **Next. 
-* You can open the project by Ctrl+O shortcut or just **go to File - Open File or Project and choose the file with .pro extension.
+* Then insert the project name, set the root directory of project and press **Next**. 
+* You can open the project by Ctrl+O shortcut or just **go to File - Open File or Project and choose the file with .pro extension**.
 * Finally you should press **Run sign** to run the project. If the procedure is successful, you will see the Login page in the form of pop-up window. 
 
 Now you are able to log in and to start exchanging messages with server.
