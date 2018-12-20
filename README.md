@@ -29,7 +29,7 @@ over the Internet. It is particularly targeted for small low power sensors, swit
 that need to be controlled or supervised remotely, through standard Internet networks.   
  
 ### Prerequisites 
-[Qt Creator](https://www.qt.io/download) should be installed before starting to clone IoTBroker.Cloud C++ Client. Note that version of Qt Creator IDE should be at least 4.7.2, version of QT should be 5.11.0 or hire.. 
+[Qt Creator](https://www.qt.io/download) should be installed before starting to clone IoTBroker.Cloud C++ Client. Note that version of Qt Creator IDE should be at least 4.7.2, version of QT should be 5.11.0 or hire.
 
 ### Installation 
 * First, you should clone IotBroker.Cloud C++ Client.
