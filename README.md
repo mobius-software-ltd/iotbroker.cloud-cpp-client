@@ -44,6 +44,6 @@ You must be sure that you have 1.0.2g version.
 Now you are able to log in and to start exchanging messages with server.
 Please note that at this stage it is not possible to register as a client. You can only log in to your existing account.
 
-IoTBroker.Cloud C++ Client is developed by [Mobius Software](http://mobius-software.com).
+IoTBroker.Cloud C++ Client is developed by [Mobius Software](https://www.mobius-software.com/).
 
 ## [License](LICENSE.md)
