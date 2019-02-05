@@ -88,6 +88,8 @@ public slots:
     void logInButtonDidClick();
     void currentProtocolChanged(int protocol);
     void changeSecureState(bool state);
+    void showMultilineWindow(bool value);
+    void showWillMultilineWindow(bool value);
 };
 
 #endif // LOGINFORM_H

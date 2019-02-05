@@ -60,6 +60,7 @@ signals:
 
 private slots:
     void sendButtonDidClick();
+    void showContentMultilineWindow(bool);
 };
 
 #endif // SENDMESSAGETAB_H

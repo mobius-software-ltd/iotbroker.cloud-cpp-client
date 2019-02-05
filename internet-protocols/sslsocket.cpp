@@ -1,4 +1,4 @@
-#include "sslsocket.h"
+﻿#include "sslsocket.h"
 #include "classes/p12fileextractor.h"
 #include "classes/messageexception.h"
 
@@ -20,13 +20,23 @@ SslSocket::SslSocket(QString withHost, int port) : SslSocket()
     this->setPort(port);
 }
 
-bool SslSocket::setCertificate(QString path, QString pass)
+bool SslSocket::setCertificate(QString pem, QString pass)
 {
     try {
-        P12FileExtractor extractor = P12FileExtractor(path.toUtf8().data(), pass.toUtf8().data());
-        QByteArray certData = QByteArray(extractor.getCertificate(), strlen(extractor.getCertificate()));
-        QSslCertificate certificate = QSslCertificate(certData);
-        this->socket->setLocalCertificate(certificate);
+        QByteArray * keyData = getKeyFromString(pem.toUtf8());
+        QByteArray keyPass = pass.toUtf8();
+        QString str = keyData->data();
+        QSsl::KeyAlgorithm algo;
+        if(str.startsWith(BEGINKEYSTRING))
+            algo = QSsl::KeyAlgorithm::Dsa;
+         else
+            algo = QSsl::KeyAlgorithm::Rsa;
+
+        QSslKey sslKey = QSslKey(*keyData, algo, QSsl::EncodingFormat::Pem, QSsl::KeyType::PrivateKey, keyPass);
+        QByteArray certData = pem.toUtf8();
+        QList<QSslCertificate> certs = QSslCertificate::fromData(certData,QSsl::Pem);
+        this->socket->setLocalCertificateChain(certs);
+        this->socket->setPrivateKey(sslKey);
     } catch (MessageException e) {
         emit didFailWithError(this, e.getMessage());
         return false;

@@ -29,7 +29,7 @@ CellWithEditLine::CellWithEditLine(QWidget *parent) :
     ui->setupUi(this);
 }
 
-CellWithEditLine *CellWithEditLine::createCellWith(QString imagePath, QString text, QString placeholder, ListWidget *widget)
+CellWithEditLine *CellWithEditLine::createCellWith(QString imagePath, QString text, QString placeholder, ListWidget *widget, bool isMultiline)
 {
 
     CellWithEditLine *widgetForm = new CellWithEditLine();
@@ -134,9 +134,20 @@ CellWithEditLine::~CellWithEditLine()
 bool CellWithEditLine::eventFilter(QObject *obj, QEvent *event)
 {
     Q_UNUSED(obj);
-    if(event->type() == QEvent::MouseButtonPress)
+    if(!this->isMultiline && event->type() == QEvent::MouseButtonPress)
     {
         emit didClick(ui->lineEdit);
     }
     return false;
 }
+
+void CellWithEditLine::setIsMultiline(bool isMultiline)
+{
+    this->isMultiline = isMultiline;
+}
+
+CustomTextEdit *CellWithEditLine::getLineEdit()
+{
+    return ui->lineEdit;
+}
+

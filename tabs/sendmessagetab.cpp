@@ -21,6 +21,7 @@
 #include "sendmessagetab.h"
 #include "ui_sendmessagetab.h"
 #include <QMessageBox>
+#include <QInputDialog>
 
 static int const contentIndex = 0;
 static int const topicIndex = 1;
@@ -43,8 +44,9 @@ SendMessageTab::SendMessageTab(QWidget *parent) :
     qosList.append(QString::number(1));
     qosList.append(QString::number(2));
 
-    this->contentCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget);
-    this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget);
+    this->contentCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget, true);
+    connect(this->contentCell->getLineEdit(), SIGNAL(focussed(bool)), this, SLOT(showContentMultilineWindow(bool)));
+    this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget, false);
     this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
     this->retainCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
     this->dupCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
@@ -115,4 +117,17 @@ bool SendMessageTab::isFieldsFill(QList<QString> list) {
 SendMessageTab::~SendMessageTab()
 {
     delete ui;
+}
+
+void SendMessageTab::showContentMultilineWindow(bool value) {
+
+    if(value) {
+        bool bOk;
+        QString str = QInputDialog::getMultiLineText(this, "Enter Will content", "", "", &bOk);
+        this->contentCell->getLineEdit()->clearFocus();
+        if (bOk)
+        {
+            this->contentCell->setInputText(str);
+        }
+   }
 }

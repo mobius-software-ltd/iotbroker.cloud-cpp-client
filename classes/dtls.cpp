@@ -12,6 +12,30 @@ Dtls::Dtls()
     m_dtls = this;
 }
 
+static char* hostname_to_ip(char * hostname)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+
+    if ( (he = gethostbyname( hostname ) ) == NULL)
+    {
+        // get the host info
+        printf("Cannot get ip from hostname : %s\n", hostname);
+        return NULL;
+    }
+
+    addr_list = (struct in_addr **) he->h_addr_list;
+
+    for(i = 0; addr_list[i] != NULL; i++)
+    {
+        //Return the first one;
+        return inet_ntoa(*addr_list[i]);
+    }
+
+    return NULL;
+}
+
 static int min (int a, int b)
 {
     return a > b ? b : a;
@@ -51,7 +75,7 @@ void* Dtls::datagramSend(void* arg)
     WOLFSSL*    ssl = shared->ssl;
 
     wc_LockMutex(&shared->shared_mutex);
-    if ((wolfSSL_write(ssl, shared->sndBuf, shared->sndSz)) != shared->sndSz) {
+    if ((wolfSSL_write(ssl, shared->sndBuf.data(), shared->sndBuf.size())) != shared->sndBuf.size()) {
         m_dtls->error((char *)"Error while send the message.");
     }
     wc_UnLockMutex(&shared->shared_mutex);
@@ -65,10 +89,10 @@ void Dtls::setHost(char *host, int port)
     this->port = port;
 }
 
-void Dtls::setCerts(char *caCert, char *cert)
+void Dtls::setCertsAndKey(QString cert, QString key)
 {
-    this->caCertificate = caCert;
     this->certificate = cert;
+    this->key = key;
 }
 
 void Dtls::start()
@@ -91,11 +115,28 @@ void Dtls::start()
         return;
     }
 
-    const unsigned char* ca = reinterpret_cast<const unsigned char *>(this->caCertificate);
+    wolfSSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
 
-    if (wolfSSL_CTX_load_verify_buffer(ctx, ca, strlen(this->caCertificate), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+    char* certSequence;
+    certSequence = new char[this->certificate.size()+1];
+    strcpy(certSequence, this->certificate.toLocal8Bit());
+
+    const unsigned char* certs = reinterpret_cast<const unsigned char *>(certSequence);
+    if (wolfSSL_CTX_use_certificate_chain_buffer_format(ctx, certs, strlen((char *)certs), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
         char message[64];
-        sprintf(message, "Error while loading CA Certificete file");
+        sprintf(message, "Error while loading Certificates ");
+        emit error(message);
+        return;
+    }
+
+    char* keySequence;
+    keySequence = new char[this->key.size()+1];
+    strcpy(keySequence, this->key.toLocal8Bit());
+
+    const unsigned char* k = reinterpret_cast<const unsigned char *>(keySequence);
+    if (wolfSSL_CTX_use_PrivateKey_buffer(ctx, k, strlen((char *)k), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+        char message[64];
+        sprintf(message, "Error while loading Key of certificate");
         emit error(message);
         return;
     }
@@ -108,11 +149,15 @@ void Dtls::start()
         emit error((char *)"SSL initialize error.");
         return;
     }
-
+    char * remote_ip = hostname_to_ip(this->host);
+    if(remote_ip == NULL) {
+        emit error((char *)"Cannot get ip from domen name.");
+        return;
+    }
     memset(&shared.servAddr, 0, sizeof(shared.servAddr));
     shared.servAddr.sin_family = AF_INET;
     shared.servAddr.sin_port = htons(this->port);
-    if (inet_pton(AF_INET, this->host, &shared.servAddr.sin_addr) < 1) {
+    if (inet_pton(AF_INET, remote_ip, &shared.servAddr.sin_addr) < 1) {
         emit error((char *)"Error and/or invalid IP address.");
         return;
     }
@@ -179,12 +224,11 @@ void Dtls::start()
     wolfSSL_Cleanup();
 }
 
-void Dtls::send(char *message)
+void Dtls::send(QByteArray message)
 {
     pthread_t tid;
 
     shared.sndBuf = message;
-    shared.sndSz = strlen(shared.sndBuf) + 1;
 
     pthread_create(&tid, NULL, datagramSend, &shared);
     this->tid[this->tindex] = tid;

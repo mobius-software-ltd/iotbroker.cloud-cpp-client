@@ -6,6 +6,12 @@
 #include <QSslSocket>
 #include <QTcpSocket>
 #include <QUdpSocket>
+#include <QSslKey>
+
+#define BEGINKEYSTRING "-----BEGIN PRIVATE KEY-----"
+#define ENDKEYSTRING "-----END PRIVATE KEY-----"
+#define BEGINRSAKEYSTRING "-----BEGIN RSA PRIVATE KEY-----"
+#define ENDRSAKEYSTRING "-----END RSA PRIVATE KEY-----"
 
 enum ConnectionState
 {
@@ -67,5 +73,72 @@ signals:
     void didFailWithError(InternetProtocol *protocol, QString error);
 
 };
+
+static bool matchLineFeed(const QByteArray &pem, int *offset)
+{
+    char ch = pem.at(*offset);
+
+    // ignore extra whitespace at the end of the line
+    while (ch == ' ' && *offset < pem.size())
+        ch = pem.at(++*offset);
+
+    if (ch == '\n') {
+        *offset += 1;
+        return true;
+    }
+    if (ch == '\r' && pem.size() > (*offset + 1) && pem.at(*offset + 1) == '\n') {
+        *offset += 2;
+        return true;
+    }
+    return false;
+}
+
+static QByteArray * getKeyFromString(const QByteArray &pem)
+{
+    int offset = 0;
+    QSsl::KeyAlgorithm algo;
+    int startPos = pem.indexOf(BEGINKEYSTRING, offset);
+    if (startPos != -1)
+    {
+        algo = QSsl::KeyAlgorithm::Dsa;
+    }
+    else
+    {
+        startPos = pem.indexOf(BEGINRSAKEYSTRING, offset);
+        if(startPos != -1)
+        {
+            algo = QSsl::KeyAlgorithm::Rsa;
+        }
+        else
+        {
+            return NULL;
+        }
+    }
+    int endPos = 0;
+    if(algo == QSsl::KeyAlgorithm::Dsa)
+        endPos = pem.indexOf(ENDKEYSTRING, startPos);
+    else
+        endPos = pem.indexOf(ENDRSAKEYSTRING, startPos);
+
+    if (endPos == -1)
+        return NULL;
+
+    if(algo == QSsl::KeyAlgorithm::Dsa) {
+        offset = endPos + sizeof(ENDKEYSTRING) - 1;
+        endPos+=sizeof(ENDKEYSTRING)-1;
+    }
+    else {
+        offset = endPos + sizeof(ENDRSAKEYSTRING) - 1;
+        endPos+=sizeof(ENDRSAKEYSTRING)-1;
+    }
+
+//    if (!matchLineFeed(pem, &offset))
+//        return NULL;
+
+    QByteArray array = QByteArray::fromRawData(pem.data() + startPos, endPos - startPos);
+    return new QByteArray(array,endPos - startPos);
+
+}
+
 
 #endif // INTERNETPROTOCOL_H

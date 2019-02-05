@@ -43,8 +43,6 @@ MqttSN::MqttSN(AccountEntity account) : IotProtocol(account)
     QObject::connect(this->internetProtocol, SIGNAL(connectionDidStop(InternetProtocol*)),              this, SLOT(connectionDidStop(InternetProtocol*)));
     QObject::connect(this->internetProtocol, SIGNAL(didReceiveMessage(InternetProtocol*,QByteArray)),   this, SLOT(didReceiveMessage(InternetProtocol*,QByteArray)));
     QObject::connect(this->internetProtocol, SIGNAL(didFailWithError(InternetProtocol*,QString)),       this, SLOT(didFailWithError(InternetProtocol*,QString)));
-
-    QObject::connect(this->messageParser, SIGNAL(messagesParserError(QString*)), this, SLOT(parseFailWithError(QString*)));
 }
 
 bool MqttSN::send(Message *message)
@@ -59,7 +57,7 @@ bool MqttSN::send(Message *message)
 void MqttSN::goConnect()
 {
     if (this->currentAccount.isSecure) {
-        if (!this->internetProtocol->setCertificate(this->currentAccount.keyPath, this->currentAccount.keyPass)) {
+        if (!this->internetProtocol->setCertificate(this->currentAccount.keyPath.get().toString(), this->currentAccount.keyPass.get().toString())) {
             return;
         }
     }

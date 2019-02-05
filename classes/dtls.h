@@ -25,8 +25,7 @@ typedef struct SharedDtls {
     char*              recvBuf;       /* I/O recv cb buffer */
     int                recvSz;          /* bytes in recvBuf */
     int                handShakeDone;   /* is the handshake done? */
-    char*              sndBuf;
-    int                sndSz;
+    QByteArray         sndBuf;
 } SharedDtls;
 
 class Dtls : public QObject
@@ -38,8 +37,8 @@ class Dtls : public QObject
     char *host;
     int port;
 
-    char *certificate;
-    char *caCertificate;
+    QString certificate;
+    QString key;
 
     SharedDtls shared;
     SharedDtls* recvShared;
@@ -55,10 +54,10 @@ public:
     static void* datagramSend(void* arg);
 
     void setHost(char *host, int port);
-    void setCerts(char *caCert, char *cert);
+    void setCertsAndKey(QString cert, QString key);
 
     void start();
-    void send(char *message);
+    void send(QByteArray message);
     void stop();
 
 signals:

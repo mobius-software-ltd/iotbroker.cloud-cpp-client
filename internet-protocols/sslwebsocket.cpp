@@ -7,6 +7,7 @@ SslWebSocket::SslWebSocket() : InternetProtocol()
     this->socket = new QWebSocket();
 
     QObject::connect(this->socket, SIGNAL(binaryMessageReceived(QByteArray)),             this, SLOT(receivedByteArray(QByteArray)));
+    QObject::connect(this->socket, SIGNAL(textMessageReceived(QString)),                  this, SLOT(receivedString(QString)));
     QObject::connect(this->socket, SIGNAL(disconnected()),                                this, SLOT(disconnected()));
     QObject::connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)),           this, SLOT(error(QAbstractSocket::SocketError)));
     QObject::connect(this->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),    this, SLOT(stateDidChanged(QAbstractSocket::SocketState)));
@@ -18,14 +19,19 @@ SslWebSocket::SslWebSocket(QString withHost, int andPort) : SslWebSocket()
     this->setPort(andPort);
 }
 
-bool SslWebSocket::setCertificate(QString path, QString pass)
+bool SslWebSocket::setCertificate(QString pem, QString pass)
 {
     try {
-        P12FileExtractor extractor = P12FileExtractor(path.toUtf8().data(), pass.toUtf8().data());
-        QByteArray certData = QByteArray(extractor.getCertificate(), strlen(extractor.getCertificate()));
-        QSslCertificate certificate = QSslCertificate(certData);
+
+        QByteArray * keyData = getKeyFromString(pem.toUtf8());
+        QByteArray keyPass = pass.toUtf8();
+        QSslKey sslKey = QSslKey(*keyData, QSsl::KeyAlgorithm::Rsa, QSsl::EncodingFormat::Pem, QSsl::KeyType::PrivateKey, keyPass);
+        QByteArray certData = pem.toUtf8();
+        QList<QSslCertificate> certs = QSslCertificate::fromData(certData,QSsl::Pem);
+
         QSslConfiguration conf = QSslConfiguration();
-        conf.setLocalCertificate(certificate);
+        conf.setLocalCertificateChain(certs);
+        conf.setPrivateKey(sslKey);
         this->socket->setSslConfiguration(conf);
     } catch (MessageException e) {
         emit didFailWithError(this, e.getMessage());
@@ -40,7 +46,7 @@ void SslWebSocket::start()
         this->socket->disconnected();
     }
 
-    QString urlString = "wss://" + this->getHost() + ":" + QString::number(this->getPort());
+    QString urlString = "wss://" + this->getHost() + ":" + QString::number(this->getPort())+"/ws";
     QUrl url = QUrl(urlString);
     this->socket->open(url);
 }
@@ -55,7 +61,8 @@ void SslWebSocket::stop()
 bool SslWebSocket::send(QByteArray data)
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
-        qint64 bytes = this->socket->sendBinaryMessage(data);
+        QString message = QString(data);
+        qint64 bytes = this->socket->sendTextMessage(message);
         if (bytes == -1) {
             return false;
         }
@@ -68,14 +75,23 @@ bool SslWebSocket::send(QByteArray data)
 
 void SslWebSocket::receivedByteArray(QByteArray array)
 {
+    printf("RECEIVED BYTE ARRAY\n");
     if (array.size() > 0) {
         emit didReceiveMessage(this, array);
     }
 }
 
+void SslWebSocket::receivedString(QString string)
+{
+    printf("RECEIVE STRING : %s\n", string.toUtf8().data());
+    if (string.length() > 0) {
+        emit didReceiveMessage(this, string.toUtf8());
+    }
+}
+
 void SslWebSocket::readyRead()
 {
-
+    printf("REDY TO READ\n");
 }
 
 void SslWebSocket::disconnected()

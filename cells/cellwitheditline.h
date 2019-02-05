@@ -22,6 +22,7 @@
 #define CELLWITHEDITLINE_H
 
 #include <listwidget.h>
+#include "customtextedit.h"
 
 namespace Ui {
 class CellWithEditLine;
@@ -39,7 +40,7 @@ public:
     explicit CellWithEditLine(QWidget *parent = 0);
     ~CellWithEditLine();
 
-    static CellWithEditLine *createCellWith(QString imagePath, QString text, QString placeholder, ListWidget *widget);
+    static CellWithEditLine *createCellWith(QString imagePath, QString text, QString placeholder, ListWidget *widget, bool isMultiline);
 
     void setNumbersValidator();
 
@@ -59,11 +60,16 @@ public:
 
     void setLineEditClickFilter(bool flag);
 
+    void setIsMultiline(bool isMultiline);
+
     void clear();
+
+    CustomTextEdit *getLineEdit();
 
 private:
     Ui::CellWithEditLine *ui;
     bool eventFilter(QObject *obj, QEvent *event);
+    bool isMultiline;
 
 signals:
     void didClick(QLineEdit *);

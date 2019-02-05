@@ -27,11 +27,12 @@ DtlsSocket::DtlsSocket(QString withHost, int port) : DtlsSocket()
     this->setPort(port);
 }
 
-bool DtlsSocket::setCertificate(QString path, QString pass)
+bool DtlsSocket::setCertificate(QString pem, QString pass)
 {
     try {
-        P12FileExtractor extractor = P12FileExtractor(path.toUtf8().data(), pass.toUtf8().data());
-        this->socket->setCerts(extractor.getCaCertificate(), extractor.getCertificate());
+        QByteArray * keyData = getKeyFromString(pem.toUtf8());
+        QString s_data = QString::fromStdString(keyData->toStdString());
+        this->socket->setCertsAndKey(pem,s_data);
     } catch (MessageException e) {
         emit didFailWithError(this, e.getMessage());
         return false;
@@ -59,7 +60,7 @@ void DtlsSocket::stop()
 bool DtlsSocket::send(QByteArray data)
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
-        this->socket->send(data.data());
+        this->socket->send(data);
         return true;
     }
     return false;
@@ -75,7 +76,8 @@ void DtlsSocket::connected()
 
 void DtlsSocket::received(char *message)
 {
-    QByteArray array = QByteArray(message);
+
+    QByteArray array = QByteArray(message, message[0]);
     emit didReceiveMessage(this, array);
 }
 

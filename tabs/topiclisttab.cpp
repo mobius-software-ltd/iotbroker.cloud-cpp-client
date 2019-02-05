@@ -37,7 +37,7 @@ TopicListTab::TopicListTab(QWidget *parent) :
     qosList.append(QString::number(1));
     qosList.append(QString::number(2));
 
-    this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic:", "topic", ui->inputListWidget);
+    this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic:", "topic", ui->inputListWidget,false);
     this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS:", qosList, "0", ui->inputListWidget);
 }
 
