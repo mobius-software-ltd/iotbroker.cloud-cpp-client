@@ -27,7 +27,7 @@ bool SslSocket::setCertificate(QString pem, QString pass)
         QByteArray keyPass = pass.toUtf8();
         QString str = keyData->data();
         QSsl::KeyAlgorithm algo;
-        if(str.startsWith(BEGINKEYSTRING))
+        if(str.startsWith(BEGINDSAKEYSTRING))
             algo = QSsl::KeyAlgorithm::Dsa;
          else
             algo = QSsl::KeyAlgorithm::Rsa;

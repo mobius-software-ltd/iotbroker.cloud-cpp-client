@@ -25,6 +25,12 @@ bool SslWebSocket::setCertificate(QString pem, QString pass)
 
         QByteArray * keyData = getKeyFromString(pem.toUtf8());
         QByteArray keyPass = pass.toUtf8();
+        QSsl::KeyAlgorithm algo;
+        QString str = keyData->data();
+        if(str.startsWith(BEGINKEYSTRING))
+            algo = QSsl::KeyAlgorithm::Dsa;
+         else
+            algo = QSsl::KeyAlgorithm::Rsa;
         QSslKey sslKey = QSslKey(*keyData, QSsl::KeyAlgorithm::Rsa, QSsl::EncodingFormat::Pem, QSsl::KeyType::PrivateKey, keyPass);
         QByteArray certData = pem.toUtf8();
         QList<QSslCertificate> certs = QSslCertificate::fromData(certData,QSsl::Pem);
