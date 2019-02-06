@@ -63,7 +63,7 @@
     </layout>
    </item>
    <item row="0" column="1">
-    <widget class="CustomTextEdit" name="lineEdit">
+    <widget class="CustomTextEdit" name="lineEdit" native="true">
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -80,16 +80,20 @@
       <string notr="true">background-color: rgba(255, 255, 255, 0);
 border-color: rgb(254, 198, 66);</string>
      </property>
-     <property name="inputMask">
+     <property name="inputMask" stdset="0">
       <string/>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CustomTextEdit</class>
+   <extends>QWidget</extends>
+   <header>cells/customtextedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
