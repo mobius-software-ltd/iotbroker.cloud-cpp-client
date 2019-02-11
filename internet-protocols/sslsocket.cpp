@@ -22,6 +22,8 @@ SslSocket::SslSocket(QString withHost, int port) : SslSocket()
 
 bool SslSocket::setCertificate(QString pem, QString pass)
 {
+    if(pem.isNull() || pem.isEmpty())
+        return true;
     try {
         QByteArray * keyData = getKeyFromString(pem.toUtf8());
         QByteArray keyPass = pass.toUtf8();

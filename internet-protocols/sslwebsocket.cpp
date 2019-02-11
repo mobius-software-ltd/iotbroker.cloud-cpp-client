@@ -21,6 +21,8 @@ SslWebSocket::SslWebSocket(QString withHost, int andPort) : SslWebSocket()
 
 bool SslWebSocket::setCertificate(QString pem, QString pass)
 {
+    if(pem.isNull() || pem.isEmpty())
+        return true;
     try {
 
         QByteArray * keyData = getKeyFromString(pem.toUtf8());

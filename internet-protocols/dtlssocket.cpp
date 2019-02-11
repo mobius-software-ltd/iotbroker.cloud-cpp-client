@@ -29,6 +29,8 @@ DtlsSocket::DtlsSocket(QString withHost, int port) : DtlsSocket()
 
 bool DtlsSocket::setCertificate(QString pem, QString pass)
 {
+    if(pem.isNull() || pem.isEmpty())
+        return true;
     try {
         QByteArray * keyData = getKeyFromString(pem.toUtf8());
         QString s_data = QString::fromStdString(keyData->toStdString());

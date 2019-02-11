@@ -269,7 +269,11 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 if (mess->getType() == MQ_SUBSCRIBE) {
                     Subscribe *subsctibe = (Subscribe *)mess;
                     MQTopic topic = subsctibe->getTopics()->last();
-                    emit subackReceived(this, topic.getName(), topic.getQoS()->getValue(), suback->getReturnCodes()->first());
+                    int code = 0;
+                    if(suback->getReturnCodes()->first() == 0x80) {
+                        code = -1;
+                    }
+                    emit subackReceived(this, topic.getName(), topic.getQoS()->getValue(), code);
                 }
             }
             break;

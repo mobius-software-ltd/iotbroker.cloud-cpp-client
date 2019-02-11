@@ -299,7 +299,7 @@ void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int code)
     this->generalForm->setProgress(0);
 
     if (code != 0) {
-        QMessageBox *messageBox = new QMessageBox("Warrning", "Wrong topic name", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        QMessageBox *messageBox = new QMessageBox("Warrning", "Subscribe failure", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
         messageBox->exec();
         return;
