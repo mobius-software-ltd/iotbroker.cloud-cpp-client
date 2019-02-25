@@ -25,7 +25,7 @@ bool SslWebSocket::setCertificate(QString pem, QString pass)
         return true;
     try {
 
-        QByteArray * keyData = getKeyFromString(pem.toUtf8());
+        QByteArray * keyData = InternetProtocol::getKeyFromString(pem.toUtf8());
         QByteArray keyPass = pass.toUtf8();
         QSsl::KeyAlgorithm algo;
         QString str = keyData->data();

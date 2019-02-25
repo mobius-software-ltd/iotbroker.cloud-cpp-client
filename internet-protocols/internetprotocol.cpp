@@ -122,4 +122,66 @@ void InternetProtocol::receivedString(QString)
 
 }
 
+QByteArray * InternetProtocol::getKeyFromString(const QByteArray &pem)
+{
+    int offset = 0;
+    QSsl::KeyAlgorithm algo;
+    int startPos = pem.indexOf(BEGINDSAKEYSTRING, offset);
+    if (startPos != -1)
+    {
+        algo = QSsl::KeyAlgorithm::Dsa;
+    }
+    else
+    {
+        startPos = pem.indexOf(BEGINRSAKEYSTRING, offset);
+        if(startPos != -1)
+        {
+            algo = QSsl::KeyAlgorithm::Rsa;
+        }
+        else
+        {
+            startPos = pem.indexOf(BEGINKEYSTRING, offset);
+            if(startPos != -1)
+            {
+                algo = QSsl::KeyAlgorithm::Rsa;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+    }
+    int endPos = 0;
+    if(algo == QSsl::KeyAlgorithm::Dsa)
+        endPos = pem.indexOf(ENDDSAKEYSTRING, startPos);
+    else
+    {
+        endPos = pem.indexOf(ENDRSAKEYSTRING, startPos);
+        if(endPos == -1 )
+            endPos = pem.indexOf(ENDKEYSTRING, startPos);
+    }
+
+    if (endPos == -1)
+        return NULL;
+
+    if(algo == QSsl::KeyAlgorithm::Dsa) {
+        offset = endPos + sizeof(ENDDSAKEYSTRING) - 1;
+        endPos+=sizeof(ENDDSAKEYSTRING)-1;
+    }
+    else {
+        if(pem.indexOf(ENDRSAKEYSTRING, startPos) != -1) {
+            offset = endPos + sizeof(ENDRSAKEYSTRING) - 1;
+            endPos+=sizeof(ENDRSAKEYSTRING)-1;
+        }
+        else
+        {
+            offset = endPos + sizeof(ENDKEYSTRING) - 1;
+            endPos+=sizeof(ENDKEYSTRING)-1;
+        }
+    }
+
+    QByteArray array = QByteArray::fromRawData(pem.data() + startPos, endPos - startPos);
+    return new QByteArray(array,endPos - startPos);
+
+}
 

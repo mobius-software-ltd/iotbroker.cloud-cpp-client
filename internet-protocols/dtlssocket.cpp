@@ -33,7 +33,16 @@ bool DtlsSocket::setCertificate(QString pem, QString pass)
         return true;
     try {
         QByteArray * keyData = getKeyFromString(pem.toUtf8());
-        QString s_data = QString::fromStdString(keyData->toStdString());
+        pem.remove(*keyData,Qt::CaseSensitive);
+        QByteArray keyPass = pass.toUtf8();
+        QString str = keyData->data();
+        QSsl::KeyAlgorithm algo;
+        if(str.startsWith(BEGINDSAKEYSTRING))
+            algo = QSsl::KeyAlgorithm::Dsa;
+         else
+            algo = QSsl::KeyAlgorithm::Rsa;
+        QSslKey sslKey = QSslKey(*keyData, algo, QSsl::EncodingFormat::Pem, QSsl::KeyType::PrivateKey, keyPass);
+        QString s_data = QString::fromStdString(sslKey.toPem().toStdString());
         this->socket->setCertsAndKey(pem,s_data);
     } catch (MessageException e) {
         emit didFailWithError(this, e.getMessage());
