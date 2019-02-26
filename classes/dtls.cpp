@@ -116,31 +116,32 @@ void Dtls::start()
     }
 
     wolfSSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
+    if (!this->certificate.isNull() && !this->certificate.isEmpty()) {
+        char* certSequence;
+        certSequence = new char[this->certificate.size()+1];
+        strcpy(certSequence, this->certificate.toLocal8Bit());
 
-    char* certSequence;
-    certSequence = new char[this->certificate.size()+1];
-    strcpy(certSequence, this->certificate.toLocal8Bit());
-
-    const unsigned char* certs = reinterpret_cast<const unsigned char *>(certSequence);
-    if (wolfSSL_CTX_use_certificate_chain_buffer_format(ctx, certs, strlen((char *)certs), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
-        char message[64];
-        sprintf(message, "Error while loading Certificates ");
-        emit error(message);
-        return;
+        const unsigned char* certs = reinterpret_cast<const unsigned char *>(certSequence);
+        if (wolfSSL_CTX_use_certificate_chain_buffer_format(ctx, certs, strlen((char *)certs), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+            char message[64];
+            sprintf(message, "Error while loading Certificates ");
+            emit error(message);
+            return;
+        }
     }
+    if (!this->key.isNull() && !this->key.isEmpty()) {
+        char* keySequence;
+        keySequence = new char[this->key.size()+1];
+        strcpy(keySequence, this->key.toLocal8Bit());
 
-    char* keySequence;
-    keySequence = new char[this->key.size()+1];
-    strcpy(keySequence, this->key.toLocal8Bit());
-
-    const unsigned char* k = reinterpret_cast<const unsigned char *>(keySequence);
-    if (wolfSSL_CTX_use_PrivateKey_buffer(ctx, k, strlen((char *)k), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
-        char message[64];
-        sprintf(message, "Error while loading Key of certificate");
-        emit error(message);
-        return;
+        const unsigned char* k = reinterpret_cast<const unsigned char *>(keySequence);
+        if (wolfSSL_CTX_use_PrivateKey_buffer(ctx, k, strlen((char *)k), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+            char message[64];
+            sprintf(message, "Error while loading Key of certificate");
+            emit error(message);
+            return;
+        }
     }
-
     wolfSSL_SetIOSend(ctx, dtls_sendto_cb);
     wolfSSL_SetIORecv(ctx, dtls_recvfrom_cb);
 
@@ -180,7 +181,8 @@ void Dtls::start()
     wolfSSL_SetIOWriteCtx(ssl, &shared);
     wolfSSL_SetIOReadCtx(ssl, &shared);
 
-    if (wolfSSL_connect(ssl) != SSL_SUCCESS) {
+    int result = wolfSSL_connect(ssl);
+    if (result != SSL_SUCCESS) {
         err1 = wolfSSL_get_error(ssl, 0);
         emit error((char *)"SSL connect error.");
         return;
