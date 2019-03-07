@@ -24,6 +24,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setWindowIcon(QIcon(":/resources/resources/iotbroker_icon_big.png"));
     MainWindow w;
 
     w.show();

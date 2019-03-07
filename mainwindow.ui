@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MQTT</string>
+   <string>IotBroker.cloud</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
