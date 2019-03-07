@@ -45,6 +45,8 @@ class MainWindow : public QMainWindow
     IotProtocol *iotProtocol;
     AccountManager *accountManager;
 
+    AccountEntity accountEntity;
+
     AccountListForm *accountListForm;
     GeneralForm *generalForm;
     LoadingForm *loadingForm;

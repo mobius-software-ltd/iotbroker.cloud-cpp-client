@@ -182,10 +182,8 @@ AccountEntity AccountManager::readDefaultAccount()
     return account;
 }
 
-void AccountManager::addTopicForDefaultAccount(TopicEntity topic)
+void AccountManager::addTopicForAccount(AccountEntity account,TopicEntity topic)
 {
-    AccountEntity account = this->readDefaultAccount();
-
     TopicEntity te = this->topicByName(topic.topicName);
     this->deleteTopic(te);
 
@@ -215,16 +213,8 @@ QList<TopicEntity> AccountManager::topicsForAccount(AccountEntity account)
     return topics;
 }
 
-QList<TopicEntity> AccountManager::topicsForDefaultAccount()
+void AccountManager::addMessageForAccount(AccountEntity account,MessageEntity message, bool incoming)
 {
-    AccountEntity account = this->readDefaultAccount();
-    return this->topicsForAccount(account);
-}
-
-void AccountManager::addMessageForDefaultAccount(MessageEntity message, bool incoming)
-{
-    AccountEntity account = this->readDefaultAccount();
-
     if (this->dataBase.open() == true) {
         message.incoming = incoming;
         message.account = account;
@@ -253,13 +243,6 @@ QList<MessageEntity> AccountManager::messagesForAccount(AccountEntity account)
     return messages;
 }
 
-QList<MessageEntity> AccountManager::messagesForDefaultAccount()
-{
-    AccountEntity account = this->readDefaultAccount();
-    QList<MessageEntity> list = this->messagesForAccount(account);
-    std::sort(list.begin(), list.end(), dateSort);
-    return list;
-}
 
 void AccountManager::deleteAccount(AccountEntity account)
 {
@@ -297,9 +280,9 @@ void AccountManager::deleteMessage(MessageEntity message)
     this->dataBase.close();
 }
 
-bool AccountManager::isTopicExist(QString topic)
+bool AccountManager::isTopicExist(AccountEntity account,QString topic)
 {
-    QList<TopicEntity> topics = this->topicsForDefaultAccount();
+    QList<TopicEntity> topics = this->topicsForAccount(account);
 
     for (int i = 0; i < topics.length(); i++) {
         TopicEntity item = topics.at(i);
@@ -310,9 +293,9 @@ bool AccountManager::isTopicExist(QString topic)
     return false;
 }
 
-void AccountManager::removeTopicsForCurrentAccount()
+void AccountManager::removeTopicsForAccount(AccountEntity account)
 {
-    QList<TopicEntity> topics = this->topicsForDefaultAccount();
+    QList<TopicEntity> topics = this->topicsForAccount(account);
 
     if (this->dataBase.open() == true) {
         for (int i = 0; i < topics.length(); i++) {
@@ -323,9 +306,9 @@ void AccountManager::removeTopicsForCurrentAccount()
     this->dataBase.close();
 }
 
-void AccountManager::removeMessagesForCurrentAccount()
+void AccountManager::removeMessagesForAccount(AccountEntity account)
 {
-    QList<MessageEntity> messages = this->messagesForDefaultAccount();
+    QList<MessageEntity> messages = this->messagesForAccount(account);
 
     if (this->dataBase.open() == true) {
         for (int i = 0; i < messages.length(); i++) {

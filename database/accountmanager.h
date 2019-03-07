@@ -53,22 +53,20 @@ public:
     AccountEntity getAccountWithClientID(QString clientID);
     AccountEntity readDefaultAccount();
 
-    void addTopicForDefaultAccount(TopicEntity topic);
+    void addTopicForAccount(AccountEntity account,TopicEntity topic);
     QList<TopicEntity> topicsForAccount(AccountEntity account);
-    QList<TopicEntity> topicsForDefaultAccount();
 
-    void addMessageForDefaultAccount(MessageEntity message, bool incoming);
+    void addMessageForAccount(AccountEntity account,MessageEntity message, bool incoming);
     QList<MessageEntity> messagesForAccount(AccountEntity account);
-    QList<MessageEntity> messagesForDefaultAccount();
 
     void deleteAccount(AccountEntity account);
     void deleteTopic(TopicEntity topic);
     void deleteMessage(MessageEntity message);
 
-    bool isTopicExist(QString topic);
+    bool isTopicExist(AccountEntity account,QString topic);
 
-    void removeTopicsForCurrentAccount();
-    void removeMessagesForCurrentAccount();
+    void removeTopicsForAccount(AccountEntity account);
+    void removeMessagesForAccount(AccountEntity account);
 
     TopicEntity topicByName(QString name);
 };

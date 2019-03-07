@@ -65,6 +65,7 @@ void MainWindow::init()
 
 void MainWindow::startWithAccount(AccountEntity account)
 {
+    this->accountEntity = account;
     int protocolType = account.protocol.get().toInt();
 
     if (protocolType == MQTT_PROTOCOL) {
@@ -110,14 +111,14 @@ void MainWindow::saveTopic(QString topicName, int qos, QByteArray content, bool 
     message.content = content;
     message.isRetain = isRetain;
     message.isDub = isDub;
-    this->accountManager->addMessageForDefaultAccount(message, isIncoming);
+    this->accountManager->addMessageForAccount(this->accountEntity, message, isIncoming);
 
-    this->generalForm->setMessages(this->accountManager->messagesForDefaultAccount());
+    this->generalForm->setMessages(this->accountManager->messagesForAccount(this->accountEntity));
 }
 
 bool MainWindow::isTopicAlreadyExistForCurrentAccount(QString topic)
 {
-    QList<TopicEntity> topics = this->accountManager->topicsForDefaultAccount();
+    QList<TopicEntity> topics = this->accountManager->topicsForAccount(this->accountEntity);
     for(int i = 0; i < topics.size(); i++) {
         if (topics.at(i).topicName == topic) {
             return true;
@@ -193,12 +194,12 @@ void MainWindow::willPublish(MessageEntity message)
 
 void MainWindow::topicsTabDidClick()
 {
-    this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
+    this->generalForm->setTopics(this->accountManager->topicsForAccount(this->accountEntity));
 }
 
 void MainWindow::messagesTabDidCLick()
 {
-    this->generalForm->setMessages(this->accountManager->messagesForDefaultAccount());
+    this->generalForm->setMessages(this->accountManager->messagesForAccount(this->accountEntity));
 }
 
 void MainWindow::logoutTabDidCLick()
@@ -276,7 +277,7 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         this->setSizeToWindowWithCentralPosition(this->generalForm->getSize());
 
         if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
-            this->accountManager->removeTopicsForCurrentAccount();
+            this->accountManager->removeTopicsForAccount(this->accountEntity);
         }
     }
 }
@@ -309,14 +310,14 @@ void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int code)
     entity.topicName = topic;
     entity.qos = qos;
 
-    this->accountManager->addTopicForDefaultAccount(entity);
-    this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
+    this->accountManager->addTopicForAccount(this->accountEntity, entity);
+    this->generalForm->setTopics(this->accountManager->topicsForAccount(this->accountEntity));
 }
 
 void MainWindow::unsubackReceived(IotProtocol*,QString topic)
 {
     this->accountManager->deleteTopic(this->accountManager->topicByName(topic));
-    this->generalForm->setTopics(this->accountManager->topicsForDefaultAccount());
+    this->generalForm->setTopics(this->accountManager->topicsForAccount(this->accountEntity));
 
     this->progressTimer->stop();
     this->generalForm->setProgress(0);
