@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->progressTimer = new QTimer(this);
     connect(this->progressTimer, SIGNAL(timeout()), this, SLOT(timeoutProgressBar()));
-    this->progressTimer->setInterval(32);
+    this->progressTimer->setInterval(50);
 
     this->accountManager = AccountManager::getInstance();
     this->init();
@@ -207,9 +207,8 @@ void MainWindow::willPublish(MessageEntity message)
     int qos = message.qos.get().toInt();
     if (qos == AT_MOST_ONCE) {
         this->saveTopic(message.topicName.get().toString(), qos, message.content.get().toByteArray(), message.isRetain.get().toBool(), message.isDub.get().toBool(), false);
-    } else {
-        this->progressTimer->start();
     }
+    this->progressTimer->start();
     this->iotProtocol->publish(message);
 }
 
@@ -317,15 +316,10 @@ void MainWindow::publishReceived(IotProtocol*, QString topic, int qos, QByteArra
 void MainWindow::pubackReceived(IotProtocol*, QString topic, int qos, QByteArray content, bool isDub, bool isRetain, int)
 {
     this->saveTopic(topic, qos, content, isRetain, isDub, false);
-    this->progressTimer->stop();
-    this->generalForm->setProgress(0);
 }
 
 void MainWindow::subackReceived(IotProtocol*,QString topic,int qos,int code)
 {
-    this->progressTimer->stop();
-    this->generalForm->setProgress(0);
-
     if (code != 0) {
         QMessageBox *messageBox = new QMessageBox("Warrning", "Subscribe failure", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
@@ -345,9 +339,6 @@ void MainWindow::unsubackReceived(IotProtocol*,QString topic)
 {
     this->accountManager->deleteTopic(this->accountManager->topicByName(topic));
     this->generalForm->setTopics(this->accountManager->topicsForAccount(this->accountEntity));
-
-    this->progressTimer->stop();
-    this->generalForm->setProgress(0);
 }
 
 void MainWindow::disconnectReceived(IotProtocol*)
@@ -379,8 +370,11 @@ void MainWindow::errorReceived(IotProtocol*,QString error)
 
 void MainWindow::timeoutProgressBar()
 {
-    if ((this->generalForm->getProgress() < this->generalForm->getProgressMax() - 5) && this->generalForm->getProgress() >= this->generalForm->getProgressMin()) {
-        this->generalForm->setProgress(this->generalForm->getProgress() + 1);
+    if ((this->generalForm->getProgress() < this->generalForm->getProgressMax()) && this->generalForm->getProgress() >= this->generalForm->getProgressMin()) {
+        this->generalForm->setProgress(this->generalForm->getProgress() + 10);
+    } else {
+        this->progressTimer->stop();
+        this->generalForm->setProgress(0);
     }
 }
 
