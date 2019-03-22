@@ -55,6 +55,7 @@ class MainWindow : public QMainWindow
     QTimer *progressTimer;
 
     void init();
+    void closeEvent (QCloseEvent *event);
     void startWithAccount(AccountEntity account);
     void setSizeToWindowWithCentralPosition(QSize size);
     void saveTopic(QString topicName, int qos, QByteArray content, bool isRetain, bool isDub, bool isIncoming);

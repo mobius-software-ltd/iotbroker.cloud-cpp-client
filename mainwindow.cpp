@@ -42,6 +42,27 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->accountManager = AccountManager::getInstance();
     this->init();
 }
+void MainWindow::closeEvent (QCloseEvent *event)
+{
+    if(this->loginForm != NULL && this->loginForm->isActiveWindow())
+    {
+       event->ignore();
+       ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
+       this->loginForm = NULL;
+       this->init();
+    }
+    else
+    {
+        QMessageBox::StandardButton resBtn = QMessageBox::question( this, "IotBroker.cloud",
+                                                                    tr("Are you sure?\n"),
+                                                                    QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
+        if (resBtn != QMessageBox::Yes) {
+            event->ignore();
+        } else {
+            event->accept();
+        }
+    }
+}
 
 void MainWindow::init()
 {
