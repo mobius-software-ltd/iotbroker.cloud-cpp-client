@@ -138,6 +138,7 @@ void MQTT::disconnectWith(int duration)
     this->isConnect = false;
     this->send(new Disconnect());
     this->timers->stopAllTimers();
+    this->internetProtocol->stop();
 }
 
 Message *MQTT::getPingreqMessage()

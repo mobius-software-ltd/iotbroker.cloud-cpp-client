@@ -192,6 +192,7 @@ void AMQP::disconnectWith(int duration)
         this->timers->stopAllTimers();
     }
     this->isConnect = false;
+    this->internetProtocol->stop();
 }
 
 Message *AMQP::getPingreqMessage()
