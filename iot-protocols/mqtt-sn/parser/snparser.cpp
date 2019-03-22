@@ -38,7 +38,7 @@ QByteArray SNParser::encode(Message *message)
         data->writeChar(length);
     } else {
         data->writeChar(threeOctetLengthSuffix);
-        data->writeChar(length);
+        data->writeShort(length);
     }
 
     SNMessageType type = (SNMessageType)message->getType();

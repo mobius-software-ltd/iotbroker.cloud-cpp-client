@@ -204,6 +204,16 @@ void MainWindow::willUnsubscribeFromTopic(TopicEntity topicEntity)
 
 void MainWindow::willPublish(MessageEntity message)
 {
+
+    int protocolType = this->accountEntity.protocol.get().toInt();
+    if((protocolType == MQTT_SN_PROTOCOL || protocolType == MQTT_SN_PROTOCOL) && message.content.get().toString().size()>1399)
+    {
+        QMessageBox *messageBox = new QMessageBox("Warrning", "Max content size MUST be < 1400 characters for UDP", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+        messageBox->exec();
+        return;
+    }
+
     int qos = message.qos.get().toInt();
     if (qos == AT_MOST_ONCE) {
         this->saveTopic(message.topicName.get().toString(), qos, message.content.get().toByteArray(), message.isRetain.get().toBool(), message.isDub.get().toBool(), false);
