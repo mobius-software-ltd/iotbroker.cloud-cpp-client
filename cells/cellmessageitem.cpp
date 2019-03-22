@@ -44,8 +44,8 @@ void CellMessageItem::createCellWith(QString title, QString text, bool isIncomin
 
     double lineWidth = width / 300.0 + 1;
 
-    item->setSizeHint(QSize(0, 50 + (12 * lineWidth)));
-    widget->addItem(item);
+    item->setSizeHint(QSize(0, 60 + (12 * lineWidth)));
+    widget->insertItem(0,item);
     widget->setItemWidget(item, widgetForm);
 }
 
