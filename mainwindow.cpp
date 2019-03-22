@@ -279,6 +279,12 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
             this->accountManager->removeTopicsForAccount(this->accountEntity);
         }
+    } else {
+        QString stringError = "Connection failure. Error code : ";
+        stringError.append(returnCode);
+        QMessageBox *messageBox = new QMessageBox("Warrning", stringError, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+        messageBox->exec();
     }
 }
 
@@ -345,6 +351,7 @@ void MainWindow::errorReceived(IotProtocol*,QString error)
         messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
         messageBox->exec();
     }
+    disconnectReceived(NULL);
 }
 
 // QProgressBar

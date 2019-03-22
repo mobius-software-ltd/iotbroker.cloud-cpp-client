@@ -123,7 +123,7 @@ void SendMessageTab::showContentMultilineWindow(bool value) {
 
     if(value) {
         bool bOk;
-        QString str = QInputDialog::getMultiLineText(this, "Enter Will content", "", "", &bOk);
+        QString str = QInputDialog::getMultiLineText(this, "Enter Will content", "", this->contentCell->getInputText(), &bOk);
         this->contentCell->getLineEdit()->clearFocus();
         if (bOk)
         {

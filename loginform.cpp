@@ -170,27 +170,29 @@ void LoginForm::showMultilineWindow(bool value) {
 
     if(value) {
         bool bOk;
-        QString str = QInputDialog::getMultiLineText(this, "Enter PEM Certificate and Key", "", "", &bOk);
+        QString str = QInputDialog::getMultiLineText(this, "Enter PEM Certificate and Key", "", this->securityKeyCell->getInputText(), &bOk);
         this->securityKeyCell->getLineEdit()->clearFocus();
         if (bOk)
         {
-            QString errorString = NULL;
-            QByteArray * key = InternetProtocol::getKeyFromString(str.toUtf8());
-            if(key == NULL) {
-                errorString = "form does not contain key";
-            }
-            QList<QSslCertificate> certs = QSslCertificate::fromData(str.toUtf8(),QSsl::Pem);
-            if(certs.isEmpty()) {
-                if(errorString == NULL)
-                    errorString = "form does not contain certificate";
-                else
-                    errorString.append("\n form does not contain certificate");
-            }
-            if(errorString != NULL) {
-                QMessageBox *messageBox = new QMessageBox("Warning", errorString, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-                messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-                messageBox->exec();
-                return;
+            if(str != NULL && !str.isEmpty()) {
+                QString errorString = NULL;
+                QByteArray * key = InternetProtocol::getKeyFromString(str.toUtf8());
+                if(key == NULL) {
+                    errorString = "form does not contain key";
+                }
+                QList<QSslCertificate> certs = QSslCertificate::fromData(str.toUtf8(),QSsl::Pem);
+                if(certs.isEmpty()) {
+                    if(errorString == NULL)
+                        errorString = "form does not contain certificate";
+                    else
+                        errorString.append("\n form does not contain certificate");
+                }
+                if(errorString != NULL) {
+                    QMessageBox *messageBox = new QMessageBox("Warning", errorString, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+                    messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+                    messageBox->exec();
+                    return;
+                }
             }
             this->securityKeyCell->setInputText(str);
         }
@@ -201,7 +203,7 @@ void LoginForm::showWillMultilineWindow(bool value) {
 
     if(value) {
         bool bOk;
-        QString str = QInputDialog::getMultiLineText(this, "Enter Will content", "", "", &bOk);
+        QString str = QInputDialog::getMultiLineText(this, "Enter Will content", "", this->willCell->getInputText(), &bOk);
         this->willCell->getLineEdit()->clearFocus();
         if (bOk)
         {
