@@ -76,7 +76,7 @@ void* Dtls::datagramSend(void* arg)
 
     wc_LockMutex(&shared->shared_mutex);
     if ((wolfSSL_write(ssl, shared->sndBuf.data(), shared->sndBuf.size())) != shared->sndBuf.size()) {
-        m_dtls->error((char *)"Error while send the message.");
+        //m_dtls->error((char *)"Error while send the message.");
     }
     wc_UnLockMutex(&shared->shared_mutex);
 
@@ -115,7 +115,7 @@ void Dtls::start()
         return;
     }
 
-    wolfSSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
+    wolfSSL_CTX_set_verify(ctx,SSL_VERIFY_NONE, NULL);
     if (!this->certificate.isNull() && !this->certificate.isEmpty()) {
         char* certSequence;
         certSequence = new char[this->certificate.size()+1];

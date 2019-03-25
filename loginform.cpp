@@ -92,28 +92,6 @@ void LoginForm::lineEditDidClick(QLineEdit *lineEdit)
 
 void LoginForm::logInButtonDidClick()
 {
-    if(!this->keyPassword->getInputText().isNull() && !this->keyPassword->getInputText().isEmpty()) {
-        //check
-        QString pem = this->securityKeyCell->getInputText();
-        QByteArray * keyData = InternetProtocol::getKeyFromString(pem.toUtf8());
-        pem.remove(*keyData,Qt::CaseSensitive);
-        QByteArray keyPass = this->keyPassword->getInputText().toUtf8();
-        QString str = keyData->data();
-        QSsl::KeyAlgorithm algo;
-        if(str.startsWith(BEGINDSAKEYSTRING))
-            algo = QSsl::KeyAlgorithm::Dsa;
-         else
-            algo = QSsl::KeyAlgorithm::Rsa;
-        QSslKey sslKey = QSslKey(*keyData, algo, QSsl::EncodingFormat::Pem, QSsl::KeyType::PrivateKey, keyPass);
-        if(sslKey.isNull())
-        {
-            QMessageBox *messageBox = new QMessageBox("Warning", "Incorrect key password", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-            messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-            messageBox->exec();
-            return;
-        }
-    }
-
     IotEnumProtocol *protocol = new IotEnumProtocol();
 
     AccountEntity account;

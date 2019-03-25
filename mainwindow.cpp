@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
 
     this->progressTimer = new QTimer(this);
-    connect(this->progressTimer, SIGNAL(timeout()), this, SLOT(timeoutProgressBar()));
+    //connect(this->progressTimer, SIGNAL(timeout()), this, SLOT(timeoutProgressBar()));
     this->progressTimer->setInterval(50);
 
     this->accountManager = AccountManager::getInstance();
@@ -253,6 +253,28 @@ void MainWindow::loginWithAccount(AccountEntity account)
             messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
             messageBox->exec();
             return;
+        }
+
+        if(account.isSecure.get().toBool() && account.keyPath != NULL && !account.keyPath.get().toString().isEmpty())
+        {
+            QString pem = account.keyPath;
+            QByteArray * keyData = InternetProtocol::getKeyFromString(pem.toUtf8());
+            pem.remove(*keyData,Qt::CaseSensitive);
+            QByteArray keyPass = account.keyPass.get().toString().toUtf8();
+            QString str = keyData->data();
+            QSsl::KeyAlgorithm algo;
+            if(str.startsWith(BEGINDSAKEYSTRING))
+                algo = QSsl::KeyAlgorithm::Dsa;
+             else
+                algo = QSsl::KeyAlgorithm::Rsa;
+            QSslKey sslKey = QSslKey(*keyData, algo, QSsl::EncodingFormat::Pem, QSsl::KeyType::PrivateKey, keyPass);
+            if(sslKey.isNull())
+            {
+                QMessageBox *messageBox = new QMessageBox("Warrning", "Key of certificate is NULL. If kay has password check password", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+                messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+                messageBox->exec();
+                return;
+            }
         }
 
         this->accountManager->addAccount(account);
