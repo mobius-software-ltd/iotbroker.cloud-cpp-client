@@ -187,11 +187,6 @@ void MainWindow::newAccountDidClick()
 void MainWindow::willSubscribeToTopic(TopicEntity topicEntity)
 {
     QString topicName = topicEntity.topicName.get().toString();
-//    if (this->accountManager->isTopicExist(topicName)) {
-//        QMessageBox *messageBox = new QMessageBox("Warrning", "Topic "+ topicName +" already exists.", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-//        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-//        messageBox->exec();
-//    }
     this->progressTimer->start();
     this->iotProtocol->subscribeTo(topicEntity);
 }
