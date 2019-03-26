@@ -314,6 +314,7 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
         this->generalForm = new GeneralForm(ui->stackedWidget);
+        this->generalForm->setTopics(this->accountManager->topicsForAccount(this->accountEntity));
         connect(this->generalForm, SIGNAL(willSubscribeToTopic(TopicEntity)), this, SLOT(willSubscribeToTopic(TopicEntity)));
         connect(this->generalForm, SIGNAL(willUnsubscribeFromTopic(TopicEntity)), this, SLOT(willUnsubscribeFromTopic(TopicEntity)));
         connect(this->generalForm, SIGNAL(willPublish(MessageEntity)), this, SLOT(willPublish(MessageEntity)));
