@@ -42,8 +42,14 @@ void LoadingForm::timeoutSlot()
         ui->progressBar->setValue(ui->progressBar->value() + 1);
     } else {
         this->timer->stop();
-        emit loadingDidFinish();
+        //emit loadingDidFinish();
+        emit timeout(NULL);
     }
+}
+
+void LoadingForm::stopTimer()
+{
+    this->timer->stop();
 }
 
 QSize LoadingForm::getSize()

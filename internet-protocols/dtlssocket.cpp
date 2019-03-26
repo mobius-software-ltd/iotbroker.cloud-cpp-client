@@ -14,15 +14,12 @@ DtlsSocket::DtlsSocket() : InternetProtocol()
 
 DtlsSocket::DtlsSocket(QString withHost, int port) : DtlsSocket()
 {
-    char *src = withHost.toUtf8().data();
-    char *dis = (char *)malloc(sizeof(char) * withHost.size());
+    char* dest;
+    size_t destination_size = withHost.size()+1;
+    dest = new char[destination_size];
+    memcpy(dest, withHost.toLocal8Bit(),destination_size);
 
-    size_t destination_size = withHost.size();
-
-    strncpy(dis, src, destination_size);
-    dis[destination_size] = '\0';
-
-    this->socket->setHost(dis, port);
+    this->socket->setHost(dest, port);
     this->setHost(withHost);
     this->setPort(port);
 }
@@ -53,10 +50,10 @@ bool DtlsSocket::setCertificate(QString pem, QString pass)
 
 void DtlsSocket::start()
 {
-    if (this->getState() == IP_CONNECTION_OPEN) {
-        this->socket->stop();
-        this->future.cancel();
-    }
+//    if (this->getState() == IP_CONNECTION_OPEN) {
+//        this->socket->stop();
+//        this->future.cancel();
+//    }
     this->future = QtConcurrent::run(this->socket, &Dtls::start);
 }
 

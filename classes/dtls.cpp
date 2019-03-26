@@ -212,9 +212,9 @@ void Dtls::start()
         emit received(plainBuf);
     }
 
-    for (int i = 0; i < this->tindex + 1; i++) {
-        pthread_join(this->tid[i], NULL);
-    }
+//    for (int i = 0; i < this->tindex + 1; i++) {
+//        pthread_join(this->tid[i], NULL);
+//    }
 
     emit didDisconnect();
 

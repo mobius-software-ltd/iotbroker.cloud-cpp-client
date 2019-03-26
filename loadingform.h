@@ -23,6 +23,7 @@
 
 #include <QWidget>
 #include <QTimer>
+#include "iot-protocols/iotprotocol.h"
 
 namespace Ui {
 class LoadingForm;
@@ -43,6 +44,7 @@ public:
     ~LoadingForm();
 
     QSize getSize();
+    void stopTimer();
 
 private:
     Ui::LoadingForm *ui;
@@ -52,6 +54,7 @@ private slots:
 
 signals:
     void loadingDidFinish();
+    void timeout(IotProtocol*protocol);
 };
 
 #endif // LOADINGFORM_H

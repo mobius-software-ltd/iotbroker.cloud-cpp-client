@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
 
     this->progressTimer = new QTimer(this);
-    //connect(this->progressTimer, SIGNAL(timeout()), this, SLOT(timeoutProgressBar()));
+    connect(this->progressTimer, SIGNAL(timeout()), this, SLOT(timeoutProgressBar()));
     this->progressTimer->setInterval(50);
 
     this->accountManager = AccountManager::getInstance();
@@ -159,6 +159,7 @@ void MainWindow::accountDidSelect(AccountEntity* account)
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
         this->loadingForm = new LoadingForm(ui->stackedWidget);
+        connect(this->loadingForm, SIGNAL(timeout(IotProtocol*)), this, SLOT(timeout(IotProtocol*)));
         ui->stackedWidget->addWidget(this->loadingForm);
         this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
     }
@@ -255,6 +256,14 @@ void MainWindow::loginWithAccount(AccountEntity account)
             return;
         }
 
+        int willSize = account.will.get().toString().size();
+        if (account.protocol.get().toInt() == MQTT_SN_PROTOCOL && willSize > 1399 ) {
+            QMessageBox *messageBox = new QMessageBox("Warrning", "Content of will message must be < 1400.", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+            messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+            messageBox->exec();
+            return;
+        }
+
         if(account.isSecure.get().toBool() && account.keyPath != NULL && !account.keyPath.get().toString().isEmpty())
         {
             QString pem = account.keyPath;
@@ -311,6 +320,8 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
 {
     Q_UNUSED(iotProtocol);
     if (returnCode == MQ_ACCEPTED) {
+        //stop timer
+        this->loadingForm->stopTimer();
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
         this->generalForm = new GeneralForm(ui->stackedWidget);
@@ -327,6 +338,8 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
             this->accountManager->removeTopicsForAccount(this->accountEntity);
         }
+
+
     } else {
         QString stringError = "Connection failure. Error code : ";
         stringError.append(returnCode);
@@ -392,13 +405,15 @@ void MainWindow::errorReceived(IotProtocol*,QString error)
         messageBox->exec();
     }
     disconnectReceived(NULL);
+//    this->progressTimer->stop();
+//    this->generalForm->setProgress(0);
 }
 
 // QProgressBar
 
 void MainWindow::timeoutProgressBar()
 {
-    if ((this->generalForm->getProgress() < this->generalForm->getProgressMax()) && this->generalForm->getProgress() >= this->generalForm->getProgressMin()) {
+    if ((this->generalForm->getProgress() < this->generalForm->getProgressMax()-5) && this->generalForm->getProgress() >= this->generalForm->getProgressMin()) {
         this->generalForm->setProgress(this->generalForm->getProgress() + 10);
     } else {
         this->progressTimer->stop();
