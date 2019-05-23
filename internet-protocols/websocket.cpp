@@ -27,7 +27,7 @@ bool WebSocket::setCertificate(QString path, QString pass)
 void WebSocket::start()
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
-        this->socket->disconnected();
+        this->socket->abort();
     }
 
     QString type = "ws";
@@ -39,7 +39,7 @@ void WebSocket::start()
 void WebSocket::stop()
 {
     if (this->getState() != IP_CONNECTION_CLOSED) {
-        this->socket->disconnected();
+        this->socket->abort();
     }
 }
 

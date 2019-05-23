@@ -318,6 +318,10 @@ void MainWindow::needToResizeLoginForm(LoginForm *form)
 
 void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
 {
+    if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
+        this->accountManager->removeTopicsForAccount(this->accountEntity);
+    }
+
     Q_UNUSED(iotProtocol);
     if (returnCode == MQ_ACCEPTED) {
         //stop timer
@@ -334,11 +338,6 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
         connect(this->generalForm, SIGNAL(logoutTabDidCLick()), this, SLOT(logoutTabDidCLick()));
         ui->stackedWidget->addWidget(this->generalForm);
         this->setSizeToWindowWithCentralPosition(this->generalForm->getSize());
-
-        if (this->accountManager->readDefaultAccount().cleanSession.get().toBool()) {
-            this->accountManager->removeTopicsForAccount(this->accountEntity);
-        }
-
 
     } else {
         QString stringError = "Connection failure. Error code : ";
