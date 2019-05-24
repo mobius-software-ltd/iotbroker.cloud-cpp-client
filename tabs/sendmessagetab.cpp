@@ -43,12 +43,15 @@ SendMessageTab::SendMessageTab(QWidget *parent) :
     this->contentCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget, true);
     connect(this->contentCell->getLineEdit(), SIGNAL(focussed(bool)), this, SLOT(showContentMultilineWindow(bool)));
     this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget, false);
-    this->retainCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
-    this->dupCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
+
 }
 
 void SendMessageTab::setQoSForSendMessagesTab(QList<QString> qosList) {
     this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
+    if(qosList.size()>2) {
+        this->retainCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
+        this->dupCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
+    }
 }
 
 void SendMessageTab::sendButtonDidClick()
@@ -64,8 +67,10 @@ void SendMessageTab::sendButtonDidClick()
         message.topicName = list.at(topicIndex);
         message.qos = list.at(qosIndex).toInt();
         message.content = list.at(contentIndex).toUtf8();
-        message.isRetain = list.at(retainIndex).toInt();
-        message.isDub = list.at(duplicateIndex).toInt();
+        if(list.size()>3) {
+            message.isRetain = list.at(retainIndex).toInt();
+            message.isDub = list.at(duplicateIndex).toInt();
+        }
         message.incoming = false;
 
         emit donePublishForSending(message);
@@ -73,8 +78,10 @@ void SendMessageTab::sendButtonDidClick()
         this->contentCell->clear();
         this->topicCell->clear();
         this->qosCell->reset();
-        this->retainCell->reset();
-        this->dupCell->reset();
+        if(list.size()>3) {
+            this->retainCell->reset();
+            this->dupCell->reset();
+        }
     }
 }
 

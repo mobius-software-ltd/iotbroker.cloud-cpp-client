@@ -188,6 +188,9 @@ void MainWindow::newAccountDidClick()
 void MainWindow::willSubscribeToTopic(TopicEntity topicEntity)
 {
     QString topicName = topicEntity.topicName.get().toString();
+    if(isTopicAlreadyExistForCurrentAccount(topicName) && this->accountEntity.protocol.get().toInt() == AMQP_PROTOCOL)
+        return;
+
     this->progressTimer->start();
     this->iotProtocol->subscribeTo(topicEntity);
 }
