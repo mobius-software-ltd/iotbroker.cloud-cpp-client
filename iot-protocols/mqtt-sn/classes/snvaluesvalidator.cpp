@@ -38,9 +38,8 @@ bool SNValuesValidator::validatePacketID(int packetID)
 bool SNValuesValidator::validateTopicID(int topicID)
 {
     reservedTopicIDS = new QList<int>();
-    reservedTopicIDS->append(0x0000);
     reservedTopicIDS->append(0xFFFF);
-    return topicID > 0 && !reservedTopicIDS->contains(topicID);
+    return topicID >= 0 && !reservedTopicIDS->contains(topicID);
 }
 
 bool SNValuesValidator::validateRegistrationTopicID(int topicID)
