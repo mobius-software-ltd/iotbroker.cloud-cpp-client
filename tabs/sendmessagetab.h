@@ -53,6 +53,7 @@ private:
 
 public:
     explicit SendMessageTab(QWidget *parent = 0);
+    void setQoSForSendMessagesTab(QList<QString> qosList);
     ~SendMessageTab();
 
 signals:

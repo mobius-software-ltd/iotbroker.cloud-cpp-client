@@ -20,6 +20,7 @@
 
 #include "generalform.h"
 #include "ui_generalform.h"
+#include "iot-protocols/classes/iotenumprotocol.h"
 
 GeneralForm::GeneralForm(QWidget *parent) :
     QWidget(parent),
@@ -77,6 +78,19 @@ void GeneralForm::tabBarClicked()
 void GeneralForm::setMessages(QList<MessageEntity> list)
 {
     ui->messagesListTab->setMessageList(list);
+}
+
+void GeneralForm::setQoSForMessagesAndTopicsTab(int protocol)
+{
+    QList<QString> qosList = QList<QString>();
+    qosList.append(QString::number(1));
+    if(protocol != AMQP_PROTOCOL)
+        qosList.append(QString::number(0));
+    if(protocol != AMQP_PROTOCOL && protocol != COAP_PROTOCOL)
+        qosList.append(QString::number(2));
+    qosList.sort();
+    ui->sendMessageTab->setQoSForSendMessagesTab(qosList);
+    ui->topicsTab->setQosForTopicsListTab(qosList);
 }
 
 void GeneralForm::setTopics(QList<TopicEntity> list)

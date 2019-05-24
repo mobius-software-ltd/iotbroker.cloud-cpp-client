@@ -45,6 +45,7 @@ public:
 
     void setMessages(QList<MessageEntity> list);
     void setTopics(QList<TopicEntity> list);
+    void setQoSForMessagesAndTopicsTab(int protocol);
 
     int getProgress();
     void setProgress(int value);

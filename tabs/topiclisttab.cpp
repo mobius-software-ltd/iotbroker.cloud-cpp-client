@@ -31,12 +31,9 @@ TopicListTab::TopicListTab(QWidget *parent) :
     this->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
 
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addButtonDidClick()));
+}
 
-    QList<QString> qosList = QList<QString>();
-    qosList.append(QString::number(0));
-    qosList.append(QString::number(1));
-    qosList.append(QString::number(2));
-
+void TopicListTab::setQosForTopicsListTab(QList<QString> qosList) {
     this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic:", "topic", ui->inputListWidget,false);
     this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS:", qosList, "0", ui->inputListWidget);
 }

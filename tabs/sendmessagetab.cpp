@@ -39,17 +39,16 @@ SendMessageTab::SendMessageTab(QWidget *parent) :
 
     connect(ui->sendPushButton, SIGNAL(clicked()), this, SLOT(sendButtonDidClick()));
 
-    QList<QString> qosList = QList<QString>();
-    qosList.append(QString::number(0));
-    qosList.append(QString::number(1));
-    qosList.append(QString::number(2));
 
     this->contentCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Content", "content", ui->sendMessageListWidget, true);
     connect(this->contentCell->getLineEdit(), SIGNAL(focussed(bool)), this, SLOT(showContentMultilineWindow(bool)));
     this->topicCell = CellWithEditLine::createCellWith(":/resources/resources/settings.png", "Topic", "topic", ui->sendMessageListWidget, false);
-    this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
     this->retainCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Retain", false, ui->sendMessageListWidget);
     this->dupCell = CellWithCheckbox::createCellWith(":/resources/resources/settings.png", "Duplicate", false, ui->sendMessageListWidget);
+}
+
+void SendMessageTab::setQoSForSendMessagesTab(QList<QString> qosList) {
+    this->qosCell = CellWithComboBox::createCellWith(":/resources/resources/settings.png", "QoS", qosList, "0", ui->sendMessageListWidget);
 }
 
 void SendMessageTab::sendButtonDidClick()

@@ -55,6 +55,7 @@ public:
     ~TopicListTab();
 
     void setTopicsList(QList<TopicEntity> list);
+    void setQosForTopicsListTab(QList<QString> qosList);
 
 signals:
     void addNewTopic(TopicEntity topic);
