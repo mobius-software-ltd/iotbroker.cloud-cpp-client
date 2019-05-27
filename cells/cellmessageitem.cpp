@@ -54,9 +54,26 @@ QString CellMessageItem::getTitle()
     return ui->title->text();
 }
 
+static QString modifyString (QString title, int width ){
+    QString *tmpTitle;
+    tmpTitle = new QString(title);
+
+    int c = tmpTitle->length();
+
+    if( c > width)
+    {
+        for(int i = 1; i <= c/width; i++)
+        {
+            int n = i * width;
+            tmpTitle->insert(n, " ");
+        }
+    }
+    return *tmpTitle;
+}
+
 void CellMessageItem::setTitle(QString title)
 {
-    ui->title->setText(title);
+    ui->title->setText(modifyString(title, 30));
 }
 
 QString CellMessageItem::getText()
@@ -66,7 +83,7 @@ QString CellMessageItem::getText()
 
 void CellMessageItem::setText(QString text)
 {
-    ui->text->setText(text);
+    ui->text->setText(modifyString(text, 65));
 }
 
 bool CellMessageItem::isIncoming()

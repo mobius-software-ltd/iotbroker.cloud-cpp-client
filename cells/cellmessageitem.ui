@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>294</width>
-    <height>73</height>
+    <height>83</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,13 +18,13 @@
     <number>12</number>
    </property>
    <property name="topMargin">
-    <number>8</number>
+    <number>4</number>
    </property>
    <property name="rightMargin">
     <number>12</number>
    </property>
    <property name="bottomMargin">
-    <number>8</number>
+    <number>4</number>
    </property>
    <property name="spacing">
     <number>0</number>
@@ -32,6 +32,12 @@
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
       <number>0</number>
      </property>
      <item>
@@ -45,6 +51,9 @@ font-weight:700;</string>
        </property>
        <property name="text">
         <string>TextLabel</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
