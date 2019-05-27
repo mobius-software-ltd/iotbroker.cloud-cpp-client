@@ -296,6 +296,8 @@ void MainWindow::loginWithAccount(AccountEntity account)
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
         this->loadingForm = new LoadingForm(ui->stackedWidget);
+        if (account.protocol.get().toInt() != COAP_PROTOCOL)
+            connect(this->loadingForm, SIGNAL(timeout(IotProtocol*)), this, SLOT(timeout(IotProtocol*)));
         ui->stackedWidget->addWidget(this->loadingForm);
         this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
     } else {

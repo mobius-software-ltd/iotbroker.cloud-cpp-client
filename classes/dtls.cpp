@@ -68,21 +68,6 @@ int dtls_recvfrom_cb(WOLFSSL* ssl, char* buf, int sz, void* ctx)
     }
 }
 
-/* DTLS Send function in its own thread */
-void* Dtls::datagramSend(void* arg)
-{
-    SharedDtls* shared = (SharedDtls*)arg;
-    WOLFSSL*    ssl = shared->ssl;
-
-    wc_LockMutex(&shared->shared_mutex);
-    if ((wolfSSL_write(ssl, shared->sndBuf.data(), shared->sndBuf.size())) != shared->sndBuf.size()) {
-        //m_dtls->error((char *)"Error while send the message.");
-    }
-    wc_UnLockMutex(&shared->shared_mutex);
-
-    return NULL;
-}
-
 void Dtls::setHost(char *host, int port)
 {
     this->host = host;
@@ -114,6 +99,7 @@ void Dtls::start()
         emit error((char *)"Dtls initialize error.");
         return;
     }
+    shared.ctx = ctx;
 
     wolfSSL_CTX_set_verify(ctx,SSL_VERIFY_NONE, NULL);
     if (!this->certificate.isNull() && !this->certificate.isEmpty()) {
@@ -197,50 +183,40 @@ void Dtls::start()
         /* first get datagram, works in blocking mode too */
         sz = recvfrom(recvShared->sd, recvBuf, MAXBUF, 0, NULL, NULL);
 
-        wc_LockMutex(&recvShared->shared_mutex);
+        //wc_LockMutex(&recvShared->shared_mutex);
         recvShared->recvBuf = recvBuf;
         recvShared->recvSz = sz;
 
         if (this->isRun) {
             if ( (sz = (wolfSSL_read(ssl, plainBuf, MAXBUF-1))) < 0) {
                 emit error((char *)"Error while read the message.");
+            } else {
+                plainBuf[MAXBUF-1] = '\0';
+                qInfo("received in dtls");
+                emit received(plainBuf);
             }
         }
-        wc_UnLockMutex(&recvShared->shared_mutex);
-        plainBuf[MAXBUF-1] = '\0';
-
-        emit received(plainBuf);
+        //wc_UnLockMutex(&recvShared->shared_mutex);
     }
 
 //    for (int i = 0; i < this->tindex + 1; i++) {
 //        pthread_join(this->tid[i], NULL);
 //    }
-
-    emit didDisconnect();
-
-    wolfSSL_shutdown(ssl);
-    wolfSSL_free(ssl);
-    close(sockfd);
-    wolfSSL_CTX_free(ctx);
-    wc_FreeMutex(&shared.shared_mutex);
-    wolfSSL_Cleanup();
 }
 
 void Dtls::send(QByteArray message)
 {
-    pthread_t tid;
-
-    shared.sndBuf = message;
-
-    pthread_create(&tid, NULL, datagramSend, &shared);
-    this->tid[this->tindex] = tid;
-
-    this->tindex++;
-    this->tid = (pthread_t *)realloc(this->tid, (this->tindex + 1) * sizeof(pthread_t));
+    wolfSSL_write(shared.ssl, message.data(), message.size());
 }
 
 void Dtls::stop()
 {
     this->isRun = false;
+    wolfSSL_shutdown(shared.ssl);
+    wolfSSL_free(shared.ssl);
     close(this->recvShared->sd);
+    wolfSSL_CTX_free(shared.ctx);
+    wc_FreeMutex(&shared.shared_mutex);
+    wolfSSL_Cleanup();
+    emit didDisconnect();
 }

@@ -19,6 +19,7 @@
 typedef struct SharedDtls {
     wolfSSL_Mutex      shared_mutex;  /* mutex for using */
     WOLFSSL*           ssl;           /* WOLFSSL object being shared */
+    WOLFSSL_CTX*       ctx;
     int                sd;            /* socket fd */
     struct sockaddr_in servAddr;      /* server sockaddr */
     socklen_t          servSz;        /* length of servAddr */

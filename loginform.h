@@ -27,6 +27,7 @@
 #include <cells/cellwithcombobox.h>
 #include <database/entities/accountentity.h>
 #include "iot-protocols/classes/iotenumprotocol.h"
+#include "iot-protocols/iotprotocol.h"
 
 namespace Ui {
 class LoginForm;
@@ -82,6 +83,7 @@ signals:
     void accountToSave(AccountEntity account);
     void securityKeyCellDidClick();
     void needToResizeLoginForm(LoginForm *form);
+    void timeout(IotProtocol*protocol);
 
 public slots:
     void lineEditDidClick(QLineEdit *lineEdit);
