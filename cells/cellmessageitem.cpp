@@ -83,7 +83,7 @@ QString CellMessageItem::getText()
 
 void CellMessageItem::setText(QString text)
 {
-    ui->text->setText(modifyString(text, 65));
+    ui->text->setText(modifyString(text, 40));
 }
 
 bool CellMessageItem::isIncoming()

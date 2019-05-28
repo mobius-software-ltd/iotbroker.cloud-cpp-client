@@ -205,7 +205,7 @@ void MainWindow::willPublish(MessageEntity message)
 {
 
     int protocolType = this->accountEntity.protocol.get().toInt();
-    if((protocolType == MQTT_SN_PROTOCOL || protocolType == MQTT_SN_PROTOCOL) && message.content.get().toString().size()>1399)
+    if((protocolType == MQTT_SN_PROTOCOL || protocolType == COAP_PROTOCOL) && message.content.get().toString().size()>1399)
     {
         QMessageBox *messageBox = new QMessageBox("Warrning", "Max content size MUST be < 1400 characters for UDP", QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
         messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
