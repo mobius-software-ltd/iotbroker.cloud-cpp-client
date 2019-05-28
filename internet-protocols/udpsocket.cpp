@@ -53,7 +53,10 @@ void UDPSocket::readyRead()
     quint16 senderPort;
     socket->readDatagram(data.data(), data.size(), &senderHost, &senderPort);
 
-    emit didReceiveMessage(this, data);
+    if(data.size()>0)
+        emit didReceiveMessage(this, data);
+    else
+         this->socket->close();
 }
 
 void UDPSocket::disconnected()
