@@ -155,7 +155,7 @@ void MainWindow::accountDidSelect(AccountEntity* account)
     this->accountManager->setDefaultAccountWithClientID(account->clientID);
     this->startWithAccount(this->accountManager->readDefaultAccount());
 
-    if (account->protocol.get().toInt() != COAP_PROTOCOL) {
+    if (!(account->protocol.get().toInt() == COAP_PROTOCOL && !account->isSecure)) {
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
         this->loadingForm = new LoadingForm(ui->stackedWidget);
@@ -296,7 +296,7 @@ void MainWindow::loginWithAccount(AccountEntity account)
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
         this->loadingForm = new LoadingForm(ui->stackedWidget);
-        if (account.protocol.get().toInt() != COAP_PROTOCOL)
+        if (!(account.protocol.get().toInt() == COAP_PROTOCOL && !account.isSecure))
             connect(this->loadingForm, SIGNAL(timeout(IotProtocol*)), this, SLOT(timeout(IotProtocol*)));
         ui->stackedWidget->addWidget(this->loadingForm);
         this->setSizeToWindowWithCentralPosition(this->loadingForm->getSize());
@@ -330,7 +330,7 @@ void MainWindow::connackReceived(IotProtocol *iotProtocol, int returnCode)
     Q_UNUSED(iotProtocol);
     if (returnCode == MQ_ACCEPTED) {
         //stop timer
-        if(this->accountEntity.protocol.get().toInt() != COAP_PROTOCOL)
+        if(!(this->accountEntity.protocol.get().toInt() == COAP_PROTOCOL && !this->accountEntity.isSecure))
             this->loadingForm->stopTimer();
         ui->stackedWidget->removeWidget(ui->stackedWidget->currentWidget());
 
