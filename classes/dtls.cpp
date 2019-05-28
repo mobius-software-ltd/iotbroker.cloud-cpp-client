@@ -159,10 +159,10 @@ void Dtls::start()
     shared.ssl = ssl;
     shared.handShakeDone = 0;
 
-    if (wc_InitMutex(&shared.shared_mutex) != 0) {
-        emit error((char *)"Mutex initialize error.");
-        return;
-    }
+//    if (wc_InitMutex(&shared.shared_mutex) != 0) {
+//        emit error((char *)"Mutex initialize error.");
+//        return;
+//    }
 
     wolfSSL_SetIOWriteCtx(ssl, &shared);
     wolfSSL_SetIOReadCtx(ssl, &shared);
@@ -206,17 +206,18 @@ void Dtls::start()
 
 void Dtls::send(QByteArray message)
 {
-    wolfSSL_write(shared.ssl, message.data(), message.size());
+    if(this->isRun)
+        wolfSSL_write(shared.ssl, message.data(), message.size());
 }
 
 void Dtls::stop()
 {
     this->isRun = false;
-    wolfSSL_shutdown(shared.ssl);
-    wolfSSL_free(shared.ssl);
+    wolfSSL_free(shared.ssl);      /* Free the wolfSSL object                  */
+    wolfSSL_CTX_free(shared.ctx);  /* Free the wolfSSL context object          */
+    wolfSSL_Cleanup();      /* Cleanup the wolfSSL environment          */
     close(this->recvShared->sd);
-    wolfSSL_CTX_free(shared.ctx);
-    wc_FreeMutex(&shared.shared_mutex);
-    wolfSSL_Cleanup();
+//    wc_FreeMutex(&shared.shared_mutex);
+
     emit didDisconnect();
 }

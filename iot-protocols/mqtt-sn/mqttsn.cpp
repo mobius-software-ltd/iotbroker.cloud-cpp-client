@@ -120,7 +120,8 @@ void MqttSN::pingreq()
 
 void MqttSN::disconnectWith(int duration)
 {
-    this->send(new SNDisconnect(duration));
+    if(this->isConnect)
+        this->send(new SNDisconnect(duration));
     this->timers->stopAllTimers();
     this->internetProtocol->stop();
 }
