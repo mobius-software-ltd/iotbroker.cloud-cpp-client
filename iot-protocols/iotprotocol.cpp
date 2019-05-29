@@ -44,3 +44,8 @@ void IotProtocol::setInternetProtocol(InternetProtocol *value)
 {
     internetProtocol = value;
 }
+
+AccountEntity IotProtocol::getCurrentAccount() const
+{
+    return currentAccount;
+}

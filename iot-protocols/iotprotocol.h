@@ -45,6 +45,7 @@ public:
     IotProtocol(AccountEntity account);
 
     InternetProtocol *getInternetProtocol() const;
+    AccountEntity getCurrentAccount() const;
     void setInternetProtocol(InternetProtocol *value);
 
     bool getIsConnect() const;

@@ -60,7 +60,7 @@ void TimersMap::goPingTimer(int keepalive)
     }
 
     this->ping = new TimerTask(this->iotProtocol->getPingreqMessage(), this->iotProtocol, keepalive * 1000);
-    this->ping->start(false);
+    this->ping->start(this->iotProtocol->getCurrentAccount().protocol.get().toInt() == COAP_PROTOCOL?false:true);
 }
 
 void TimersMap::stopPingTimer()
