@@ -61,7 +61,8 @@ void DtlsSocket::stop()
 {
     if (this->getState() != IP_CONNECTION_CLOSED) {
         this->socket->stop();
-        this->future.cancel();
+        //cancel does not work on future
+        //this->future.cancel();
     }
 }
 
@@ -101,6 +102,7 @@ void DtlsSocket::readyRead()
 
 void DtlsSocket::disconnected()
 {
+    qInfo("set state closed");
     this->setState(IP_CONNECTION_CLOSED);
     emit connectionDidStop(this);
 }
