@@ -328,11 +328,14 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 } else {
                     // subscribe
                     int handle = AMQPSimpleType::variantToUInt(attach->getHandle());
+                    if(this->usedMappings.contains(handle)) {
+                        int qos = AT_LEAST_ONCE;
+                        emit subackReceived(this, attach->getName(), qos, 0);
+                    }
                     this->usedIncomingMappings.insert(attach->getName(), handle);
                     this->usedMappings.insert(handle, attach->getName());
 
-                    int qos = AT_LEAST_ONCE;
-                    emit subackReceived(this, attach->getName(), qos, 0);
+
                 }
 
             } break;
