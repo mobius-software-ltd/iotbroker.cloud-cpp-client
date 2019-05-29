@@ -139,7 +139,7 @@ void CoAP::connectionDidStart(InternetProtocol *protocol)
 {
     Q_UNUSED(protocol);
     this->isConnect = true;
-    emit connackReceived(this, 0);
+    this->isConnackReceived = false;
     this->timers->goPingTimer(this->currentAccount.keepAlive);
 }
 
@@ -152,6 +152,10 @@ void CoAP::connectionDidStop(InternetProtocol *protocol)
 
 void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 {
+    if(!this->isConnackReceived) {
+        this->isConnackReceived = true;
+        emit connackReceived(this, 0);
+    }
     Q_UNUSED(protocol);
 
     CoAPMessage *message = (CoAPMessage *)this->messageParser->decode(data);

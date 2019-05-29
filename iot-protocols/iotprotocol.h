@@ -38,6 +38,7 @@ protected:
     AccountEntity currentAccount;
     TimersMap *timers;
     bool isConnect;
+    bool isConnackReceived;
 
 public:
     IotProtocol();

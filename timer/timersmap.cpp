@@ -60,7 +60,7 @@ void TimersMap::goPingTimer(int keepalive)
     }
 
     this->ping = new TimerTask(this->iotProtocol->getPingreqMessage(), this->iotProtocol, keepalive * 1000);
-    this->ping->start(true);
+    this->ping->start(false);
 }
 
 void TimersMap::stopPingTimer()
