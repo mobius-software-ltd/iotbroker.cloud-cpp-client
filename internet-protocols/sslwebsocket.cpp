@@ -83,7 +83,6 @@ bool SslWebSocket::send(QByteArray data)
 
 void SslWebSocket::receivedByteArray(QByteArray array)
 {
-    printf("RECEIVED BYTE ARRAY\n");
     if (array.size() > 0) {
         emit didReceiveMessage(this, array);
     }
@@ -91,7 +90,6 @@ void SslWebSocket::receivedByteArray(QByteArray array)
 
 void SslWebSocket::receivedString(QString string)
 {
-    printf("RECEIVE STRING : %s\n", string.toUtf8().data());
     if (string.length() > 0) {
         emit didReceiveMessage(this, string.toUtf8());
     }
@@ -99,7 +97,7 @@ void SslWebSocket::receivedString(QString string)
 
 void SslWebSocket::readyRead()
 {
-    printf("REDY TO READ\n");
+
 }
 
 void SslWebSocket::disconnected()

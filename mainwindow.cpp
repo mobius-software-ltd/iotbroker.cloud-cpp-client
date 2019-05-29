@@ -405,14 +405,12 @@ void MainWindow::timeout(IotProtocol*)
 
 void MainWindow::errorReceived(IotProtocol*,QString error)
 {
-    if (this->iotProtocol->getIsConnect()) {
-        QMessageBox *messageBox = new QMessageBox("Warrning", error, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
-        messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
-        messageBox->exec();
-    }
+    QMessageBox *messageBox = new QMessageBox("Warrning", error, QMessageBox::Warning, QMessageBox::Ok, QMessageBox::Cancel, QMessageBox::NoButton, this);
+    messageBox->setStyleSheet("QDialog {background-image: url(:/resources/resources/iot_broker_background.jpg) }");
+    messageBox->exec();
     disconnectReceived(NULL);
-//    this->progressTimer->stop();
-//    this->generalForm->setProgress(0);
+    this->loadingForm->stopTimer();
+
 }
 
 // QProgressBar

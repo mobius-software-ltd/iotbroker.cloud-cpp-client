@@ -190,6 +190,8 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 if (connack->getReturnCode() == MQ_ACCEPTED) {
                     this->timers->goPingTimer(this->keepAlive);
                     emit connackReceived(this, connack->getReturnCode());
+                }  else {
+                    emit errorReceived(this, "Client got connack with error");
                 }
             }
             break;

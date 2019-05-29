@@ -49,7 +49,8 @@ void LoadingForm::timeoutSlot()
 
 void LoadingForm::stopTimer()
 {
-    this->timer->stop();
+    if(this->timer->isActive())
+        this->timer->stop();
 }
 
 QSize LoadingForm::getSize()

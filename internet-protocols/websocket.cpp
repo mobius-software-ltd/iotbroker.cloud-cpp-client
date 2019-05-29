@@ -39,6 +39,7 @@ void WebSocket::start()
 void WebSocket::stop()
 {
     if (this->getState() != IP_CONNECTION_CLOSED) {
+        this->socket->flush();
         this->socket->abort();
     }
 }

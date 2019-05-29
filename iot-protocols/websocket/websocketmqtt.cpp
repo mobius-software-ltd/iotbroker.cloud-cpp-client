@@ -166,6 +166,8 @@ void WebsocketMQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray dat
             if (connack->getReturnCode() == MQ_ACCEPTED) {
                 this->timers->goPingTimer(this->keepAlive);
                 emit connackReceived(this, connack->getReturnCode());
+            } else {
+                emit errorReceived(this, "Client got connack with error");
             }
         }
         break;
