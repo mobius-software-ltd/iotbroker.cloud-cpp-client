@@ -179,11 +179,16 @@ void Dtls::start()
     shared.handShakeDone = 1;
 
     /* DTLS Recv */
+    struct timeval read_timeout;
+    read_timeout.tv_sec = 1;
+    read_timeout.tv_usec = 10;
+    setsockopt(shared.sd, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof read_timeout);
     while(this->isRun) {
         /* first get datagram, works in blocking mode too */
-        sz = recvfrom(recvShared->sd, recvBuf, MAXBUF, 0, NULL, NULL);
+        sz = recvfrom(shared.sd, recvBuf, MAXBUF, 0, NULL, NULL);
+        if(sz<0)
+            continue;
 
-        //wc_LockMutex(&recvShared->shared_mutex);
         recvShared->recvBuf = recvBuf;
         recvShared->recvSz = sz;
 
@@ -192,16 +197,12 @@ void Dtls::start()
                 emit error((char *)"Error while read the message.");
             } else {
                 plainBuf[MAXBUF-1] = '\0';
-                qInfo("received in dtls");
                 emit received(plainBuf);
             }
         }
-        //wc_UnLockMutex(&recvShared->shared_mutex);
+
     }
 
-//    for (int i = 0; i < this->tindex + 1; i++) {
-//        pthread_join(this->tid[i], NULL);
-//    }
 }
 
 void Dtls::send(QByteArray message)
