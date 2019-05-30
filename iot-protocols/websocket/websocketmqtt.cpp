@@ -73,6 +73,7 @@ void WebsocketMQTT::publish(MessageEntity message)
     publish->setTopic(topic);
     publish->setContent(content);
     publish->setRetain(message.isRetain.get().toBool());
+    publish->setDup(message.isDub.get().toBool());
 
     if (qosNumber == AT_MOST_ONCE) {
         this->send(publish);
