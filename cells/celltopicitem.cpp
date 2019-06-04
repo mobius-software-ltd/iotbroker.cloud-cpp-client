@@ -41,23 +41,6 @@ CellTopicItem *CellTopicItem::createCellWith(QString text, int qos, ListWidget *
     return widgetForm;
 }
 
-static QString modifyString (QString title, int width ){
-    QString *tmpTitle;
-    tmpTitle = new QString(title);
-
-    int c = tmpTitle->length();
-
-    if( c > width)
-    {
-        for(int i = 1; i <= c/width; i++)
-        {
-            int n = i * width;
-            tmpTitle->insert(n, " ");
-        }
-    }
-    return *tmpTitle;
-}
-
 QString CellTopicItem::getText()
 {
     return ui->label->text();
@@ -65,7 +48,7 @@ QString CellTopicItem::getText()
 
 void CellTopicItem::setText(QString text)
 {
-    ui->label->setText(modifyString(text, 30));
+    ui->label->setText(text);
 }
 
 int CellTopicItem::getValue()
