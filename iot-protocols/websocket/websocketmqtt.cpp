@@ -115,8 +115,8 @@ void WebsocketMQTT::pingreq()
 void WebsocketMQTT::disconnectWith(int duration)
 {
     Q_UNUSED(duration);
-    this->isConnect = false;
     this->send(new Disconnect());
+    this->isConnect = false;
     this->timers->stopAllTimers();
     this->internetProtocol->stop();
 }
