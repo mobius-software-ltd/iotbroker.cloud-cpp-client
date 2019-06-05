@@ -51,7 +51,7 @@ bool SslWebSocket::setCertificate(QString pem, QString pass)
 void SslWebSocket::start()
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
-        this->socket->disconnected();
+        this->socket->abort();
     }
 
     QString urlString = "wss://" + this->getHost() + ":" + QString::number(this->getPort())+"/ws";
@@ -62,7 +62,8 @@ void SslWebSocket::start()
 void SslWebSocket::stop()
 {
     if (this->getState() != IP_CONNECTION_CLOSED) {
-        this->socket->disconnected();
+        this->socket->flush();
+        this->socket->abort();
     }
 }
 
@@ -70,6 +71,7 @@ bool SslWebSocket::send(QByteArray data)
 {
     if (this->getState() == IP_CONNECTION_OPEN) {
         QString message = QString(data);
+        qInfo("send message : %s", message.toLocal8Bit().data());
         qint64 bytes = this->socket->sendTextMessage(message);
         if (bytes == -1) {
             return false;
