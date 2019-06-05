@@ -310,9 +310,8 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                     // publish
                     for (int i = 0; i < pendingMessages.size(); i++) {
                         AMQPTransfer *message = this->pendingMessages.at(i);
-                        int h1 = AMQPSimpleType::variantToUInt(message->getHandle());
-                        int h2 = AMQPSimpleType::variantToUInt(attach->getHandle());
-                        if (h1 == h2) {
+                        int realHandle = this->usedOutgoingMappings.value(attach->getName(),-1);
+                        if (realHandle==AMQPSimpleType::variantToUInt(message->getHandle())) {
                             this->pendingMessages.removeAt(i);
                             i--;
                             this->timers->goMessageTimer(message);
