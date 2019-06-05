@@ -112,8 +112,6 @@ void CoAP::pingreq()
 
 void CoAP::disconnectWith(int duration)
 {
-    if(this->isConnect)
-        this->send(getPingreqMessage());
     Q_UNUSED(duration);
     this->timers->stopAllTimers();
     this->internetProtocol->stop();

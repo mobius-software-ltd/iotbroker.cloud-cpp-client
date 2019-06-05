@@ -8,7 +8,7 @@ DtlsSocket::DtlsSocket() : InternetProtocol()
 
     QObject::connect(socket, SIGNAL(didConnect()), this, SLOT(connected()));
     QObject::connect(socket, SIGNAL(didDisconnect()), this, SLOT(disconnected()));
-    QObject::connect(socket, SIGNAL(received(char*)), this, SLOT(received(char*)));
+    QObject::connect(socket, SIGNAL(received(char*, int)), this, SLOT(received(char*, int)));
     QObject::connect(socket, SIGNAL(error(char*)), this, SLOT(errorString(char*)));
 }
 
@@ -83,10 +83,9 @@ void DtlsSocket::connected()
     emit connectionDidStart(this);
 }
 
-void DtlsSocket::received(char *message)
+void DtlsSocket::received(char *message, int size)
 {
-
-    QByteArray array = QByteArray(message, message[0]);
+    QByteArray array = QByteArray(message, size);
     emit didReceiveMessage(this, array);
 }
 

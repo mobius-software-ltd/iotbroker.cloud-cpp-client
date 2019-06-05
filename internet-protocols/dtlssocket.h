@@ -25,7 +25,7 @@ public:
 public slots:
 
     void connected();
-    void received(char *message);
+    void received(char *message, int size);
     virtual void errorString(char *message);
 
     virtual void readyRead();

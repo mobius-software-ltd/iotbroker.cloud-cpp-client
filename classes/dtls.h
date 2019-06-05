@@ -64,7 +64,7 @@ public:
 signals:
     void didConnect();
     void didDisconnect();
-    void received(char *message);
+    void received(char *message, int size);
     void error(char *message);
 };
 

@@ -197,7 +197,7 @@ void Dtls::start()
                 emit error((char *)"Error while read the message.");
             } else {
                 plainBuf[MAXBUF-1] = '\0';
-                emit received(plainBuf);
+                emit received(plainBuf,sz);
             }
         }
 

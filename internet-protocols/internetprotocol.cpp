@@ -107,6 +107,11 @@ void InternetProtocol::received(char*)
 
 }
 
+void InternetProtocol::received(char*, int size)
+{
+
+}
+
 void InternetProtocol::errorString(char *)
 {
 

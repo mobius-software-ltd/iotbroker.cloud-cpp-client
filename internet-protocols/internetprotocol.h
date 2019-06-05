@@ -58,6 +58,7 @@ public slots:
 
     virtual void connected();
     virtual void received(char*);
+    virtual void received(char*, int size);
     virtual void errorString(char *);
 
     virtual void receivedByteArray(QByteArray);
