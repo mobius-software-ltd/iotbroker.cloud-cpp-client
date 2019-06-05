@@ -57,7 +57,8 @@ void SslSocket::start()
 void SslSocket::stop()
 {
     if (this->getState() != IP_CONNECTION_CLOSED) {
-        this->socket->disconnectFromHost();
+        this->socket->flush();
+        this->socket->abort();
     }
 }
 

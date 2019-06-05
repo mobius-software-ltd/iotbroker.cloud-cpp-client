@@ -191,8 +191,10 @@ void AMQP::disconnectWith(int duration)
     if (this->timers != NULL) {
         this->timers->stopAllTimers();
     }
+    if(!this->isConnect)
+        this->internetProtocol->stop();
     this->isConnect = false;
-    this->internetProtocol->stop();
+
 }
 
 Message *AMQP::getPingreqMessage()
@@ -424,6 +426,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 AMQPClose *close = new AMQPClose();
                 close->setChannel(end->getChannel());
                 this->send(close);
+                this->internetProtocol->stop();
             } break;
             case AMQP_CLOSE_HEADER_CODE:
             {
