@@ -324,6 +324,7 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
         case SN_DISCONNECT:
         {
             this->timers->stopAllTimers();
+            this->internetProtocol->stop();
             emit disconnectReceived(this);
         } break;
         case SN_WILLTOPICUPD:
