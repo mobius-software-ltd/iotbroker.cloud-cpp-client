@@ -38,8 +38,10 @@ private:
 
     QMap<QString, long> usedIncomingMappings;
     QMap<QString, long> usedOutgoingMappings;
-    QMap<long, QString> usedMappings;
+    QMap<long, QString> usedInMappings;
+    QMap<long, QString> usedOutMappings;
     QList<AMQPTransfer *> pendingMessages;
+    QSet<QString> currentTopics;
 
 public:
     AMQP(AccountEntity account);
@@ -48,6 +50,7 @@ public:
 
     virtual void goConnect();
     virtual void publish(MessageEntity message);
+
     virtual void subscribeTo(TopicEntity topic);
     virtual void unsubscribeFrom(TopicEntity topic);
     virtual void pingreq();
@@ -57,6 +60,7 @@ public:
 
     virtual void timeoutMethod();
 
+    void subscribeTo(QString topic);
     void setTopics(QList<TopicEntity> topics);
 
 public slots:

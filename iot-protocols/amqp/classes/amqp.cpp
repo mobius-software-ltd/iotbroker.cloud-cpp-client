@@ -34,9 +34,13 @@ AMQP::AMQP(AccountEntity account) : IotProtocol(account)
     this->messageParser = new AMQPParser();
 
     this->usedIncomingMappings = QMap<QString, long>();
+    this->usedInMappings = QMap<long, QString>();
     this->usedOutgoingMappings = QMap<QString, long>();
-    this->usedMappings = QMap<long, QString>();
+    this->usedOutMappings = QMap<long, QString>();
+
     this->pendingMessages = QList<AMQPTransfer *>();
+    this->currentTopics = QSet<QString>();
+
 
     if (account.isSecure) {
         this->internetProtocol = new SslSocket(account.serverHost.get().toString(), account.port.get().toInt());
@@ -50,6 +54,24 @@ AMQP::AMQP(AccountEntity account) : IotProtocol(account)
     QObject::connect(this->internetProtocol, SIGNAL(didReceiveMessage(InternetProtocol*,QByteArray)),   this, SLOT(didReceiveMessage(InternetProtocol*,QByteArray)));
     QObject::connect(this->internetProtocol, SIGNAL(didFailWithError(InternetProtocol*,QString)),       this, SLOT(didFailWithError(InternetProtocol*,QString)));
 }
+
+static AMQPAttach * getAttach(QString topic, long handler, int channel) {
+    AMQPAttach *attach = new AMQPAttach();
+    attach->setChannel(channel);
+    attach->setName(topic);
+    attach->setHandle(AMQPSimpleType::UIntToVariant(handler));
+    attach->setRole(new AMQPRoleCode(AMQP_RECEIVER_ROLE_CODE));
+    attach->setSendCodes(new AMQPSendCode(AMQP_MIXED_SEND_CODE));
+    AMQPTarget *target = new AMQPTarget();
+    target->setAddress(topic);
+    target->setDurable(new AMQPTerminusDurability(AMQP_NONE_TERMINUS_DURABILITIES));
+    target->setTimeout(AMQPSimpleType::UIntToVariant(0));
+    target->setDynamic(AMQPSimpleType::boolToVariant(false));
+
+    attach->setTarget(target);
+     return attach;
+}
+
 
 bool AMQP::send(Message *message)
 {
@@ -110,7 +132,7 @@ void AMQP::publish(MessageEntity message)
     } else {
         long currentHandler = this->nextHandle++;
         this->usedOutgoingMappings.insert(topicName, currentHandler);
-        this->usedMappings.insert(currentHandler, topicName);
+        this->usedOutMappings.insert(currentHandler, topicName);
         transfer->setHandle(AMQPSimpleType::UIntToVariant(currentHandler));
         this->pendingMessages.append(transfer);
 
@@ -133,33 +155,22 @@ void AMQP::publish(MessageEntity message)
     }
 }
 
-void AMQP::subscribeTo(TopicEntity topic)
+void AMQP::subscribeTo(TopicEntity topicEntry) {
+    this->subscribeTo(topicEntry.topicName.get().toString());
+}
+
+
+void AMQP::subscribeTo(QString topic)
 {
-    QString topicName = topic.topicName.get().toString();
+    currentTopics.insert(topic);
     long currentHandler;
-    if (this->usedIncomingMappings.contains(topicName)) {
-        currentHandler = this->usedIncomingMappings.value(topicName);
+    if (this->usedIncomingMappings.contains(topic)) {
+        currentHandler = this->usedIncomingMappings.value(topic);
     } else {
         currentHandler = nextHandle++;
-        this->usedIncomingMappings.insert(topicName, currentHandler);
-        this->usedMappings.insert(currentHandler, topicName);
     }
 
-    AMQPAttach *attach = new AMQPAttach();
-    attach->setChannel(this->channel);
-    attach->setName(topicName);
-    attach->setHandle(AMQPSimpleType::UIntToVariant(currentHandler));
-    attach->setRole(new AMQPRoleCode(AMQP_RECEIVER_ROLE_CODE));
-    attach->setSendCodes(new AMQPSendCode(AMQP_MIXED_SEND_CODE));
-    AMQPTarget *target = new AMQPTarget();
-    target->setAddress(topicName);
-    target->setDurable(new AMQPTerminusDurability(AMQP_NONE_TERMINUS_DURABILITIES));
-    target->setTimeout(AMQPSimpleType::UIntToVariant(0));
-    target->setDynamic(AMQPSimpleType::boolToVariant(false));
-
-    attach->setTarget(target);
-
-    this->send(attach);
+    this->send(getAttach(topic,currentHandler, this->channel));
 }
 
 void AMQP::unsubscribeFrom(TopicEntity topic)
@@ -213,9 +224,7 @@ void AMQP::setTopics(QList<TopicEntity> topics)
     for (int i = 0; i < topics.size(); i++) {
         TopicEntity topic = topics.at(i);
         QString topicName = topic.topicName.get().toString();
-        long currentHandler = nextHandle++;
-        this->usedIncomingMappings.insert(topicName, currentHandler);
-        this->usedMappings.insert(currentHandler, topicName);
+        currentTopics.insert(topicName);
     }
 }
 
@@ -295,12 +304,10 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             case AMQP_BEGIN_HEADER_CODE:
             {
                 this->isConnect = true;
-                for (int i = 0; i < this->usedIncomingMappings.keys().size(); i++) {
-                    QString topicName = this->usedIncomingMappings.keys().at(i);
-                    TopicEntity topic = TopicEntity();
-                    topic.topicName = topicName;
-                    this->subscribeTo(topic);
-                }
+                QSet<QString>::iterator i;
+                for (i = currentTopics.begin(); i != currentTopics.end(); ++i)
+                    this->subscribeTo(*i);
+
             } break;
             case AMQP_ATTACH_HEADER_CODE:
             {
@@ -329,12 +336,15 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 } else {
                     // subscribe
                     int handle = AMQPSimpleType::variantToUInt(attach->getHandle());
-                    if(this->usedMappings.contains(handle)) {
+
+                    if(this->currentTopics.contains(attach->getName())) {
                         int qos = AT_LEAST_ONCE;
                         emit subackReceived(this, attach->getName(), qos, 0);
+                    } else {
+                        this->send(getAttach(attach->getName(),this->nextHandle++, this->channel));
                     }
                     this->usedIncomingMappings.insert(attach->getName(), handle);
-                    this->usedMappings.insert(handle, attach->getName());
+                    this->usedInMappings.insert(handle, attach->getName());
 
 
                 }
@@ -371,10 +381,10 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                 }
                 QString topic = QString();
                 long handle = AMQPSimpleType::variantToUInt(transfer->getHandle());
-                if (transfer->getHandle()->isNull() || !this->usedMappings.contains(handle)) {
+                if (transfer->getHandle()->isNull() || !this->usedInMappings.contains(handle)) {
                     return;
                 }
-                topic = this->usedMappings.value(handle);
+                topic = this->usedInMappings.value(handle);
                 emit publishReceived(this, topic, qos->getValue(), data->getData().getByteArray(), false, false);
 
             } break;
@@ -389,7 +399,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                             AMQPTransfer *transfer = (AMQPTransfer *)this->timers->removeTimer(i);
                             if (transfer != NULL) {
                                 long handle = AMQPSimpleType::variantToUInt(transfer->getHandle());
-                                QString topic = this->usedMappings.value(handle);
+                                QString topic = this->usedOutMappings.value(handle);
                                 AMQPData *data = (AMQPData *)transfer->getData();
                                 emit pubackReceived(this, topic, 1, data->getData().getByteArray(), false, false, 0);
                             }
@@ -398,7 +408,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
                         AMQPTransfer *transfer = (AMQPTransfer *)this->timers->removeTimer(first);
                         if (transfer != NULL) {
                             long handle = AMQPSimpleType::variantToUInt(transfer->getHandle());
-                            QString topic = this->usedMappings.value(handle);
+                            QString topic = this->usedOutMappings.value(handle);
                             AMQPData *data = (AMQPData *)transfer->getData();
                             emit pubackReceived(this, topic, 1, data->getData().getByteArray(), false, false, 0);
                         }
@@ -410,11 +420,14 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             {
                 AMQPDetach *detach = (AMQPDetach *)message;
                 long handle = AMQPSimpleType::variantToUInt(detach->getHandle());
-                if (this->usedMappings.contains(handle)) {
-                    QString topicName = this->usedMappings.value(handle);
-                    this->usedMappings.remove(handle);
+                if (this->usedInMappings.contains(handle)) {
+                    QString topicName = this->usedInMappings.value(handle);
+                    currentTopics.remove(topicName);
+                    this->usedInMappings.remove(handle);
                     if (this->usedOutgoingMappings.contains(topicName)) {
-                        this->usedOutgoingMappings.remove(topicName);
+                        int i = this->usedOutgoingMappings.remove(topicName);
+                        if(i>0)
+                            this->usedOutMappings.remove(i);
                     }
                     emit unsubackReceived(this, topicName);
                 }
