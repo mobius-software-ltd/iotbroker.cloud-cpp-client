@@ -61,6 +61,7 @@ void CoAP::goConnect()
         }
     }
     this->internetProtocol->start();
+    this->timers->goPingTimer(1);
 }
 
 void CoAP::publish(MessageEntity message)
@@ -138,7 +139,6 @@ void CoAP::connectionDidStart(InternetProtocol *protocol)
     Q_UNUSED(protocol);
     this->isConnect = true;
     this->isConnackReceived = false;
-    this->timers->goPingTimer(this->currentAccount.keepAlive);
 }
 
 void CoAP::connectionDidStop(InternetProtocol *protocol)
@@ -152,6 +152,7 @@ void CoAP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 {
     if(!this->isConnackReceived) {
         this->isConnackReceived = true;
+        this->timers->goPingTimer(this->currentAccount.keepAlive);
         emit connackReceived(this, 0);
     }
     Q_UNUSED(protocol);
