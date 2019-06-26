@@ -175,7 +175,8 @@ void WebsocketMQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray dat
         case MQ_PUBLISH:
         {
             Publish *publish = (Publish *)message;
-            emit publishReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain());
+            if(publish->getTopic()->getQoS()->getValue() != 2)
+                emit publishReceived(this, publish->getTopic()->getName(), publish->getTopic()->getQoS()->getValue(), publish->getContent(), publish->isDup(), publish->isRetain());
 
             int qos = publish->getTopic()->getQoS()->getValue();
             if (qos == AT_LEAST_ONCE) {
