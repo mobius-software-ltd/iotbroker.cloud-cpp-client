@@ -286,7 +286,7 @@ void MqttSN::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             SNPublish *publish = (SNPublish *)this->publishPackets->value(pubrel->getPacketID());
             int topicId = ByteArray(publish->getTopic()->encode()).readShort();
             QString topicName =  this->topics->value(topicId);
-            emit pubackReceived(this, topicName, publish->getTopic()->getQoS()->getValue(), *publish->getContent(), publish->getIsDup(), publish->getIsRetain(), SN_ACCEPTED_RETURN_CODE);
+            //emit pubackReceived(this, topicName, publish->getTopic()->getQoS()->getValue(), *publish->getContent(), publish->getIsDup(), publish->getIsRetain(), SN_ACCEPTED_RETURN_CODE);
             SNPubcomp *pubcomp = new SNPubcomp(pubrel->getPacketID());
             this->send(pubcomp);
         } break;
