@@ -172,11 +172,11 @@ void MQTT::connectionDidStop(InternetProtocol *protocol)
 void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 {
     Q_UNUSED(protocol);
-
+    QByteArray barray = this->messageParser->nextMessage(data);
     do {
-        QByteArray barray = this->messageParser->nextMessage(data);
         Message *message = this->messageParser->decodeMessage(barray);
 
+        if(message!=NULL)
         switch (message->getType()) {
             case MQ_CONNECT:
             {
@@ -313,8 +313,8 @@ void MQTT::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
             }
             break;
         }
-
-    } while (data.length() > 0);
+        barray = this->messageParser->nextMessage(data);
+    } while (barray.length() > 0);
 }
 
 void MQTT::didFailWithError(InternetProtocol *protocol, QString error)

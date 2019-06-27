@@ -311,6 +311,12 @@ Message *Parser::decode(QByteArray byteArray)
     switch (messageType) {
 
         case MQ_CONNECT: {
+            int reserved = (fixedHeader & 0xf);
+
+            if(reserved != 0) {
+                throw new QString("Connect has rserved field not 0");
+                return NULL;
+            }
 
             Connect *connect = new Connect();
 
