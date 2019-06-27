@@ -50,6 +50,8 @@ int AMQPParser::next(ByteArray buffer)
 
 AMQPHeader *AMQPParser::decode(ByteArray buffer)
 {
+    if(buffer.getSize()<8)
+        return NULL;
     ByteArray data = ByteArray(buffer.getByteArray());
     if (data.readStringWithLength(4) == AMQPProtocolName) {
 

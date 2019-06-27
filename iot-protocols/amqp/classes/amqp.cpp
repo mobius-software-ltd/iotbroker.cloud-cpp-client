@@ -271,6 +271,7 @@ void AMQP::didReceiveMessage(InternetProtocol *protocol, QByteArray data)
 
         AMQPHeader *message = this->messageParser->decode(*packet);
 
+        if(message!=NULL)
         switch (message->getType()) {
             case AMQP_PROTOCOL_HEADER_CODE:
             {
